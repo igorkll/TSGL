@@ -5,6 +5,40 @@
 
 const uint8_t tsgl_colormode_sizes[] = {2, 2, 2, 2, 3, 3};
 
+static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    switch (framebuffer->rotation) {
+        case 0:
+            return x;
+        case 1:
+            return framebuffer->defaultWidth - y - 1;
+        case 2:
+            return framebuffer->defaultWidth - x - 1;
+        case 3:
+            return y;
+        default:
+            return -1;
+    }
+}
+
+static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    switch (framebuffer->rotation) {
+        case 0:
+            return y;
+        case 1:
+            return x;
+        case 2:
+            return framebuffer->defaultHeight - y - 1;
+        case 3:
+            return framebuffer->defaultHeight - x - 1;
+        default:
+            return -1;
+    }
+}
+
+static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->width)) * framebuffer->colorsize;
+}
+
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
     framebuffer->colorsize = tsgl_colormode_sizes[colormode];
     framebuffer->width = width;
@@ -39,7 +73,7 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color) {
-    size_t index = (x + (y * framebuffer->width)) * framebuffer->colorsize;
+    size_t index = _getBufferIndex(framebuffer, x, y);
     uint8_t* buffer = (uint8_t*)framebuffer->buffer;
     switch (framebuffer->colormode) {
         case tsgl_rgb_565_le : {
