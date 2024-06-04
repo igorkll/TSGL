@@ -4,7 +4,7 @@
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_rgb_565
+#define COLORMODE  tsgl_bgr_565_be
 
 tsgl_framebuffer framebuffer;
 
