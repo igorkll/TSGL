@@ -129,7 +129,8 @@ static const lcd_init_cmd_t ili_init_cmds[]={
 };
 
 static void lcd_spi_pre_transfer_callback(spi_transaction_t *t) {
-    gpio_set_level(PIN_NUM_DC, (bool)t->user);
+    int dc=(int)t->user;
+    gpio_set_level(PIN_NUM_DC, dc);
 }
 
 static void lcd_cmd(spi_device_handle_t spi, const uint8_t cmd, bool keep_cs_active) {
@@ -233,6 +234,64 @@ static void lcd_init(spi_device_handle_t spi) {
     }
 }
 
+static void test(spi_device_handle_t spi) {
+    esp_err_t ret;
+    int x;
+    //Transaction descriptors. Declared static so they're not allocated on the stack; we need this memory even when this
+    //function is finished because the SPI driver needs access to it even while we're already calculating the next line.
+    static spi_transaction_t trans[5];
+
+    //In theory, it's better to initialize trans and data only once and hang on to the initialized
+    //variables. We allocate them on the stack, so we need to re-init them each call.
+    for (x=0; x<6; x++) {
+        memset(&trans[x], 0, sizeof(spi_transaction_t));
+        if ((x&1)==0) {
+            //Even transfers are commands
+            trans[x].length=8;
+            trans[x].user=(void*)0;
+        } else {
+            //Odd transfers are data
+            trans[x].length=8*4;
+            trans[x].user=(void*)1;
+        }
+        trans[x].flags=SPI_TRANS_USE_TXDATA;
+    }
+    trans[0].tx_data[0]=0x2A;           //Column Address Set
+    trans[1].tx_data[0]=0;              //Start Col High
+    trans[1].tx_data[1]=0;              //Start Col Low
+    trans[1].tx_data[2]=(320)>>8;       //End Col High
+    trans[1].tx_data[3]=(320)&0xff;     //End Col Low
+    trans[2].tx_data[0]=0x2B;           //Page address set
+    trans[3].tx_data[0]=0>>8;        //Start page high
+    trans[3].tx_data[1]=0&0xff;      //start page low
+    trans[3].tx_data[2]=320>>8;    //end page high
+    trans[3].tx_data[3]=320&0xff;  //end page low
+    trans[4].tx_data[0]=0x2C;           //memory write
+
+    //Queue all transactions.
+    for (x=0; x<6; x++) {
+        ret=spi_device_queue_trans(spi, &trans[x], portMAX_DELAY);
+        assert(ret==ESP_OK);
+    }
+
+    //When we are here, the SPI driver is busy (in the background) getting the transactions sent. That happens
+    //mostly using DMA, so the CPU doesn't have much to do here. We're not going to wait for the transaction to
+    //finish because we may as well spend the time calculating the next line. When that is done, we can call
+    //send_line_finish, which will wait for the transfers to be done and check their status.
+}
+
+static void send_line_finish(spi_device_handle_t spi)
+{
+    spi_transaction_t *rtrans;
+    esp_err_t ret;
+    //Wait for all 6 transactions to be done and get back the results.
+    for (int x=0; x<6; x++) {
+        ret=spi_device_get_trans_result(spi, &rtrans, portMAX_DELAY);
+        assert(ret==ESP_OK);
+        //We could inspect rtrans now if we received any info back. The LCD is treated as write-only, though.
+    }
+}
+
 bool tsgl_display_init(tsgl_display* display, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
     spi_bus_config_t buscfg={
         .miso_io_num=PIN_NUM_MISO,
@@ -253,6 +312,8 @@ bool tsgl_display_init(tsgl_display* display, tsgl_colormode colormode, tsgl_pos
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
     ESP_ERROR_CHECK(spi_bus_add_device(LCD_HOST, &devcfg, display->spi));
     lcd_init(*display->spi);
+    test(*display->spi);
+    send_line_finish(*display->spi);
     return true;
 }
 
