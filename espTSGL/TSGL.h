@@ -12,4 +12,4 @@ typedef enum {
     tsgl_bgr_888,
 } tsgl_colormode;
 
-typedef uint16_t tsgl_pos;
+typedef int16_t tsgl_pos;

@@ -39,6 +39,10 @@ static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_po
     return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->width)) * framebuffer->colorsize;
 }
 
+static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
+}
+
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
     framebuffer->colorsize = tsgl_colormode_sizes[colormode];
     framebuffer->width = width;
@@ -73,6 +77,7 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color) {
+    if (!_pointInFrame(framebuffer, x, y)) return;
     size_t index = _getBufferIndex(framebuffer, x, y);
     uint8_t* buffer = (uint8_t*)framebuffer->buffer;
     switch (framebuffer->colormode) {
@@ -117,6 +122,29 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
             buffer[index] = color.r;
             break;
         }
+    }
+}
+
+void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
+    for (tsgl_pos ix = x; ix < x + width; ix++) {
+        for (tsgl_pos iy = y; iy < y + height; iy++) {
+            tsgl_framebuffer_set(framebuffer, ix, iy, color);
+        }
+    }
+}
+
+void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
+    tsgl_pos endY = (y + framebuffer->height) - 1;
+    tsgl_pos endX = (x + width) - 1;
+    for (tsgl_pos ix = x + 1; ix < endX; ix++) {
+        tsgl_framebuffer_set(framebuffer, ix, y, color);
+        tsgl_framebuffer_set(framebuffer, ix, endY, color);
+    }
+
+    endX = (x + framebuffer->width) - 1;
+    for (tsgl_pos iy = y; iy < y + height; iy++) {
+        tsgl_framebuffer_set(framebuffer, x, iy, color);
+        tsgl_framebuffer_set(framebuffer, endX, iy, color);
     }
 }
 
