@@ -31,14 +31,16 @@ void app_main() {
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     while (true) {
-        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_CYAN, TSGL_PURPLE);
-        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2) - 1, framebuffer.height - (step * 2) - 1, current);
+        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_CYAN, TSGL_RED);
+        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
         tsgl_display_send(&display, &framebuffer);
         vTaskDelay(10 / portTICK_PERIOD_MS);
         step++;
         if (step > stepMax) {
             step = 0;
-            tsgl_framebuffer_clear(&framebuffer, TSGL_BROWN);
+            for (tsgl_pos i = 0; i < framebuffer.width; i++) {
+                tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
+            }
         }
     }
 
