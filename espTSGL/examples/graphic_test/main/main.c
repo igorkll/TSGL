@@ -1,9 +1,13 @@
+#include <../../../TSGL.h>
 #include <../../../TSGL_framebuffer.h>
 #include <../../../TSGL_display.h>
 #include <../../../TSGL_color.h>
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
+#define umax(a,b) (((a) > (b)) ? (a) : (b))
+#define umin(a,b) (((a) < (b)) ? (a) : (b))
 
 #define WIDTH      320
 #define HEIGHT     240
@@ -18,8 +22,10 @@ void app_main() {
     tsgl_framebuffer_rotate(&framebuffer, 1); //set rotation
 
     while (true) {
-        tsgl_framebuffer_clear(&framebuffer, tsgl_color_pack(0, 64, 127));
-        tsgl_framebuffer_set(&framebuffer, 1, 1, tsgl_color_pack(255, 0, 0));
+        tsgl_framebuffer_clear(&framebuffer, tsgl_color_pack(0, 16, 64));
+        for (tsgl_pos i = 0; i < umin(framebuffer.width, framebuffer.height); i++) {
+            tsgl_framebuffer_set(&framebuffer, i, i, tsgl_color_pack(255, 0, 0));
+        }
         tsgl_display_send(&display, &framebuffer);
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
