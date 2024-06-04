@@ -6,6 +6,7 @@ extern const uint8_t tsgl_colormode_sizes[];
 
 typedef struct {
     void* buffer;
+    size_t buffersize;
     tsgl_pos width;
     tsgl_pos height;
     tsgl_pos defaultWidth;
@@ -19,3 +20,4 @@ bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormo
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation);
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color);
+void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_color color);

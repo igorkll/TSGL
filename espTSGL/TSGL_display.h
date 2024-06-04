@@ -11,6 +11,6 @@ typedef struct {
     spi_device_handle_t* spi;
 } tsgl_display;
 
-void tsgl_display_init(tsgl_display* display, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height);
+bool tsgl_display_init(tsgl_display* display, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height);
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_free(tsgl_display* display);

@@ -13,7 +13,8 @@ bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormo
     framebuffer->defaultHeight = height;
     framebuffer->rotation = 0;
     framebuffer->colormode = colormode;
-    framebuffer->buffer = heap_caps_malloc(width * height * framebuffer->colorsize, MALLOC_CAP_DMA);
+    framebuffer->buffersize = width * height * framebuffer->colorsize;
+    framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_DMA);
     return framebuffer->buffer != NULL;
 }
 
@@ -81,6 +82,14 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
             buffer[index++] = color.g;
             buffer[index] = color.r;
             break;
+        }
+    }
+}
+
+void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_color color) {
+    for (tsgl_pos x = 0; x < framebuffer->width; x++) {
+        for (tsgl_pos y = 0; y < framebuffer->height; y++) {
+            tsgl_framebuffer_set(framebuffer, x, y, color);
         }
     }
 }
