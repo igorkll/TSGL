@@ -292,14 +292,14 @@ static void send_line_finish(spi_device_handle_t spi)
     }
 }
 
-bool tsgl_display_init(tsgl_display* display, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
+bool tsgl_display_init(tsgl_display* display, tsgl_pos width, tsgl_pos height) {
     spi_bus_config_t buscfg={
         .miso_io_num=PIN_NUM_MISO,
         .mosi_io_num=PIN_NUM_MOSI,
         .sclk_io_num=PIN_NUM_CLK,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=width * height * tsgl_colormode_sizes[colormode]
+        .max_transfer_sz=width * height * 2
     };
     spi_device_interface_config_t devcfg={
         .clock_speed_hz=40*1000*1000,

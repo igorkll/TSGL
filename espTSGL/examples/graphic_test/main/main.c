@@ -11,7 +11,7 @@
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_rgb_565_be
+#define COLORMODE  tsgl_framebuffer_rgb565_be
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -28,7 +28,7 @@ void app_main() {
     tsgl_color last = tsgl_color_pack(255, 0, 0);
 
     assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
-    assert(tsgl_display_init(&display, COLORMODE, WIDTH, HEIGHT));
+    assert(tsgl_display_init(&display, WIDTH, HEIGHT));
     tsgl_framebuffer_rotate(&framebuffer, 0); //set rotation
     tsgl_framebuffer_clear(&framebuffer, bg);
 

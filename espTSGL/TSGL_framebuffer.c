@@ -43,7 +43,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
     return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
 }
 
-bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
+bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height) {
     framebuffer->colorsize = tsgl_colormode_sizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
@@ -81,46 +81,100 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
     size_t index = _getBufferIndex(framebuffer, x, y);
     uint8_t* buffer = (uint8_t*)framebuffer->buffer;
     switch (framebuffer->colormode) {
-        case tsgl_rgb_565_le : {
+        case tsgl_framebuffer_rgb565_le : {
             uint16_t color565 = tsgl_color_to565(color);
             buffer[index++] = color565 % 256;
             buffer[index] = color565 >> 8;
             break;
         }
 
-        case tsgl_rgb_565_be : {
+        case tsgl_framebuffer_rgb565_be : {
             uint16_t color565 = tsgl_color_to565(color);
             buffer[index++] = color565 >> 8;
             buffer[index] = color565 % 256;
             break;
         }
 
-        case tsgl_bgr_565_le : {
+        case tsgl_framebuffer_bgr565_le : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
             buffer[index++] = color565 % 256;
             buffer[index] = color565 >> 8;
             break;
         }
 
-        case tsgl_bgr_565_be : {
+        case tsgl_framebuffer_bgr565_be : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
             buffer[index++] = color565 >> 8;
             buffer[index] = color565 % 256;
             break;
         }
 
-        case tsgl_rgb_888 : {
+        case tsgl_framebuffer_rgb888 : {
             buffer[index++] = color.r;
             buffer[index++] = color.g;
             buffer[index] = color.b;
             break;
         }
 
-        case tsgl_bgr_888 : {
+        case tsgl_framebuffer_bgr888 : {
             buffer[index++] = color.b;
             buffer[index++] = color.g;
             buffer[index] = color.r;
             break;
+        }
+    }
+}
+
+tsgl_color tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    if (!_pointInFrame(framebuffer, x, y)) return tsgl_color_pack(0, 0, 0);
+    size_t index = _getBufferIndex(framebuffer, x, y);
+    uint8_t* buffer = (uint8_t*)framebuffer->buffer;
+    switch (framebuffer->colormode) {
+        case tsgl_framebuffer_rgb565_le : {
+            uint16_t color565 = tsgl_color_to565(color);
+            buffer[index++] = color565 % 256;
+            buffer[index] = color565 >> 8;
+            break;
+        }
+
+        case tsgl_framebuffer_rgb565_be : {
+            uint16_t color565 = tsgl_color_to565(color);
+            buffer[index++] = color565 >> 8;
+            buffer[index] = color565 % 256;
+            break;
+        }
+
+        case tsgl_framebuffer_bgr565_le : {
+            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
+            buffer[index++] = color565 % 256;
+            buffer[index] = color565 >> 8;
+            break;
+        }
+
+        case tsgl_framebuffer_bgr565_be : {
+            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
+            buffer[index++] = color565 >> 8;
+            buffer[index] = color565 % 256;
+            color.r = buffer[index++];
+            color.g = buffer[index++];
+            color.b = buffer[index];
+            break;
+        }
+
+        case tsgl_framebuffer_rgb888 : {
+            tsgl_color color;
+            color.r = buffer[index++];
+            color.g = buffer[index++];
+            color.b = buffer[index];
+            return color;
+        }
+
+        case tsgl_framebuffer_bgr888 : {
+            tsgl_color color;
+            color.b = buffer[index++];
+            color.g = buffer[index++];
+            color.r = buffer[index];
+            return color;
         }
     }
 }
@@ -136,7 +190,7 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
     tsgl_pos endX = (x + width) - 1;
     tsgl_pos endY = (y + height) - 1;
-    
+
     for (tsgl_pos ix = x + 1; ix < endX; ix++) {
         tsgl_framebuffer_set(framebuffer, ix, y, color);
         tsgl_framebuffer_set(framebuffer, ix, endY, color);
