@@ -37,7 +37,7 @@ tsgl_color tsgl_color_from565(uint16_t color) {
 }
 
 uint32_t tsgl_color_toHex(tsgl_color color) {
-
+    return 0;
 }
 
 tsgl_color tsgl_color_fromHex(uint32_t color) {
