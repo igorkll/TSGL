@@ -13,8 +13,10 @@ void app_main() {
         printf("the problem when creating a framebuffer\n");
         while (true);
     }
+    tsgl_framebuffer_rotate(&framebuffer, 1); //set rotation
 
     while (true) {
+        tsgl_framebuffer_set(&framebuffer, 1, 1, tsgl_color_pack(255, 0, 0));
     }
 
     tsgl_framebuffer_free(&framebuffer); //if you don't need this framebuffer anymore, then you should unload it.

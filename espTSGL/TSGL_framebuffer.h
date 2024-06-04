@@ -15,6 +15,5 @@ typedef struct {
 
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height);
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
-
+void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation);
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color);
-tsgl_color tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y);
