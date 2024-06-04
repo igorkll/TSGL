@@ -7,7 +7,6 @@ typedef struct {
     uint8_t b;
 } tsgl_color;
 
-
 tsgl_color tsgl_color_pack(uint8_t r, uint8_t g, uint8_t b);
 tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2);
 
@@ -16,11 +15,6 @@ tsgl_color tsgl_color_from565(uint16_t color);
 
 uint32_t tsgl_color_toHex(tsgl_color color);
 tsgl_color tsgl_color_fromHex(uint32_t color);
-
-
-#define TSGL_BLACK tsgl_color_pack(0, 0, 0)
-#define TSGL_RED tsgl_color_pack(255, 0, 0)
-#define TSGL_LIME tsgl_color_pack(0, 255, 0)
 
 #define TSGL_WHITE tsgl_color_fromHex(0xffffff)
 #define TSGL_ORANGE tsgl_color_fromHex(0xF2B233)

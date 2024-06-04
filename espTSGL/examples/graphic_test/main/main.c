@@ -23,26 +23,22 @@ static float fmap(float value, float low, float high, float low_2, float high_2)
 }
 
 void app_main() {
-    tsgl_color bg = tsgl_color_pack(0, 16, 64);
-    tsgl_color first = tsgl_color_pack(0, 255, 0);
-    tsgl_color last = tsgl_color_pack(255, 0, 0);
-
     assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
     assert(tsgl_display_init(&display, WIDTH, HEIGHT));
     tsgl_framebuffer_rotate(&framebuffer, 0); //set rotation
-    tsgl_framebuffer_clear(&framebuffer, bg);
+    tsgl_framebuffer_clear(&framebuffer, TSGL_BROWN);
 
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     while (true) {
-        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), first, last);
+        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_CYAN, TSGL_PURPLE);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2) - 1, framebuffer.height - (step * 2) - 1, current);
         tsgl_display_send(&display, &framebuffer);
         vTaskDelay(10 / portTICK_PERIOD_MS);
         step++;
         if (step > stepMax) {
             step = 0;
-            tsgl_framebuffer_clear(&framebuffer, bg);
+            tsgl_framebuffer_clear(&framebuffer, TSGL_BROWN);
         }
     }
 
