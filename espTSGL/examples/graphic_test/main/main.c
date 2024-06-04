@@ -35,7 +35,7 @@ void app_main() {
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     while (true) {
-        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, -1, 1), first, last);
+        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), first, last);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2) - 1, framebuffer.height - (step * 2) - 1, current);
         tsgl_display_send(&display, &framebuffer);
         vTaskDelay(10 / portTICK_PERIOD_MS);

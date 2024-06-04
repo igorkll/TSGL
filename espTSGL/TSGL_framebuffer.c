@@ -134,14 +134,14 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
-    tsgl_pos endY = (y + framebuffer->height) - 1;
     tsgl_pos endX = (x + width) - 1;
+    tsgl_pos endY = (y + height) - 1;
+    
     for (tsgl_pos ix = x + 1; ix < endX; ix++) {
         tsgl_framebuffer_set(framebuffer, ix, y, color);
         tsgl_framebuffer_set(framebuffer, ix, endY, color);
     }
 
-    endX = (x + framebuffer->width) - 1;
     for (tsgl_pos iy = y; iy < y + height; iy++) {
         tsgl_framebuffer_set(framebuffer, x, iy, color);
         tsgl_framebuffer_set(framebuffer, endX, iy, color);
