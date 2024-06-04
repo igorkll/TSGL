@@ -1,4 +1,5 @@
 #include <../../../TSGL_framebuffer.h>
+#include <../../../TSGL_color.h>
 #include <stdio.h>
 
 #define WIDTH      320
