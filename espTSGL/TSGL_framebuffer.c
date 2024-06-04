@@ -41,7 +41,7 @@ static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 }
 
 static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->width)) * framebuffer->colorsize;
+    return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->defaultWidth)) * framebuffer->colorsize;
 }
 
 static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
@@ -66,8 +66,8 @@ void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
 }
 
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
-    framebuffer->rotation = rotation;
-    switch (rotation) {
+    framebuffer->rotation = rotation % 4;
+    switch (framebuffer->rotation) {
         case 0:
         case 2:
             framebuffer->width = framebuffer->defaultWidth;
@@ -75,8 +75,8 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
             break;
         case 1:
         case 3:
-            framebuffer->height = framebuffer->defaultWidth;
             framebuffer->width = framebuffer->defaultHeight;
+            framebuffer->height = framebuffer->defaultWidth;
             break;
     }
 }

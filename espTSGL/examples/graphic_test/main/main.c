@@ -25,7 +25,7 @@ static float fmap(float value, float low, float high, float low_2, float high_2)
 void app_main() {
     assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
     assert(tsgl_display_init(&display, WIDTH, HEIGHT));
-    tsgl_framebuffer_rotate(&framebuffer, 0); //set rotation
+    tsgl_framebuffer_rotate(&framebuffer, 1); //set rotation
     tsgl_framebuffer_clear(&framebuffer, TSGL_BROWN);
 
     uint16_t step = 0;
