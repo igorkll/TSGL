@@ -2,6 +2,8 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 
+extern const uint8_t tsgl_colormode_sizes[];
+
 typedef struct {
     void* buffer;
     tsgl_pos width;

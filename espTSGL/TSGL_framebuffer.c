@@ -1,18 +1,19 @@
 #include "TSGL.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
+#include <esp_heap_caps.h>
 
-static const uint8_t colormode_sizes[] = {2, 2, 2, 2, 3, 3};
+const uint8_t tsgl_colormode_sizes[] = {2, 2, 2, 2, 3, 3};
 
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
-    framebuffer->colorsize = colormode_sizes[colormode];
+    framebuffer->colorsize = tsgl_colormode_sizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
     framebuffer->defaultWidth = width;
     framebuffer->defaultHeight = height;
     framebuffer->rotation = 0;
     framebuffer->colormode = colormode;
-    framebuffer->buffer = calloc(width * height, framebuffer->colorsize);
+    framebuffer->buffer = heap_caps_malloc(width * height * framebuffer->colorsize, MALLOC_CAP_DMA);
     return framebuffer->buffer != NULL;
 }
 
@@ -24,7 +25,14 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->rotation = rotation;
     switch (rotation) {
         case 0:
-            
+        case 2:
+            framebuffer->width = framebuffer->defaultWidth;
+            framebuffer->height = framebuffer->defaultHeight;
+            break;
+        case 1:
+        case 3:
+            framebuffer->height = framebuffer->defaultWidth;
+            framebuffer->width = framebuffer->defaultHeight;
             break;
     }
 }
