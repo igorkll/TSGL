@@ -22,14 +22,20 @@ static float fmap(float value, float low, float high, float low_2, float high_2)
     return scaled_value;
 }
 
+static void hue() {
+    for (tsgl_pos i = 0; i < framebuffer.width; i++) {
+        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
+    }
+}
+
 void app_main() {
     assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
     assert(tsgl_display_init(&display, WIDTH, HEIGHT));
-    tsgl_framebuffer_rotate(&framebuffer, 1); //set rotation
-    tsgl_framebuffer_clear(&framebuffer, TSGL_BROWN);
+    hue();
 
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
+    uint8_t rotation = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_CYAN, TSGL_RED);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
@@ -37,10 +43,11 @@ void app_main() {
         vTaskDelay(10 / portTICK_PERIOD_MS);
         step++;
         if (step > stepMax) {
+            rotation = (rotation + 1) % 4;
+            tsgl_framebuffer_rotate(&framebuffer, rotation); //set rotation
+
             step = 0;
-            for (tsgl_pos i = 0; i < framebuffer.width; i++) {
-                tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
-            }
+            hue();
         }
     }
 
