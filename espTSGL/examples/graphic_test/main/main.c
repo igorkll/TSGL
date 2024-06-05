@@ -13,7 +13,7 @@
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_framebuffer_rgb888
+#define COLORMODE  tsgl_framebuffer_rgb565_be
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -36,7 +36,7 @@ void colorBox(tsgl_pos y, tsgl_color color) {
 }
 
 void app_main() {
-    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_DMA));
     assert(tsgl_display_initSpi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18, TSGL_HOST1_MISO, TSGL_HOST1_MOSI, TSGL_HOST1_CLK));
     hue();
 

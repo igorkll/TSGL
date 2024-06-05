@@ -16,7 +16,6 @@
 
 
 
-
 typedef struct {
     uint8_t cmd;
     uint8_t data[16];
@@ -27,7 +26,7 @@ static const lcd_init_cmd_t st_init_cmds[]={
     /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
     {0x36, {(1<<5)|(1<<6)}, 1},
     /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-    {0x3A, {0x06}, 1}, //0x05
+    {0x3A, {0x05}, 1}, //0x05 / 0x06
     /* Porch Setting */
     {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
     /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
@@ -126,7 +125,7 @@ bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height
         .sclk_io_num=clk,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz = TSGL_MAX_SPI_PACK
+        .max_transfer_sz = 320 * 240 * 3
     };
     ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
     return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);
