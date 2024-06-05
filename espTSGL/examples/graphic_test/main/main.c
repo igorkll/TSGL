@@ -16,13 +16,13 @@
 tsgl_framebuffer framebuffer;
 tsgl_display display;
 
-static float fmap(float value, float low, float high, float low_2, float high_2) {
+float fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);
     float scaled_value = low_2 + (high_2 - low_2) * relative_value;
     return scaled_value;
 }
 
-static void hue() {
+void hue() {
     for (tsgl_pos i = 0; i < framebuffer.width; i++) {
         tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
     }
@@ -37,7 +37,7 @@ void app_main() {
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     uint8_t rotation = 0;
     while (true) {
-        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_CYAN, TSGL_RED);
+        tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
         tsgl_display_send(&display, &framebuffer);
         vTaskDelay(10 / portTICK_PERIOD_MS);
