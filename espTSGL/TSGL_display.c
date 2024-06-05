@@ -13,11 +13,19 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_bus_config_t* buscfg, int8_t dc, int8_t cs, int8_t rst) {
+bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_bus_config_t buscfg, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+    spi_device_interface_config_t devcfg={
+        .clock_speed_hz = freq,
+        .mode = 0,
+        .spics_io_num = cs,
+        .queue_size = 7,
+        .pre_cb = tsgl_spi_pre_transfer_callback
+    };
+
     display->width = width;
     display->height = height;
     display->interfaceType = tsgl_display_interface_spi;
-    
+    display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
 }
 
@@ -30,18 +38,18 @@ void tsgl_display_all(tsgl_display* display) {
 }
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
-
-}
-
-void tsgl_display_flood(tsgl_display* display, tsgl_color color, uint32_t count) {
-    
+    switch (display->interfaceType) {
+        case tsgl_display_interface_spi:
+            tsgl_spi_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+            break;
+    }
 }
 
 void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
             spi_bus_remove_device(*display->interface);
-            free(display->interface);
             break;
     }
+    free(display->interface);
 }

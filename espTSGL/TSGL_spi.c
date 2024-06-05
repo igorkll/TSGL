@@ -16,6 +16,8 @@ typedef static struct {
     bool state;
 } Dc_info;
 
+static spi_transaction_t current_transaction;
+
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
     Dc_info* dc_info = (Dc_info*)t->user;
     gpio_set_level(dc_info->pin, dc_info->state);
@@ -45,5 +47,5 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .tx_buffer = data,
         .user = (void*)dc_info
     };
-    spi_device_polling_transmit(spi, &t);
+    spi_device_polling_transmit((spi_device_handle_t)*display->interface, &t);
 }
