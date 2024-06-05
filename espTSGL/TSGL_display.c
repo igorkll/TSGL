@@ -27,7 +27,7 @@ static const lcd_init_cmd_t st_init_cmds[]={
     /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
     {0x36, {(1<<5)|(1<<6)}, 1},
     /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-    {0x3A, {0x55}, 1},
+    {0x3A, {0x06}, 1}, //0x05
     /* Porch Setting */
     {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
     /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
@@ -103,8 +103,8 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
 
-        //
-        int cmd=0;
+        // init display
+        uint16_t cmd = 0;
         while (st_init_cmds[cmd].databytes!=0xff) {
             tsgl_spi_sendCommand(display, st_init_cmds[cmd].cmd);
             tsgl_spi_sendData(display, st_init_cmds[cmd].data, st_init_cmds[cmd].databytes&0x1F);
@@ -126,7 +126,7 @@ bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height
         .sclk_io_num=clk,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz = width * height * 2
+        .max_transfer_sz = width * height * 3
     };
     ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
     return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);

@@ -1,18 +1,19 @@
-#include <../../../TSGL.h>
-#include <../../../TSGL_framebuffer.h>
-#include <../../../TSGL_display.h>
-#include <../../../TSGL_color.h>
-#include <../../../TSGL_spi.h>
+#include <TSGL.h>
+#include <TSGL_framebuffer.h>
+#include <TSGL_display.h>
+#include <TSGL_color.h>
+#include <TSGL_spi.h>
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_heap_caps.h>
 
 #define umax(a,b) (((a) > (b)) ? (a) : (b))
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_framebuffer_rgb565_be
+#define COLORMODE  tsgl_framebuffer_rgb888
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -35,7 +36,7 @@ void colorBox(tsgl_pos y, tsgl_color color) {
 }
 
 void app_main() {
-    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
+    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_DMA));
     assert(tsgl_display_initSpi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18, TSGL_HOST1_MISO, TSGL_HOST1_MOSI, TSGL_HOST1_CLK));
     hue();
 
