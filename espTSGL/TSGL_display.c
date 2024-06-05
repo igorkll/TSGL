@@ -13,7 +13,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_bus_config_t buscfg, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg={
         .clock_speed_hz = freq,
         .mode = 0,
@@ -27,6 +27,21 @@ bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
+
+    ESP_ERROR_CHECK(spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface));
+}
+
+bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t sclk) {
+    spi_bus_config_t buscfg={
+        .miso_io_num=PIN_NUM_MISO,
+        .mosi_io_num=PIN_NUM_MOSI,
+        .sclk_io_num=PIN_NUM_CLK,
+        .quadwp_io_num=-1,
+        .quadhd_io_num=-1,
+        .max_transfer_sz=width * height * 2
+    };
+    ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
+    return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos sx, tsgl_pos sy) {
