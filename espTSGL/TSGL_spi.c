@@ -34,16 +34,28 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     ESP_ERROR_CHECK(spi_device_polling_transmit(*((spi_device_handle_t*)display->interface), &t));
 }
 
+#define umin(a,b) (((a) < (b)) ? (a) : (b))
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size == 0) return;
     Pre_transfer_info pre_transfer_info = {
         .pin = display->dc,
         .state = true
     };
-    spi_transaction_t t = {
-        .length = size * 8,
-        .tx_buffer = data,
-        .user = (void*)(&pre_transfer_info)
-    };
-    ESP_ERROR_CHECK(spi_device_polling_transmit(*((spi_device_handle_t*)display->interface), &t));
+    
+
+    uint64_t part = umin(size, TSGL_MAX_SPI_PACK);
+    uint64_t offset = 0;
+    while (true) {
+        spi_transaction_t t = {
+            .length = umin(part, size - offset) * 8,
+            .tx_buffer = data + offset,
+            .user = (void*)(&pre_transfer_info)
+        };
+
+        ESP_ERROR_CHECK(spi_device_polling_transmit(*((spi_device_handle_t*)display->interface), &t));
+        offset = offset + part;
+        if (offset >= size) {
+            break;
+        }
+    }
 }

@@ -126,7 +126,7 @@ bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height
         .sclk_io_num=clk,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz = width * height * 3
+        .max_transfer_sz = TSGL_MAX_SPI_PACK
     };
     ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
     return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);
