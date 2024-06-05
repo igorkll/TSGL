@@ -5,11 +5,16 @@
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 
+typedef enum {
+    tsgl_display_interface_spi
+} tsgl_display_interfaceType;
+
 typedef struct {
     tsgl_pos width;
     tsgl_pos height;
-    uint8_t interfaceType;
+    tsgl_display_interfaceType interfaceType;
     void* interface;
+    int8_t dc;
 } tsgl_display;
 
 bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_bus_config_t* buscfg, int8_t dc, int8_t cs, int8_t rst);
