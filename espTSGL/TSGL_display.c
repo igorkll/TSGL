@@ -14,7 +14,23 @@
 #include <freertos/task.h>
 
 bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
-    spi_device_interface_config_t devcfg={
+    // configuration of non-SPI pins
+    gpio_config_t io_conf = {};
+    if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;
+    if (rst >= 0) io_conf.pin_bit_mask |= 1ULL << rst;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pull_up_en = true;
+    gpio_config(&io_conf);
+
+    // reset display
+    if (rst >= 0) {
+        gpio_set_level(rst, false);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        gpio_set_level(rst, true);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
+    spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
         .mode = 0,
         .spics_io_num = cs,
