@@ -48,6 +48,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
     return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
 }
 
+
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height) {
     framebuffer->colorsize = tsgl_colormode_sizes[colormode];
     framebuffer->width = width;
@@ -57,7 +58,7 @@ bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_color
     framebuffer->rotation = 0;
     framebuffer->colormode = colormode;
     framebuffer->buffersize = width * height * framebuffer->colorsize;
-    framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_DMA);
+    framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_SPIRAM);
     return framebuffer->buffer != NULL;
 }
 

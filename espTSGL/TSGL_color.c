@@ -19,7 +19,7 @@ tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2) {
     return result;
 }
 
-tsgl_color color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
+tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
     float h = hue / 255.0;
     float s = saturation / 255.0;
     float v = value / 255.0;

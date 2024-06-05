@@ -25,8 +25,13 @@ float fmap(float value, float low, float high, float low_2, float high_2) {
 
 void hue() {
     for (tsgl_pos i = 0; i < framebuffer.width; i++) {
-        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
+        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
     }
+}
+
+void colorBox(tsgl_pos y, tsgl_color color) {
+    int boxSize = framebuffer.width / 32;
+    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, color);
 }
 
 void app_main() {
@@ -40,8 +45,24 @@ void app_main() {
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
+        colorBox(0, TSGL_WHITE);
+        colorBox(1, TSGL_ORANGE);
+        colorBox(2, TSGL_MAGENTA);
+        colorBox(3, TSGL_LIGHT_BLUE);
+        colorBox(4, TSGL_YELLOW);
+        colorBox(5, TSGL_LIME);
+        colorBox(6, TSGL_PINK);
+        colorBox(7, TSGL_GRAY);
+        colorBox(8, TSGL_LIGHT_GRAY);
+        colorBox(9, TSGL_CYAN);
+        colorBox(10, TSGL_PURPLE);
+        colorBox(11, TSGL_BLUE);
+        colorBox(12, TSGL_BROWN);
+        colorBox(13, TSGL_GREEN);
+        colorBox(14, TSGL_RED);
+        colorBox(15, TSGL_BLACK);
         tsgl_display_send(&display, &framebuffer);
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
@@ -50,6 +71,7 @@ void app_main() {
             step = 0;
             hue();
         }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     tsgl_framebuffer_free(&framebuffer); //if you don't need this framebuffer anymore, then you should unload it.
