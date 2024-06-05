@@ -31,14 +31,14 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
     ESP_ERROR_CHECK(spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface));
 }
 
-bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t sclk) {
+bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t clk) {
     spi_bus_config_t buscfg={
         .miso_io_num=PIN_NUM_MISO,
         .mosi_io_num=PIN_NUM_MOSI,
         .sclk_io_num=PIN_NUM_CLK,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=width * height * 2
+        .max_transfer_sz = width * height * 3
     };
     ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
     return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);
