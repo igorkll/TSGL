@@ -31,7 +31,7 @@ void hue() {
 
 void app_main() {
     assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT));
-    assert(tsgl_display_initSpi(&display, WIDTH, HEIGHT, TSGL_HOST1, 80000000, 21, 22, 18, TSGL_HOST1_MISO, TSGL_HOST1_MOSI, TSGL_HOST1_CLK));
+    assert(tsgl_display_initSpi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18, TSGL_HOST1_MISO, TSGL_HOST1_MOSI, TSGL_HOST1_CLK));
     hue();
 
     uint16_t step = 0;
