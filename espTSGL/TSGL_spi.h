@@ -1,6 +1,6 @@
 #pragma once
 #include <driver/spi_master.h>
-#include "TSGL_framebuffer.h"
+#include "TSGL_display.h"
 
 // recommended SPI pins to get the maximum frequency, if you change at least one pin, the maximum frequency will drop to 20 megahertz
 #ifdef CONFIG_IDF_TARGET_ESP32
@@ -19,7 +19,7 @@
     #define TSGL_HOST1_CS   5
     #define TSGL_HOST1_QUADWP 22
     #define TSGL_HOST1_QUADHD 21
-#if defined CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#elif defined CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 
 #elif defined CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
 

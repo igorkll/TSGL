@@ -33,9 +33,9 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
 
 bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t clk) {
     spi_bus_config_t buscfg={
-        .miso_io_num=PIN_NUM_MISO,
-        .mosi_io_num=PIN_NUM_MOSI,
-        .sclk_io_num=PIN_NUM_CLK,
+        .miso_io_num=miso,
+        .mosi_io_num=mosi,
+        .sclk_io_num=clk,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
         .max_transfer_sz = width * height * 3
@@ -63,7 +63,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            spi_bus_remove_device(*display->interface);
+            spi_bus_remove_device((spi_device_handle_t)*display->interface);
             break;
     }
     free(display->interface);
