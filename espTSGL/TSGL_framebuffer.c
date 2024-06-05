@@ -84,47 +84,46 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
     size_t index = _getBufferIndex(framebuffer, x, y);
-    uint8_t* buffer = (uint8_t*)framebuffer->buffer;
     switch (framebuffer->colormode) {
         case tsgl_framebuffer_rgb565_le : {
             uint16_t color565 = tsgl_color_to565(color);
-            buffer[index++] = color565 % 256;
-            buffer[index] = color565 >> 8;
+            framebuffer->buffer[index++] = color565 % 256;
+            framebuffer->buffer[index] = color565 >> 8;
             break;
         }
 
         case tsgl_framebuffer_rgb565_be : {
             uint16_t color565 = tsgl_color_to565(color);
-            buffer[index++] = color565 >> 8;
-            buffer[index] = color565 % 256;
+            framebuffer->buffer[index++] = color565 >> 8;
+            framebuffer->buffer[index] = color565 % 256;
             break;
         }
 
         case tsgl_framebuffer_bgr565_le : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            buffer[index++] = color565 % 256;
-            buffer[index] = color565 >> 8;
+            framebuffer->buffer[index++] = color565 % 256;
+            framebuffer->buffer[index] = color565 >> 8;
             break;
         }
 
         case tsgl_framebuffer_bgr565_be : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            buffer[index++] = color565 >> 8;
-            buffer[index] = color565 % 256;
+            framebuffer->buffer[index++] = color565 >> 8;
+            framebuffer->buffer[index] = color565 % 256;
             break;
         }
 
         case tsgl_framebuffer_rgb888 : {
-            buffer[index++] = color.r;
-            buffer[index++] = color.g;
-            buffer[index] = color.b;
+            framebuffer->buffer[index++] = color.r;
+            framebuffer->buffer[index++] = color.g;
+            framebuffer->buffer[index] = color.b;
             break;
         }
 
         case tsgl_framebuffer_bgr888 : {
-            buffer[index++] = color.b;
-            buffer[index++] = color.g;
-            buffer[index] = color.r;
+            framebuffer->buffer[index++] = color.b;
+            framebuffer->buffer[index++] = color.g;
+            framebuffer->buffer[index] = color.r;
             break;
         }
     }
@@ -133,18 +132,17 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
 tsgl_color tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     if (!_pointInFrame(framebuffer, x, y)) return _black;
     size_t index = _getBufferIndex(framebuffer, x, y);
-    uint8_t* buffer = (uint8_t*)framebuffer->buffer;
     switch (framebuffer->colormode) {
         case tsgl_framebuffer_rgb565_le : {
-            return tsgl_color_from565(buffer[index] + (buffer[index+1] << 8));
+            return tsgl_color_from565(framebuffer->buffer[index] + (framebuffer->buffer[index+1] << 8));
         }
 
         case tsgl_framebuffer_rgb565_be : {
-            return tsgl_color_from565((buffer[index] << 8) + buffer[index+1]);
+            return tsgl_color_from565((framebuffer->buffer[index] << 8) + framebuffer->buffer[index+1]);
         }
 
         case tsgl_framebuffer_bgr565_le : {
-            tsgl_color color = tsgl_color_from565(buffer[index] + (buffer[index+1] << 8));
+            tsgl_color color = tsgl_color_from565(framebuffer->buffer[index] + (framebuffer->buffer[index+1] << 8));
             uint8_t t = color.b;
             color.b = color.r;
             color.r = t;
@@ -152,7 +150,7 @@ tsgl_color tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_
         }
 
         case tsgl_framebuffer_bgr565_be : {
-            tsgl_color color = tsgl_color_from565((buffer[index] << 8) + buffer[index+1]);
+            tsgl_color color = tsgl_color_from565((framebuffer->buffer[index] << 8) + framebuffer->buffer[index+1]);
             uint8_t t = color.b;
             color.b = color.r;
             color.r = t;
@@ -161,17 +159,17 @@ tsgl_color tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_
 
         case tsgl_framebuffer_rgb888 : {
             tsgl_color color;
-            color.r = buffer[index++];
-            color.g = buffer[index++];
-            color.b = buffer[index];
+            color.r = framebuffer->buffer[index++];
+            color.g = framebuffer->buffer[index++];
+            color.b = framebuffer->buffer[index];
             return color;
         }
 
         case tsgl_framebuffer_bgr888 : {
             tsgl_color color;
-            color.b = buffer[index++];
-            color.g = buffer[index++];
-            color.r = buffer[index];
+            color.b = framebuffer->buffer[index++];
+            color.g = framebuffer->buffer[index++];
+            color.r = framebuffer->buffer[index];
             return color;
         }
     }

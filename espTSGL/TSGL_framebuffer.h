@@ -14,7 +14,7 @@ typedef enum {
 } tsgl_framebuffer_colormode;
 
 typedef struct {
-    void* buffer;
+    uint8_t* buffer;
     size_t buffersize;
     tsgl_pos width;
     tsgl_pos height;
