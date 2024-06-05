@@ -28,7 +28,7 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
 
-    ESP_ERROR_CHECK(spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface));
+    return spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface) == ESP_OK;
 }
 
 bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t clk) {
@@ -63,7 +63,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            spi_bus_remove_device((spi_device_handle_t)*display->interface);
+            spi_bus_remove_device(*((spi_device_handle_t*)display->interface));
             break;
     }
     free(display->interface);
