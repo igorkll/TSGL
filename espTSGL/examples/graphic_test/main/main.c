@@ -52,6 +52,9 @@ void app_main() {
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     uint8_t rotation = 0;
+    uint32_t currentFrame = 0;
+    uint32_t oldFrame = 0;
+    TickType_t oldFPSCheckTime = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
         tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
@@ -81,7 +84,16 @@ void app_main() {
             step = 0;
             hue();
         }
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        
+        currentFrame++;
+        TickType_t t = xTaskGetTickCount();
+        if (t - oldFPSCheckTime > 1000 / portTICK_PERIOD_MS) {
+            printf("FPS %li\n", currentFrame - oldFrame);
+            oldFrame = currentFrame;
+            oldFPSCheckTime = t;
+        }
+
+        //vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     tsgl_framebuffer_free(&framebuffer); //if you don't need this framebuffer anymore, then you should unload it.
