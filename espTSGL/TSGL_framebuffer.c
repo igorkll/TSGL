@@ -1,6 +1,7 @@
 #include "TSGL.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
+#include "TSGL_spi.h"
 #include <esp_heap_caps.h>
 #include <esp_err.h>
 
@@ -50,7 +51,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
 }
 
 
-esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps) {
+esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
     framebuffer->colorsize = tsgl_framebuffer_colormodeSizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
@@ -62,7 +63,22 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_
     if (caps == 0) {
         framebuffer->buffer = malloc(framebuffer->buffersize);
     } else {
-        framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
+        switch (caps) {
+            case TSGL_DMA:
+                framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA);
+                if (framebuffer->buffer == NULL) {
+                    framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_DMA);
+                }
+                break;
+
+            case TSGL_NO_DMA:
+                framebuffer->buffer = malloc(framebuffer->buffersize);
+                break;
+            
+            default:
+                framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
+                break;
+        }
     }
     if (framebuffer->buffer == NULL) {
         return ESP_ERR_NO_MEM;

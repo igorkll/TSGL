@@ -19,7 +19,7 @@ typedef struct {
     bool state;
 } Pre_transfer_info;
 
-esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host, spi_common_dma_t dma) {
+esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host, int8_t dma) {
     int8_t miso;
     int8_t mosi;
     int8_t clk;
@@ -44,18 +44,19 @@ esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host, spi_common_dma_t 
             ESP_LOGE(TAG, "%i spihost is unknown, tsgl_spi_init cannot be used", host);
             return ESP_ERR_INVALID_ARG;
     }
-    spi_bus_config_t buscfg={
-        .miso_io_num=miso,
-        .mosi_io_num=mosi,
-        .sclk_io_num=clk,
-        .quadwp_io_num=-1,
-        .quadhd_io_num=-1,
-        .max_transfer_sz = maxlen
-    };
-    return spi_bus_initialize(host, &buscfg, dma);
+    return tsgl_spi_initManual(maxlen, host, dma, miso, mosi, clk);
 }
 
-esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, spi_common_dma_t dma, int8_t miso, int8_t mosi, int8_t clk) {
+esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t dma, int8_t miso, int8_t mosi, int8_t clk) {
+    switch (dma) {
+        case TSGL_DMA:
+            dma = SPI_DMA_CH_AUTO;
+            break;
+
+        case TSGL_NO_DMA:
+            dma = SPI_DMA_DISABLED;
+            break;
+    }
     spi_bus_config_t buscfg={
         .miso_io_num=miso,
         .mosi_io_num=mosi,
