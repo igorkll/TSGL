@@ -35,10 +35,18 @@ void colorBox(tsgl_pos y, tsgl_color color) {
     tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, color);
 }
 
+void printFreeRamSize(const char* title) {
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
+    printf("%s. free ram: %f\n", title, info.total_free_bytes / 1024.0);
+}
+
 void app_main() {
-    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_framebuffer_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_NO_DMA));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    printFreeRamSize("before display init");
+    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_framebuffer_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_DMA)); //MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA
     ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
+    printFreeRamSize("after display init");
     hue();
 
     uint16_t step = 0;
