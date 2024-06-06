@@ -2,7 +2,7 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 
-extern const uint8_t tsgl_colormode_sizes[];
+extern const uint8_t tsgl_framebuffer_colormodeSizes[];
 
 typedef enum {
     tsgl_framebuffer_rgb565_be,

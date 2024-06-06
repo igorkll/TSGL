@@ -36,8 +36,9 @@ void colorBox(tsgl_pos y, tsgl_color color) {
 }
 
 void app_main() {
-    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_DMA));
-    assert(tsgl_display_initSpi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18, TSGL_HOST1_MISO, TSGL_HOST1_MOSI, TSGL_HOST1_CLK));
+    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_framebuffer_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_NO_DMA))
+    assert(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    assert(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     hue();
 
     uint16_t step = 0;

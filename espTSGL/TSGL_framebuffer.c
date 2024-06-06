@@ -3,7 +3,7 @@
 #include "TSGL_color.h"
 #include <esp_heap_caps.h>
 
-const uint8_t tsgl_colormode_sizes[] = {2, 2, 2, 2, 3, 3};
+const uint8_t tsgl_framebuffer_colormodeSizes[] = {2, 2, 2, 2, 3, 3};
 static const tsgl_color _black = {
     .r = 0,
     .g = 0,
@@ -50,7 +50,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
 
 
 bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps) {
-    framebuffer->colorsize = tsgl_colormode_sizes[colormode];
+    framebuffer->colorsize = tsgl_framebuffer_colormodeSizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
     framebuffer->defaultWidth = width;

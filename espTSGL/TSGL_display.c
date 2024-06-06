@@ -118,19 +118,6 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
     return result;
 }
 
-bool tsgl_display_initSpi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst, int8_t miso, int8_t mosi, int8_t clk) {
-    spi_bus_config_t buscfg={
-        .miso_io_num=miso,
-        .mosi_io_num=mosi,
-        .sclk_io_num=clk,
-        .quadwp_io_num=-1,
-        .quadhd_io_num=-1,
-        .max_transfer_sz = 320 * 240 * 3
-    };
-    ESP_ERROR_CHECK(spi_bus_initialize(spihost, &buscfg, SPI_DMA_CH_AUTO));
-    return tsgl_display_spi(display, width, height, spihost, freq, dc, cs, rst);
-}
-
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
