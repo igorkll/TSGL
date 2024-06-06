@@ -2,6 +2,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
 #include <esp_heap_caps.h>
+#include <esp_err.h>
 
 const uint8_t tsgl_framebuffer_colormodeSizes[] = {2, 2, 2, 2, 3, 3};
 static const tsgl_color _black = {
@@ -49,7 +50,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
 }
 
 
-bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps) {
+esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps) {
     framebuffer->colorsize = tsgl_framebuffer_colormodeSizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
@@ -63,7 +64,10 @@ bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_color
     } else {
         framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
     }
-    return framebuffer->buffer != NULL;
+    if (framebuffer->buffer == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
 }
 
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {

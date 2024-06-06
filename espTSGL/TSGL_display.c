@@ -69,7 +69,7 @@ static const lcd_init_cmd_t st_init_cmds[]={
 
 
 
-bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
         .mode = 0,
@@ -84,8 +84,8 @@ bool tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, sp
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
 
-    bool result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface) == ESP_OK;
-    if (result) {
+    esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
+    if (result == ESP_OK) {
         // configuration of non-SPI pins
         gpio_config_t io_conf = {};
         if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;

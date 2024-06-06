@@ -1,6 +1,7 @@
 #pragma once
 #include "TSGL.h"
 #include "TSGL_color.h"
+#include <esp_err.h>
 
 extern const uint8_t tsgl_framebuffer_colormodeSizes[];
 
@@ -25,7 +26,7 @@ typedef struct {
     tsgl_framebuffer_colormode colormode;
 } tsgl_framebuffer;
 
-bool tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps);
+esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_framebuffer_colormode colormode, tsgl_pos width, tsgl_pos height, uint32_t caps);
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_color color);

@@ -42,7 +42,7 @@ esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host, spi_common_dma_t 
         
         default:
             ESP_LOGE(TAG, "%i spihost is unknown, tsgl_spi_init cannot be used", host);
-            return;
+            return ESP_ERR_INVALID_ARG;
     }
     spi_bus_config_t buscfg={
         .miso_io_num=miso,
