@@ -61,6 +61,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
     display->driver = driver;
     display->colormode = driver->colormode;
     display->colorsize = tsgl_colormodeSizes[driver->colormode];
+    display->black = tsgl_color_raw(TSGL_BLACK, driver->colormode);
 
     esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
     if (result == ESP_OK) {
@@ -83,6 +84,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
         // init display
         _doCommands(display, driver->init);
         tsgl_display_selectAll(display);
+        tsgl_display_clear(display, display->black);
     } else {
         free(display->interface);
     }

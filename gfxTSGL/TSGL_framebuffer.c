@@ -62,8 +62,10 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     }
     if (framebuffer->buffer == NULL) {
         return ESP_FAIL;
+    } else {
+        tsgl_framebuffer_clear(framebuffer, framebuffer->black);
+        return ESP_OK;
     }
-    return ESP_OK;
 }
 
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {

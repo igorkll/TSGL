@@ -20,6 +20,12 @@ typedef struct {
     bool state;
 } Pre_transfer_info;
 
+static size_t _getPartSize() {
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
+    return info.largest_free_block / 2;
+}
+
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
     int8_t miso;
     int8_t mosi;
@@ -88,9 +94,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
     };
 
     if (spi_device_transmit(*((spi_device_handle_t*)display->interface), &t) != ESP_OK) {
-        multi_heap_info_t info;
-        heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-        uint16_t part = info.largest_free_block / 4;
+        size_t part = _getPartSize();
         size_t offset = 0;
         while (true) {
             spi_transaction_t t = {
@@ -109,9 +113,22 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 }
 
 void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
-    for (size_t i = 0; i < flood; i++) {
-        tsgl_spi_sendData(display, data, size);
+    size_t part = (_getPartSize() / size) * size;
+    size_t bytesCount = flood * size;
+    size_t offset = 0;
+    void* floodPart = malloc(part);
+    if (floodPart == NULL) return;
+    for (size_t i = 0; i < part; i += size) {
+        memcpy(floodPart + i, data, size);
     }
+    while (true) {
+        tsgl_spi_sendData(display, floodPart, umin(bytesCount - offset, part));
+        offset += part;
+        if (offset >= bytesCount) {
+            break;
+        }
+    }
+    free(floodPart);
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
