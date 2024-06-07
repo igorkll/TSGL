@@ -76,7 +76,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         }
     }
     if (framebuffer->buffer == NULL) {
-        return ESP_ERR_NO_MEM;
+        return ESP_FAIL;
     }
     return ESP_OK;
 }
