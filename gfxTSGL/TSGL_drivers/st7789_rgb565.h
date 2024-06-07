@@ -3,8 +3,8 @@
 static tsgl_driver_list _st7789_rgb565_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
     tsgl_driver_list list = {
         .list = {
-            {0x2A, {x >> 8, x & 0xff, x2 >> 8, x2 & 0xff}, 4, 0},
-            {0x2B, {y >> 8, y & 0xff, y2 >> 8, y2 & 0xff}, 4, 0},
+            {0x2A, {x >> 8, x & 0xff, x2 >> 8, x2 & 0xff}, 4},
+            {0x2B, {y >> 8, y & 0xff, y2 >> 8, y2 & 0xff}, 4},
             {0x2C, {}, 0, -1}
         }
     };
