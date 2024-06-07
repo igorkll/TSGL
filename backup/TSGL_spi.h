@@ -34,5 +34,5 @@ esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host); //spi_common_dma
 esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t miso, int8_t mosi, int8_t clk);
 void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd);
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size);
-void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);
+void tsgl_spi_asyncSendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t);

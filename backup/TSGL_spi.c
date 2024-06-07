@@ -11,7 +11,6 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_heap_caps.h>
 
 static const char* TAG = "tsgl_spi";
 
@@ -19,6 +18,15 @@ typedef struct {
     int8_t pin;
     bool state;
 } Pre_transfer_info;
+
+typedef struct {
+    size_t size;
+    const uint8_t* data;
+    void* interface;
+    Pre_transfer_info pre_transfer_info;
+    int8_t dc_pin;
+    bool dc_state;
+} Transfer_info;
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
     int8_t miso;
@@ -74,6 +82,36 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
 }
 
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
+
+static bool _transmiting = false;
+static void _transmitData(void* param) {
+    _transmiting = true;
+    Transfer_info* transfer_info = (Transfer_info*)param;
+    uint16_t part = 4092;
+    size_t offset = 0;
+    Pre_transfer_info pre_transfer_info = {
+        .pin = transfer_info->dc_pin,
+        .state = transfer_info->dc_state
+    };
+    
+    while (true) {
+        spi_transaction_t t = {
+            .length = umin(transfer_info->size - offset, part) * 8,
+            .tx_buffer = transfer_info->data + offset,
+            .user = (void*)(&pre_transfer_info)
+        };
+
+        vTaskDelay(1);
+        ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)transfer_info->interface), &t));
+        offset += part;
+        if (offset >= transfer_info->size) {
+            break;
+        }
+    }
+    _transmiting = false;
+    vTaskDelete(NULL);
+}
+
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size == 0) return;
     Pre_transfer_info pre_transfer_info = {
@@ -87,31 +125,21 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .user = (void*)(&pre_transfer_info)
     };
 
-    if (spi_device_transmit(*((spi_device_handle_t*)display->interface), &t) != ESP_OK) {
-        multi_heap_info_t info;
-        heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-        uint16_t part = info.largest_free_block / 4;
-        size_t offset = 0;
-        while (true) {
-            spi_transaction_t t = {
-                .length = umin(size - offset, part) * 8,
-                .tx_buffer = data + offset,
-                .user = (void*)(&pre_transfer_info)
-            };
-
-            ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
-            offset += part;
-            if (offset >= size) {
-                break;
-            }
-        }
-    }
+    ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
 }
 
-void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
-    for (size_t i = 0; i < flood; i++) {
-        tsgl_spi_sendData(display, data, size);
-    }
+void tsgl_spi_asyncSendData(tsgl_display* display, const uint8_t* data, size_t size) {
+    if (size == 0) return;
+    Transfer_info transfer_info = {
+        .data = data,
+        .size = size,
+        .interface = display->interface,
+        .dc_pin = display->dc,
+        .dc_state = true
+    };
+
+    while (_transmiting) vTaskDelay(1);
+    xTaskCreate(_transmitData, NULL, 4096 * 4, (void*)(&transfer_info), 1, NULL);
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {

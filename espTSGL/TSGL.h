@@ -15,3 +15,7 @@ typedef enum {
     tsgl_rgb888,
     tsgl_bgr888,
 } tsgl_colormode;
+
+typedef struct {
+
+} tsgl_driver;
