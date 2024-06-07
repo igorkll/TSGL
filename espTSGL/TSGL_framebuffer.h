@@ -13,6 +13,7 @@ typedef struct {
     uint8_t colorsize;
     uint8_t rotation;
     tsgl_colormode colormode;
+    tsgl_rawcolor black;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);

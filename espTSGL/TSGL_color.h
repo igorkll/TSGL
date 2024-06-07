@@ -2,7 +2,10 @@
 #include <TSGL.h>
 #include <stdint.h>
 
-typedef uint8_t tsgl_rawcolor[3];
+typedef struct {
+    uint8_t arr[3];
+} tsgl_rawcolor;
+
 typedef struct {
     uint8_t r;
     uint8_t g;

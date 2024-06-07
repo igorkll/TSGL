@@ -5,12 +5,6 @@
 #include <esp_heap_caps.h>
 #include <esp_err.h>
 
-static const tsgl_color _black = {
-    .r = 0,
-    .g = 0,
-    .b = 0
-};
-
 static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->rotation) {
         case 0:
@@ -52,6 +46,7 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
 
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
+    framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
     framebuffer->colorsize = tsgl_colormodeSizes[colormode];
     framebuffer->width = width;
     framebuffer->height = height;
@@ -107,11 +102,11 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 }
 
 tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    if (!_pointInFrame(framebuffer, x, y)) return _black;
+    if (!_pointInFrame(framebuffer, x, y)) return framebuffer->black;
     size_t index = _getBufferIndex(framebuffer, x, y);
     tsgl_rawcolor rawcolor;
     for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-        rawcolor[i] = framebuffer->buffer[index + i];
+        rawcolor.arr[i] = framebuffer->buffer[index + i];
     }
     return rawcolor;
 }
@@ -122,7 +117,7 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
     if (!_pointInFrame(framebuffer, x, y)) return;
     size_t index = _getBufferIndex(framebuffer, x, y);
     for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-        ramebuffer->buffer[index + i] = color[i];
+        framebuffer->buffer[index + i] = color.arr[i];
     }
 }
 

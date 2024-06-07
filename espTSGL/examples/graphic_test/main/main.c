@@ -26,13 +26,13 @@ float fmap(float value, float low, float high, float low_2, float high_2) {
 
 void hue() {
     for (tsgl_pos i = 0; i < framebuffer.width; i++) {
-        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255));
+        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_raw(tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255), COLORMODE));
     }
 }
 
 void colorBox(tsgl_pos y, tsgl_color color) {
     int boxSize = framebuffer.width / 32;
-    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, color);
+    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, tsgl_color_raw(color, COLORMODE));
 }
 
 void printFreeRamSize(const char* title) {
@@ -57,7 +57,7 @@ void app_main() {
     TickType_t oldFPSCheckTime = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
-        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), current);
+        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), tsgl_color_raw(current, COLORMODE));
         colorBox(0, TSGL_WHITE);
         colorBox(1, TSGL_ORANGE);
         colorBox(2, TSGL_MAGENTA);
