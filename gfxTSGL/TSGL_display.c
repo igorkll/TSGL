@@ -14,17 +14,23 @@
 #include <freertos/task.h>
 
 
-static void _doCommand(tsgl_display* display, const tsgl_driver_command command) {
+static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
+    printf("%i %i\n", command.cmd, command.datalen);
     tsgl_display_sendCommand(display, command.cmd);
     if (command.datalen > 0) {
         tsgl_display_sendData(display, command.data, command.datalen);
     }
-    vTaskDelay(command.delay / portTICK_PERIOD_MS);
+    if (command.delay > 0) {
+        vTaskDelay(command.delay / portTICK_PERIOD_MS);
+    } else if (command.delay < 0) {
+        return true;
+    }
+    return false;
 }
 
 static void _doCommands(tsgl_display* display, const tsgl_driver_command* list) {
     uint16_t cmd = 0;
-    while (list[cmd].delay != -1) _doCommand(display, list[cmd++]);
+    while (!_doCommand(display, list[cmd++]));
 }
 
 static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {

@@ -51,6 +51,8 @@ void app_main() {
     printFreeRamSize("after display init");
     hue();
 
+    tsgl_display_enable(&display);
+
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     uint8_t rotation = 0;
