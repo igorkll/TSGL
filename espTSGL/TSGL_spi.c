@@ -78,7 +78,7 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
         .tx_buffer = &cmd,
         .user = (void*)(&pre_transfer_info)
     };
-    ESP_ERROR_CHECK(spi_device_polling_transmit(*((spi_device_handle_t*)display->interface), &t));
+    ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
 }
 
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
@@ -92,7 +92,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .tx_buffer = data,
         .user = (void*)(&pre_transfer_info)
     };
-    ESP_ERROR_CHECK(spi_device_polling_transmit(*((spi_device_handle_t*)display->interface), &t));
+    ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
