@@ -22,8 +22,10 @@ typedef struct {
 typedef struct {
     size_t size;
     const uint8_t* data;
-    spi_device_handle_t* interface;
-    Pre_transfer_info* pre_transfer_info;
+    void* interface;
+    Pre_transfer_info pre_transfer_info;
+    int8_t dc_pin;
+    bool dc_state;
 } Transfer_info;
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
@@ -87,14 +89,18 @@ static void _transmitData(void* param) {
     Transfer_info* transfer_info = (Transfer_info*)param;
     uint16_t part = 4092;
     size_t offset = 0;
+    Pre_transfer_info pre_transfer_info = {
+        .pin = transfer_info->dc_pin,
+        .state = transfer_info->dc_state
+    };
     while (true) {
         spi_transaction_t t = {
             .length = umin(transfer_info->size - offset, part) * 8,
             .tx_buffer = transfer_info->data + offset,
-            .user = (void*)(&transfer_info->pre_transfer_info)
+            .user = (void*)(&pre_transfer_info)
         };
 
-        ESP_ERROR_CHECK(spi_device_transmit(*transfer_info->interface, &t));
+        ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)transfer_info->interface), &t));
         offset += part;
         if (offset >= transfer_info->size) {
             break;
@@ -122,20 +128,16 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 
 void tsgl_spi_asyncSendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size == 0) return;
-    Pre_transfer_info pre_transfer_info = {
-        .pin = display->dc,
-        .state = true
-    };
-
     Transfer_info transfer_info = {
         .data = data,
         .size = size,
-        .interface = (spi_device_handle_t*)display->interface,
-        .pre_transfer_info = &pre_transfer_info
+        .interface = display->interface,
+        .dc_pin = display->dc,
+        .dc_state = true
     };
 
     while (_transmiting) vTaskDelay(1);
-    xTaskCreate(_transmitData, NULL, 4096, (void*)(&transfer_info), 1, NULL);
+    xTaskCreate(_transmitData, NULL, 4096 * 4, (void*)(&transfer_info), 1, NULL);
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
