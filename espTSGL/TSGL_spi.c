@@ -111,24 +111,6 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .state = true
     };
 
-    Transfer_info transfer_info = {
-        .data = data,
-        .size = size,
-        .interface = (spi_device_handle_t*)display->interface,
-        .pre_transfer_info = &pre_transfer_info
-    };
-
-    while (_transmiting) vTaskDelay(1);
-    xTaskCreate(_transmitData, NULL, 4096, (void*)(&transfer_info), 1, NULL);
-}
-
-void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size == 0) return;
-    Pre_transfer_info pre_transfer_info = {
-        .pin = display->dc,
-        .state = true
-    };
-
     spi_transaction_t t = {
         .length = size * 8,
         .tx_buffer = data,
