@@ -1,5 +1,16 @@
 #include "../TSGL.h"
 
+static tsgl_driver_list _st7789_rgb565_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
+    tsgl_driver_list list = {
+        .list = {
+            {0x2A, {x >> 8, x & 0xff, x2 >> 8, x2 & 0xff}, 4, 0},
+            {0x2B, {y >> 8, y & 0xff, y2 >> 8, y2 & 0xff}, 4, 0},
+            {0x2C, {}, 0, -1}
+        }
+    };
+    return list;
+}
+
 static const tsgl_driver st7789_rgb565 = {
     .init = {
         /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
@@ -28,17 +39,14 @@ static const tsgl_driver st7789_rgb565 = {
         {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
         /* Negative Voltage Gamma Control */
         {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
-        /* selecting a rendering area */
-        {0x2A, {0, 0, (320)>>8, (320)&0xff}, 4},
-        {0x2B, {0>>8, 0&0xff, 320>>8, 320&0xff}, 4},
-        {0x2C, {}, 0},
         /* Sleep Out */
         {0x11, {0}, 0, -1}
     },
     .enable = {
-        {0x29, {0}, 0, 0}
+        {0x29, {0}, 0, -1}
     },
     .disable = {
-        {0x28, {0}, 0, 0}
-    }
+        {0x28, {0}, 0, -1}
+    },
+    .select = _st7789_rgb565_select
 };

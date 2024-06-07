@@ -67,9 +67,23 @@ static const lcd_init_cmd_t st_init_cmds[]={
 
 
 
+static void _doCommand(tsgl_display* display, tsgl_driver_command* command) {
+    tsgl_spi_sendCommand(display, command->cmd);
+    if (command->databytes > 0) tsgl_spi_sendData(display, command->data, command->databytes);
+    vTaskDelay(command->delay / portTICK_PERIOD_MS);
+}
 
+static void _doCommands(tsgl_display* display, tsgl_driver_command** list) {
+    uint16_t cmd = 0;
+    while (list[cmd][3] != -1) {
+        tsgl_spi_sendCommand(display, list[cmd][0]);
+        tsgl_spi_sendData(display, list[cmd][1], list[cmd][2]);
+        vTaskDelay(list[cmd][3] / portTICK_PERIOD_MS);
+        cmd++;
+    }
+}
 
-esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
         .mode = 0,
