@@ -104,6 +104,10 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color);
 #define DISPLAY_DC  21
 #define DISPLAY_CS  22
 #define DISPLAY_RST 18
+//#define CUSTOM_SPI_GPIO //when using custom GPIO pins instead of standard ones, the frequency cannot be higher than 26 megahertz (20000000 recommended)
+//#define CUSTOM_MISO x
+//#define CUSTOM_MOSI x
+//#define CUSTOM_CLK x
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -111,7 +115,12 @@ tsgl_display display;
 void app_main() {
     ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
-    ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, DISPLAY_DC, DISPLAY_CS, DISPLAY_RST));
+    #ifdef CUSTOM_SPI_GPIO
+        ESP_ERROR_CHECK(tsgl_spi_initManual(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, CUSTOM_MISO, CUSTOM_MOSI, CUSTOM_CLK));
+    #else
+        ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, DISPLAY_DC, DISPLAY_CS, DISPLAY_RST));
+    #endif
+    
     tsgl_framebuffer_rotate(&framebuffer, 3); //making the screen vertical
     tsgl_pos margin = 32;
     while (true) {
