@@ -114,11 +114,11 @@ tsgl_display display;
 
 void app_main() {
     #ifdef CUSTOM_SPI_GPIO
-        ESP_ERROR_CHECK(tsgl_spi_initManual(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA, CUSTOM_MISO, CUSTOM_MOSI, CUSTOM_CLK));
+        ESP_ERROR_CHECK(tsgl_spi_initManual(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, CUSTOM_MISO, CUSTOM_MOSI, CUSTOM_CLK));
     #else
-        ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
+        ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
     #endif
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, 0));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, DISPLAY_DC, DISPLAY_CS, DISPLAY_RST));
     
     tsgl_framebuffer_rotate(&framebuffer, 3); //making the screen vertical

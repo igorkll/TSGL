@@ -58,22 +58,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     if (caps == 0) {
         framebuffer->buffer = malloc(framebuffer->buffersize);
     } else {
-        switch (caps) {
-            case TSGL_DMA:
-                framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA);
-                if (framebuffer->buffer == NULL) {
-                    framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, MALLOC_CAP_DMA);
-                }
-                break;
-
-            case TSGL_NO_DMA:
-                framebuffer->buffer = malloc(framebuffer->buffersize);
-                break;
-            
-            default:
-                framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
-                break;
-        }
+        framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
     }
     if (framebuffer->buffer == NULL) {
         return ESP_FAIL;

@@ -121,7 +121,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_pos width, tsgl_pos heigh
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_spi_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+            tsgl_spi_asyncSendData(display, framebuffer->buffer, framebuffer->buffersize);
             break;
     }
 }

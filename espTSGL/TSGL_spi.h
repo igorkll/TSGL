@@ -5,9 +5,6 @@
 #include <esp_err.h>
 #include "TSGL_display.h"
 
-#define TSGL_DMA    -7
-#define TSGL_NO_DMA -8
-
 // recommended SPI pins to get the maximum frequency, if you change at least one pin, the maximum frequency will drop to 20 megahertz
 #ifdef CONFIG_IDF_TARGET_ESP32
     #define TSGL_HOST1      SPI2_HOST
@@ -33,8 +30,9 @@
 
 #endif
 
-esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host, int8_t dma); //spi_common_dma_t dma
-esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t dma, int8_t miso, int8_t mosi, int8_t clk);
+esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host); //spi_common_dma_t dma
+esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t miso, int8_t mosi, int8_t clk);
 void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd);
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size);
+void tsgl_spi_asyncSendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t);

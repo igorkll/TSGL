@@ -13,7 +13,7 @@
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_rgb565_be
+#define COLORMODE  tsgl_rgb888
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -43,8 +43,8 @@ void printFreeRamSize(const char* title) {
 
 void app_main() {
     printFreeRamSize("before display init");
-    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
+    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
     hue();
