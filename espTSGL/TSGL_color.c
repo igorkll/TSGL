@@ -100,3 +100,100 @@ tsgl_color tsgl_color_fromHex(uint32_t color) {
     };
     return result;
 }
+
+tsgl_rawColor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
+    switch (colormode) {
+        case tsgl_rgb565_le : {
+            uint16_t color565 = tsgl_color_to565(color);
+            tsgl_rawColor rawcolor;
+            rawcolor[0] = color565 % 256;
+            rawcolor[1] = color565 >> 8;
+            return rawcolor;
+        }
+
+        case tsgl_rgb565_be : {
+            uint16_t color565 = tsgl_color_to565(color);
+            framebuffer->buffer[index++] = color565 >> 8;
+            framebuffer->buffer[index] = color565 % 256;
+            break;
+        }
+
+        case tsgl_bgr565_le : {
+            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
+            framebuffer->buffer[index++] = color565 % 256;
+            framebuffer->buffer[index] = color565 >> 8;
+            break;
+        }
+
+        case tsgl_bgr565_be : {
+            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
+            framebuffer->buffer[index++] = color565 >> 8;
+            framebuffer->buffer[index] = color565 % 256;
+            break;
+        }
+
+        case tsgl_rgb888 : {
+            framebuffer->buffer[index++] = color.r;
+            framebuffer->buffer[index++] = color.g;
+            framebuffer->buffer[index] = color.b;
+            break;
+        }
+
+        case tsgl_bgr888 : {
+            framebuffer->buffer[index++] = color.b;
+            framebuffer->buffer[index++] = color.g;
+            framebuffer->buffer[index] = color.r;
+            break;
+        }
+    }
+}
+
+tsgl_color tsgl_color_uraw(tsgl_rawColor rawcolor, tsgl_colormode colormode) {
+    switch (colormode) {
+        case tsgl_rgb565_le : {
+            return tsgl_color_from565(rawcolor[0] + (rawcolor[1] << 8));
+        }
+
+        case tsgl_rgb565_be : {
+            return tsgl_color_from565((rawcolor[0] << 8) + rawcolor[1]);
+        }
+
+        case tsgl_bgr565_le : {
+            tsgl_color color = tsgl_color_from565(rawcolor[0] + (rawcolor[1] << 8));
+            uint8_t t = color.b;
+            color.b = color.r;
+            color.r = t;
+            return color;
+        }
+
+        case tsgl_bgr565_be : {
+            tsgl_color color = tsgl_color_from565((rawcolor[0] << 8) + rawcolor[1]);
+            uint8_t t = color.b;
+            color.b = color.r;
+            color.r = t;
+            return color;
+        }
+
+        case tsgl_rgb888 : {
+            tsgl_color color = {
+                .r = rawcolor[0],
+                .g = rawcolor[1],
+                .b = rawcolor[2]
+            };
+            return color;
+        }
+
+        case tsgl_bgr888 : {
+            tsgl_color color = {
+                .r = rawcolor[2],
+                .g = rawcolor[1],
+                .b = rawcolor[0]
+            };
+            return color;
+        }
+
+        default : {
+            return TSGL_BLACK;
+        }
+    }
+}

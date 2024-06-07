@@ -13,7 +13,7 @@
 
 #define WIDTH      320
 #define HEIGHT     240
-#define COLORMODE  tsgl_framebuffer_rgb565_be
+#define COLORMODE  tsgl_rgb565_be
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -43,7 +43,7 @@ void printFreeRamSize(const char* title) {
 
 void app_main() {
     printFreeRamSize("before display init");
-    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_framebuffer_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
+    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
@@ -79,7 +79,7 @@ void app_main() {
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
-            tsgl_framebuffer_rotate(&framebuffer, rotation); //set rotation
+            tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
 
             step = 0;
             hue();

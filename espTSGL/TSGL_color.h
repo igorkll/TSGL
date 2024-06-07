@@ -1,4 +1,5 @@
 #pragma once
+#include <TSGL.h>
 #include <stdint.h>
 
 typedef struct {
@@ -6,16 +7,6 @@ typedef struct {
     uint8_t g;
     uint8_t b;
 } tsgl_color;
-
-tsgl_color tsgl_color_pack(uint8_t r, uint8_t g, uint8_t b);
-tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2);
-tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value);
-
-uint16_t tsgl_color_to565(tsgl_color color);
-tsgl_color tsgl_color_from565(uint16_t color);
-
-uint32_t tsgl_color_toHex(tsgl_color color);
-tsgl_color tsgl_color_fromHex(uint32_t color);
 
 #define TSGL_WHITE tsgl_color_fromHex(0xffffff)
 #define TSGL_ORANGE tsgl_color_fromHex(0xF2B233)
@@ -33,3 +24,16 @@ tsgl_color tsgl_color_fromHex(uint32_t color);
 #define TSGL_GREEN tsgl_color_fromHex(0x57A64E)
 #define TSGL_RED tsgl_color_fromHex(0xCC4C4C)
 #define TSGL_BLACK tsgl_color_fromHex(0x191919)
+
+tsgl_color tsgl_color_pack(uint8_t r, uint8_t g, uint8_t b);
+tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2);
+tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value);
+
+uint16_t tsgl_color_to565(tsgl_color color);
+tsgl_color tsgl_color_from565(uint16_t color);
+
+uint32_t tsgl_color_toHex(tsgl_color color);
+tsgl_color tsgl_color_fromHex(uint32_t color);
+
+tsgl_rawColor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
+tsgl_color tsgl_color_uraw(tsgl_rawColor color, tsgl_colormode colormode);
