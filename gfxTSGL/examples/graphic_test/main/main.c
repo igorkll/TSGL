@@ -8,18 +8,18 @@
 #include <freertos/task.h>
 #include <esp_heap_caps.h>
 
-#include <TSGL_drivers/st7789_rgb565.h>
+#include <TSGL_drivers/st7789.h>
 
 #define WIDTH     320
 #define HEIGHT    240
 #define DRIVER    st7789_rgb565
-#define COLORMODE DRIVER.colormode
 
 
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
 
+#define COLORMODE DRIVER.colormode
 #define umax(a,b) (((a) > (b)) ? (a) : (b))
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
 

@@ -4,6 +4,9 @@
 #include "TSGL_spi.h"
 #include <esp_heap_caps.h>
 #include <esp_err.h>
+#include <esp_log.h>
+
+const char* TAG = "TSGL_framebuffer.c";
 
 static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->rotation) {
@@ -59,10 +62,16 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         framebuffer->buffer = malloc(framebuffer->buffersize);
     } else {
         framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
+        if (framebuffer->buffer == NULL) {
+            ESP_LOGW(TAG, "failed to allocate framebuffer with caps. attempt to allocate without caps");
+            framebuffer->buffer = malloc(framebuffer->buffersize);
+        }
     }
     if (framebuffer->buffer == NULL) {
+        ESP_LOGE(TAG, "failed to allocate framebuffer: %ix%ix%i", width, height, framebuffer->colorsize);
         return ESP_FAIL;
     } else {
+        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %ix%ix%i", width, height, framebuffer->colorsize);
         tsgl_framebuffer_clear(framebuffer, framebuffer->black);
         return ESP_OK;
     }
