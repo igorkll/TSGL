@@ -14,73 +14,17 @@
 #include <freertos/task.h>
 
 
-
-
-typedef struct {
-    uint8_t cmd;
-    uint8_t data[16];
-    uint8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
-} lcd_init_cmd_t;
-
-static const lcd_init_cmd_t st_init_cmds[]={
-    /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-    {0x36, {(1<<5)|(1<<6)}, 1},
-    /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-    {0x3A, {0x05}, 1}, //0x05 / 0x06
-    /* Porch Setting */
-    {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-    /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
-    {0xB7, {0x45}, 1},
-    /* VCOM Setting, VCOM=1.175V */
-    {0xBB, {0x2B}, 1},
-    /* LCM Control, XOR: BGR, MX, MH */
-    {0xC0, {0x2C}, 1},
-    /* VDV and VRH Command Enable, enable=1 */
-    {0xC2, {0x01, 0xff}, 2},
-    /* VRH Set, Vap=4.4+... */
-    {0xC3, {0x11}, 1},
-    /* VDV Set, VDV=0 */
-    {0xC4, {0x20}, 1},
-    /* Frame Rate Control, 60Hz, inversion=0 */
-    {0xC6, {0x0f}, 1},
-    /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */
-    {0xD0, {0xA4, 0xA1}, 1},
-    /* Positive Voltage Gamma Control */
-    {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-    /* Negative Voltage Gamma Control */
-    {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
-    /* Sleep Out */
-    {0x11, {0}, 0x80},
-    /* Display On */
-    {0x29, {0}, 0x80},
-    {0x2A, {0, 0, (320)>>8, (320)&0xff}, 4},
-    {0x2B, {0>>8, 0&0xff, 320>>8, 320&0xff}, 4},
-    {0x2C, {}, 0},
-    {0, {0}, 0xff}
-};
-
-
-
-
-
-
-
-
-
 static void _doCommand(tsgl_display* display, tsgl_driver_command* command) {
-    tsgl_spi_sendCommand(display, command->cmd);
-    if (command->databytes > 0) tsgl_spi_sendData(display, command->data, command->databytes);
+    tsgl_display_sendCommand(display, command->cmd);
+    if (command->databytes > 0) {
+        tsgl_display_sendData(display, command->data, command->databytes);
+    }
     vTaskDelay(command->delay / portTICK_PERIOD_MS);
 }
 
 static void _doCommands(tsgl_display* display, tsgl_driver_command** list) {
     uint16_t cmd = 0;
-    while (list[cmd][3] != -1) {
-        tsgl_spi_sendCommand(display, list[cmd][0]);
-        tsgl_spi_sendData(display, list[cmd][1], list[cmd][2]);
-        vTaskDelay(list[cmd][3] / portTICK_PERIOD_MS);
-        cmd++;
-    }
+    while (list[cmd++]->delay != -1) _doCommand(display, list[cmd++]);
 }
 
 esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
@@ -117,27 +61,35 @@ esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos 
         }
 
         // init display
-        uint16_t cmd = 0;
-        while (st_init_cmds[cmd].databytes!=0xff) {
-            tsgl_spi_sendCommand(display, st_init_cmds[cmd].cmd);
-            tsgl_spi_sendData(display, st_init_cmds[cmd].data, st_init_cmds[cmd].databytes&0x1F);
-            if (st_init_cmds[cmd].databytes&0x80) {
-                vTaskDelay(100 / portTICK_PERIOD_MS);
-            }
-            cmd++;
-        }
+        _doCommands(display, driver->init);
     } else {
         free(display->interface);
     }
     return result;
 }
 
-void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
+void tsgl_display_enable(tsgl_display* display) {
+
+}
+
+void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_spi_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+            tsgl_spi_sendCommand(display, command);
             break;
     }
+}
+
+void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
+    switch (display->interfaceType) {
+        case tsgl_display_interface_spi:
+            tsgl_spi_sendData(display, data, size);
+            break;
+    }
+}
+
+void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
+    tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
 }
 
 void tsgl_display_free(tsgl_display* display) {
