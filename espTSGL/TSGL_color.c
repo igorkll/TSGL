@@ -101,54 +101,55 @@ tsgl_color tsgl_color_fromHex(uint32_t color) {
     return result;
 }
 
-tsgl_rawColor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
+tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
+    tsgl_rawcolor rawcolor;
     switch (colormode) {
         case tsgl_rgb565_le : {
             uint16_t color565 = tsgl_color_to565(color);
-            tsgl_rawColor rawcolor;
             rawcolor[0] = color565 % 256;
             rawcolor[1] = color565 >> 8;
-            return rawcolor;
+            break;
         }
 
         case tsgl_rgb565_be : {
             uint16_t color565 = tsgl_color_to565(color);
-            framebuffer->buffer[index++] = color565 >> 8;
-            framebuffer->buffer[index] = color565 % 256;
+            rawcolor[0] = color565 >> 8;
+            rawcolor[1] = color565 % 256;
             break;
         }
 
         case tsgl_bgr565_le : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            framebuffer->buffer[index++] = color565 % 256;
-            framebuffer->buffer[index] = color565 >> 8;
+            rawcolor[0] = color565 % 256;
+            rawcolor[1] = color565 >> 8;
             break;
         }
 
         case tsgl_bgr565_be : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            framebuffer->buffer[index++] = color565 >> 8;
-            framebuffer->buffer[index] = color565 % 256;
+            rawcolor[0] = color565 >> 8;
+            rawcolor[1] = color565 % 256;
             break;
         }
 
         case tsgl_rgb888 : {
-            framebuffer->buffer[index++] = color.r;
-            framebuffer->buffer[index++] = color.g;
-            framebuffer->buffer[index] = color.b;
+            rawcolor[0] = color.r;
+            rawcolor[1] = color.g;
+            rawcolor[2] = color.b;
             break;
         }
 
         case tsgl_bgr888 : {
-            framebuffer->buffer[index++] = color.b;
-            framebuffer->buffer[index++] = color.g;
-            framebuffer->buffer[index] = color.r;
+            rawcolor[0] = color.b;
+            rawcolor[1] = color.g;
+            rawcolor[2] = color.r;
             break;
         }
     }
+    return rawcolor;
 }
 
-tsgl_color tsgl_color_uraw(tsgl_rawColor rawcolor, tsgl_colormode colormode) {
+tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     switch (colormode) {
         case tsgl_rgb565_le : {
             return tsgl_color_from565(rawcolor[0] + (rawcolor[1] << 8));

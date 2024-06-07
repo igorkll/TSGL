@@ -2,6 +2,7 @@
 #include <TSGL.h>
 #include <stdint.h>
 
+typedef uint8_t tsgl_rawcolor[3];
 typedef struct {
     uint8_t r;
     uint8_t g;
@@ -35,5 +36,5 @@ tsgl_color tsgl_color_from565(uint16_t color);
 uint32_t tsgl_color_toHex(tsgl_color color);
 tsgl_color tsgl_color_fromHex(uint32_t color);
 
-tsgl_rawColor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
-tsgl_color tsgl_color_uraw(tsgl_rawColor color, tsgl_colormode colormode);
+tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
+tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
