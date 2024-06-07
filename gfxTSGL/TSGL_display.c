@@ -14,20 +14,24 @@
 #include <freertos/task.h>
 
 
-static void _doCommand(tsgl_display* display, tsgl_driver_command* command) {
-    tsgl_display_sendCommand(display, command->cmd);
-    if (command->databytes > 0) {
-        tsgl_display_sendData(display, command->data, command->databytes);
+static void _doCommand(tsgl_display* display, const tsgl_driver_command command) {
+    tsgl_display_sendCommand(display, command.cmd);
+    if (command.datalen > 0) {
+        tsgl_display_sendData(display, command.data, command.datalen);
     }
-    vTaskDelay(command->delay / portTICK_PERIOD_MS);
+    vTaskDelay(command.delay / portTICK_PERIOD_MS);
 }
 
-static void _doCommands(tsgl_display* display, tsgl_driver_command** list) {
+static void _doCommands(tsgl_display* display, const tsgl_driver_command* list) {
     uint16_t cmd = 0;
-    while (list[cmd++]->delay != -1) _doCommand(display, list[cmd++]);
+    while (list[cmd].delay != -1) _doCommand(display, list[cmd++]);
 }
 
-esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
+    _doCommands(display, list.list);
+}
+
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
         .mode = 0,
@@ -41,6 +45,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos 
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
+    display->driver = driver;
 
     esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
     if (result == ESP_OK) {
@@ -62,14 +67,19 @@ esp_err_t tsgl_display_spi(tsgl_display* display, tsgl_driver* driver, tsgl_pos 
 
         // init display
         _doCommands(display, driver->init);
+        tsgl_display_select(display, 0, 0, width, height);
     } else {
         free(display->interface);
     }
     return result;
 }
 
-void tsgl_display_enable(tsgl_display* display) {
+void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
+}
 
+void tsgl_display_enable(tsgl_display* display) {
+    _doCommands(display, display->driver->enable);
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
@@ -90,6 +100,10 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+}
+
+void tsgl_display_disable(tsgl_display* display) {
+    _doCommands(display, display->driver->disable);
 }
 
 void tsgl_display_free(tsgl_display* display) {

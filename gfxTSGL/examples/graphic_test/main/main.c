@@ -8,6 +8,8 @@
 #include <freertos/task.h>
 #include <esp_heap_caps.h>
 
+#include <TSGL_drivers/st7789_rgb565.h>
+
 #define umax(a,b) (((a) > (b)) ? (a) : (b))
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
 
@@ -45,7 +47,7 @@ void app_main() {
     printFreeRamSize("before display init");
     ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
-    ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
+    ESP_ERROR_CHECK(tsgl_display_spi(&display, &st7789_rgb565, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
     hue();
 

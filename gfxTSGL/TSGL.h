@@ -19,7 +19,7 @@ typedef enum {
 typedef struct {
     uint8_t cmd;
     uint8_t data[16];
-    uint8_t databytes;
+    uint8_t datalen;
     int16_t delay; //-1 = end of commands
 } tsgl_driver_command;
 
