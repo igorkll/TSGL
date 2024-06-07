@@ -6,7 +6,7 @@
 #include <esp_err.h>
 #include <esp_log.h>
 
-const char* TAG = "TSGL_framebuffer.c";
+const char* TAG = "TSGL_framebuffer";
 
 static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->rotation) {
