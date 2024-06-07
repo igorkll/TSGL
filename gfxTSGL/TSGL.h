@@ -17,5 +17,14 @@ typedef enum {
 } tsgl_colormode;
 
 typedef struct {
+    uint8_t cmd;
+    uint8_t data[16];
+    uint8_t databytes;
+    int16_t delay; //-1 = end of commands
+} tsgl_driver_command;
 
+typedef struct {
+    tsgl_driver_command init[64];
+    tsgl_driver_command enable[8];
+    tsgl_driver_command disable[8];
 } tsgl_driver;
