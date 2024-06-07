@@ -40,13 +40,17 @@ static const tsgl_driver st7789_rgb565 = {
         /* Negative Voltage Gamma Control */
         {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
         /* Sleep Out */
-        {0x11, {0}, 0, -1}
+        {0x11, {0}, 0, 100},
+        /* Display On */
+        {0x29, {0}, 0, -1}
     },
     .enable = {
+        {0x11, {0}, 0, 100},
         {0x29, {0}, 0, -1}
     },
     .disable = {
-        {0x28, {0}, 0, -1}
+        {0x28, {0}, 0, 100},
+        {0x10, {0}, 0, -1}
     },
     .select = _st7789_rgb565_select
 };

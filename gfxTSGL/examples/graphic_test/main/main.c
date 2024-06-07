@@ -51,8 +51,6 @@ void app_main() {
     printFreeRamSize("after display init");
     hue();
 
-    tsgl_display_enable(&display);
-
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
     uint8_t rotation = 0;
@@ -84,6 +82,8 @@ void app_main() {
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
             tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
+            if (rotation == 1) tsgl_display_enable(&display);
+            if (rotation == 3) tsgl_display_disable(&display);
 
             step = 0;
             hue();

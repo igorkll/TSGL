@@ -15,7 +15,6 @@
 
 
 static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
-    printf("%i %i\n", command.cmd, command.datalen);
     tsgl_display_sendCommand(display, command.cmd);
     if (command.datalen > 0) {
         tsgl_display_sendData(display, command.data, command.datalen);
