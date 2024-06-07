@@ -62,14 +62,14 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
 typedef struct {
     uint8_t* buffer;
     size_t buffersize;
-    tsgl_pos width;
+    tsgl_pos width; //the width and height fields are swapped when calling tsgl_framebuffer_rotate with parameter 1 or 3
     tsgl_pos height;
     tsgl_pos defaultWidth;
     tsgl_pos defaultHeight;
     uint8_t colorsize;
     uint8_t rotation; //read-only! to change the rotation, use a special method
     tsgl_colormode colormode;
-    tsgl_rawcolor black;
+    tsgl_rawcolor black; //the black color that is used inside the framebuffer, however, you can use it for the same framebuffer since it is converted specifically for it
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
@@ -113,19 +113,20 @@ tsgl_framebuffer framebuffer;
 tsgl_display display;
 
 void app_main() {
-    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
     #ifdef CUSTOM_SPI_GPIO
-        ESP_ERROR_CHECK(tsgl_spi_initManual(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, CUSTOM_MISO, CUSTOM_MOSI, CUSTOM_CLK));
+        ESP_ERROR_CHECK(tsgl_spi_initManual(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA, CUSTOM_MISO, CUSTOM_MOSI, CUSTOM_CLK));
     #else
-        ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, DISPLAY_DC, DISPLAY_CS, DISPLAY_RST));
+        ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1, TSGL_DMA));
     #endif
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, TSGL_DMA));
+    ESP_ERROR_CHECK(tsgl_display_spi(&display, WIDTH, HEIGHT, TSGL_HOST1, FREQUENCY, DISPLAY_DC, DISPLAY_CS, DISPLAY_RST));
     
     tsgl_framebuffer_rotate(&framebuffer, 3); //making the screen vertical
     tsgl_pos margin = 32;
+    uint8_t hue = 0;
     while (true) {
-        tsgl_framebuffer_clear(&framebuffer, framebuffer->black);
-        tsgl_framebuffer_fill(&framebuffer, margin, margin, framebuffer.width - (margin * 2), framebuffer.height - (margin * 2), tsgl_color_raw(current, COLORMODE));
+        tsgl_framebuffer_clear(&framebuffer, framebuffer.black);
+        tsgl_framebuffer_fill(&framebuffer, margin, margin, framebuffer.width - (margin * 2), framebuffer.height - (margin * 2), tsgl_color_raw(tsgl_color_hsv(hue++, 255, 255), COLORMODE));
         tsgl_display_send(&display, &framebuffer);
     }
 
