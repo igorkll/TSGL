@@ -17,6 +17,7 @@ enum {
 ```
 
 # TSGL_color.h
+* all color constants have the tsgl_color data type and require conversion to be sent to the screen or written to the framebuffer
 * TSGL_WHITE - 0xffffff
 * TSGL_ORANGE - 0xF2B233
 * TSGL_MAGENTA - 0xE57FD8
@@ -54,4 +55,30 @@ tsgl_color tsgl_color_fromHex(uint32_t color);
 
 tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
 tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
+```
+
+# TSGL_framebuffer.h
+```c
+typedef struct {
+    uint8_t* buffer;
+    size_t buffersize;
+    tsgl_pos width;
+    tsgl_pos height;
+    tsgl_pos defaultWidth;
+    tsgl_pos defaultHeight;
+    uint8_t colorsize;
+    uint8_t rotation; //read-only! to change the rotation, use a special method
+    tsgl_colormode colormode;
+    tsgl_rawcolor black;
+} tsgl_framebuffer;
+
+esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
+void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
+void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
+tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y);
+
+void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
+void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
+void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
+void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color);
 ```
