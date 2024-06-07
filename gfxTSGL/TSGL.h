@@ -28,6 +28,7 @@ typedef struct {
 } tsgl_driver_list;
 
 typedef struct {
+    tsgl_colormode colormode;
     tsgl_driver_command init[64];
     tsgl_driver_command enable[8];
     tsgl_driver_command disable[8];

@@ -13,9 +13,9 @@
 #define umax(a,b) (((a) > (b)) ? (a) : (b))
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
 
-#define WIDTH      320
-#define HEIGHT     240
-#define COLORMODE  tsgl_rgb565_be
+#define WIDTH  320
+#define HEIGHT 240
+#define DRIVER st7789_rgb565
 
 tsgl_framebuffer framebuffer;
 tsgl_display display;
@@ -28,13 +28,13 @@ float fmap(float value, float low, float high, float low_2, float high_2) {
 
 void hue() {
     for (tsgl_pos i = 0; i < framebuffer.width; i++) {
-        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_raw(tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255), COLORMODE));
+        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_raw(tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255), DRIVER.colormode));
     }
 }
 
 void colorBox(tsgl_pos y, tsgl_color color) {
     int boxSize = framebuffer.width / 32;
-    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, tsgl_color_raw(color, COLORMODE));
+    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, tsgl_color_raw(color, DRIVER.colormode));
 }
 
 void printFreeRamSize(const char* title) {
@@ -45,11 +45,18 @@ void printFreeRamSize(const char* title) {
 
 void app_main() {
     printFreeRamSize("before display init");
-    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
-    ESP_ERROR_CHECK(tsgl_display_spi(&display, &st7789_rgb565, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
+    ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[DRIVER.colormode], TSGL_HOST1));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, DRIVER.colormode, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
     hue();
+
+    tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, DRIVER.colormode));
+    vTaskDelay(10);
+    tsgl_display_clear(&display, tsgl_color_raw(TSGL_GREEN, DRIVER.colormode));
+    vTaskDelay(10);
+    tsgl_display_clear(&display, tsgl_color_raw(TSGL_CYAN, DRIVER.colormode));
+    vTaskDelay(10);
 
     uint16_t step = 0;
     uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
@@ -59,7 +66,7 @@ void app_main() {
     TickType_t oldFPSCheckTime = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
-        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), tsgl_color_raw(current, COLORMODE));
+        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), tsgl_color_raw(current, DRIVER.colormode));
         colorBox(0, TSGL_WHITE);
         colorBox(1, TSGL_ORANGE);
         colorBox(2, TSGL_MAGENTA);
@@ -82,8 +89,6 @@ void app_main() {
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
             tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
-            if (rotation == 1) tsgl_display_enable(&display);
-            if (rotation == 3) tsgl_display_disable(&display);
 
             step = 0;
             hue();

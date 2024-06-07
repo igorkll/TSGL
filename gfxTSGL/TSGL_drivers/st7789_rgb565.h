@@ -12,6 +12,7 @@ static tsgl_driver_list _st7789_rgb565_select(tsgl_pos x, tsgl_pos y, tsgl_pos x
 }
 
 static const tsgl_driver st7789_rgb565 = {
+    .colormode = tsgl_rgb565_be,
     .init = {
         /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
         {0x36, {(1<<5)|(1<<6)}, 1},
