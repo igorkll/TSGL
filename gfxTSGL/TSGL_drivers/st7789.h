@@ -1,4 +1,5 @@
 #include "../TSGL.h"
+#include <stdint.h>
 
 static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
     tsgl_driver_list list = {
@@ -9,6 +10,46 @@ static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl
         }
     };
     return list;
+}
+
+static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
+    switch (rotation) {
+        default : {
+            tsgl_driver_list list = {
+                .list = {
+                    {0x36, {(1<<5) | (1<<6)}, 1, -1}
+                }
+            };
+            return list;
+        }
+
+        case 1 : {
+            tsgl_driver_list list = {
+                .list = {
+                    {0x36, {(1<<5) | (1<<6) | (1<<2)}, 1, -1}
+                }
+            };
+            return list;
+        }
+
+        case 2 : {
+            tsgl_driver_list list = {
+                .list = {
+                    {0x36, {(1<<5) | (1<<6) | (1<<2) | (1<<4)}, 1, -1}
+                }
+            };
+            return list;
+        }
+
+        case 3 : {
+            tsgl_driver_list list = {
+                .list = {
+                    {0x36, {(1<<5) | (1<<6) | (1<<4)}, 1, -1}
+                }
+            };
+            return list;
+        }
+    }
 }
 
 static const tsgl_driver st7789_rgb565 = {
@@ -53,7 +94,8 @@ static const tsgl_driver st7789_rgb565 = {
         {0x28, {0}, 0, 100},
         {0x10, {0}, 0, -1}
     },
-    .select = _st7789_select
+    .select = _st7789_select,
+    .rotate = _st7789_rotate
 };
 
 static const tsgl_driver st7789_rgb888 = {
@@ -98,5 +140,6 @@ static const tsgl_driver st7789_rgb888 = {
         {0x28, {0}, 0, 100},
         {0x10, {0}, 0, -1}
     },
-    .select = _st7789_select
+    .select = _st7789_select,
+    .rotate = _st7789_rotate
 };

@@ -13,7 +13,7 @@
 #define WIDTH     320
 #define HEIGHT    240
 #define DRIVER    st7789_rgb565
-#define WITHOUT_FRAMEBUFFER
+//#define WITHOUT_FRAMEBUFFER
 
 
 #ifdef WITHOUT_FRAMEBUFFER
@@ -72,6 +72,8 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
 
+    tsgl_display_rotate(&display, 2);
+
     // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -80,7 +82,6 @@ void app_main() {
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_CYAN, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    _rotate(3);
     hue();
     uint16_t step = 0;
     uint16_t stepMax = umin(currentWidth, currentHeight) / 2;
