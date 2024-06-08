@@ -68,10 +68,10 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         }
     }
     if (framebuffer->buffer == NULL) {
-        ESP_LOGE(TAG, "failed to allocate framebuffer: %ix%ix%i", width, height, framebuffer->colorsize);
+        ESP_LOGE(TAG, "failed to allocate framebuffer: %ix%ix%f", width, height, framebuffer->colorsize);
         return ESP_FAIL;
     } else {
-        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %ix%ix%i", width, height, framebuffer->colorsize);
+        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.1f", width, height, framebuffer->colorsize);
         return ESP_OK;
     }
 }
@@ -102,9 +102,25 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
     size_t index = _getBufferIndex(framebuffer, x, y);
-    for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-        framebuffer->buffer[index + i] = color.arr[i];
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            if (index & 1 == 0) {
+                framebuffer->buffer[index] = (color.arr[1] << 4) || color.arr[2];
+                framebuffer->buffer[index+1] = color.arr[3] << 4;
+            } else {
+                framebuffer->buffer[index] = (color.arr[1] << 4) || color.arr[2];
+                framebuffer->buffer[index+1] = color.arr[3] << 4;
+            }
+            break;
+        
+        default:
+            for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+                framebuffer->buffer[index + i] = color.arr[i];
+            }
+            break;
     }
+    
 }
 
 void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
