@@ -112,8 +112,9 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
             size_t index = rawindex * framebuffer->colorsize;
             if ((rawindex & 1) == 0) {
                 framebuffer->buffer[index] = (color.arr[1] << 4) | color.arr[2];
-                framebuffer->buffer[index+1] = color.arr[3] << 4;
+                framebuffer->buffer[index+1] = (color.arr[3] << 4) | ((framebuffer->buffer[index+1] << 4) >> 4);
             } else {
+                framebuffer->buffer[index] = (framebuffer->buffer[index] >> 4) << 4;
                 framebuffer->buffer[index] |= color.arr[1];
                 framebuffer->buffer[index+1] = (color.arr[2] << 4) | color.arr[3];
             }
