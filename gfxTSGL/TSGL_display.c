@@ -73,6 +73,8 @@ static void _selectLast(tsgl_display* display) {
 }
 
 
+
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
@@ -173,6 +175,11 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
             tsgl_spi_sendData(display, data, size);
             break;
     }
+}
+
+void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t command, const uint8_t arg) {
+    tsgl_display_sendCommand(display, command);
+    tsgl_display_sendData(display, &arg, 1);
 }
 
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {

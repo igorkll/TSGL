@@ -36,6 +36,7 @@ void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos
 void tsgl_display_enable(tsgl_display* display);
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command);
 void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size);
+void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t command, const uint8_t arg);
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_disable(tsgl_display* display);
