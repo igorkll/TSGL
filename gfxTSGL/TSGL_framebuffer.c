@@ -96,17 +96,8 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     }
 }
 
-tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    if (!_pointInFrame(framebuffer, x, y)) return framebuffer->black;
-    size_t index = _getBufferIndex(framebuffer, x, y);
-    tsgl_rawcolor rawcolor;
-    for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-        rawcolor.arr[i] = framebuffer->buffer[index + i];
-    }
-    return rawcolor;
-}
 
-
+// graphic
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
@@ -145,4 +136,14 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) 
             tsgl_framebuffer_set(framebuffer, x, y, color);
         }
     }
+}
+
+tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    if (!_pointInFrame(framebuffer, x, y)) return framebuffer->black;
+    size_t index = _getBufferIndex(framebuffer, x, y);
+    tsgl_rawcolor rawcolor;
+    for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+        rawcolor.arr[i] = framebuffer->buffer[index + i];
+    }
+    return rawcolor;
 }

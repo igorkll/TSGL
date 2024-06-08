@@ -13,10 +13,25 @@
 #define WIDTH     320
 #define HEIGHT    240
 #define DRIVER    st7789_rgb565
+#define WITHOUT_FRAMEBUFFER
 
 
-
-tsgl_framebuffer framebuffer;
+#ifndef WITHOUT_FRAMEBUFFER
+    tsgl_framebuffer framebuffer;
+    #define currentWidth framebuffer.width
+    #define currentHeight framebuffer.height
+    #define _set(...) tsgl_framebuffer_set(&framebuffer, __VA_ARGS__)
+    #define _fill(...) tsgl_framebuffer_fill(&framebuffer, __VA_ARGS__)
+    #define _rect(...) tsgl_framebuffer_rect(&framebuffer, __VA_ARGS__)
+    #define _clear(...) tsgl_framebuffer_clear(&framebuffer, __VA_ARGS__)
+#else
+    #define currentWidth display.width
+    #define currentHeight display.height
+    #define _set(...) tsgl_display_set(&display, __VA_ARGS__)
+    #define _fill(...) tsgl_display_fill(&display, __VA_ARGS__)
+    #define _rect(...) tsgl_display_rect(&display, __VA_ARGS__)
+    #define _clear(...) tsgl_display_clear(&display, __VA_ARGS__)
+#endif
 tsgl_display display;
 
 #define COLORMODE DRIVER.colormode
@@ -30,14 +45,14 @@ float fmap(float value, float low, float high, float low_2, float high_2) {
 }
 
 void hue() {
-    for (tsgl_pos i = 0; i < framebuffer.width; i++) {
-        tsgl_framebuffer_fill(&framebuffer, i, 0, 1, framebuffer.height, tsgl_color_raw(tsgl_color_hsv(fmap(i, 0, framebuffer.width - 1, 0, 255), 255, 255), COLORMODE));
+    for (tsgl_pos i = 0; i < currentWidth; i++) {
+        _fill(i, 0, 1, currentHeight, tsgl_color_raw(tsgl_color_hsv(fmap(i, 0, currentWidth - 1, 0, 255), 255, 255), COLORMODE));
     }
 }
 
 void colorBox(tsgl_pos y, tsgl_color color) {
-    int boxSize = framebuffer.width / 32;
-    tsgl_framebuffer_fill(&framebuffer, 0, (y * boxSize) + boxSize, framebuffer.width / 2, boxSize, tsgl_color_raw(color, COLORMODE));
+    int boxSize = currentWidth / 32;
+    _fill(0, (y * boxSize) + boxSize, currentWidth / 2, boxSize, tsgl_color_raw(color, COLORMODE));
 }
 
 void printFreeRamSize(const char* title) {
@@ -49,10 +64,11 @@ void printFreeRamSize(const char* title) {
 void app_main() {
     printFreeRamSize("before display init");
     ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    #ifndef WITHOUT_FRAMEBUFFER
+        ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+    #endif
     ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
-    hue();
 
     // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
@@ -62,15 +78,16 @@ void app_main() {
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_CYAN, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
+    hue();
     uint16_t step = 0;
-    uint16_t stepMax = umin(framebuffer.width, framebuffer.height) / 2;
+    uint16_t stepMax = umin(currentWidth, currentHeight) / 2;
     uint8_t rotation = 0;
     uint32_t currentFrame = 0;
     uint32_t oldFrame = 0;
     TickType_t oldFPSCheckTime = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
-        tsgl_framebuffer_rect(&framebuffer, step, step, framebuffer.width - (step * 2), framebuffer.height - (step * 2), tsgl_color_raw(current, COLORMODE));
+        _rect(step, step, currentWidth - (step * 2), currentHeight - (step * 2), tsgl_color_raw(current, COLORMODE));
         colorBox(0, TSGL_WHITE);
         colorBox(1, TSGL_ORANGE);
         colorBox(2, TSGL_MAGENTA);
@@ -87,12 +104,16 @@ void app_main() {
         colorBox(13, TSGL_GREEN);
         colorBox(14, TSGL_RED);
         colorBox(15, TSGL_BLACK);
-        tsgl_display_send(&display, &framebuffer);
+        #ifndef WITHOUT_FRAMEBUFFER
+            tsgl_display_send(&display, &framebuffer);
+        #endif
 
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
-            tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
+            #ifndef WITHOUT_FRAMEBUFFER
+                tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
+            #endif
 
             step = 0;
             hue();
@@ -109,6 +130,8 @@ void app_main() {
         //vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
-    tsgl_framebuffer_free(&framebuffer); //if you don't need this framebuffer anymore, then you should unload it.
+    #ifndef WITHOUT_FRAMEBUFFER
+        tsgl_framebuffer_free(&framebuffer); //if you don't need this framebuffer anymore, then you should unload it.
+    #endif
     tsgl_display_free(&display);
 }
