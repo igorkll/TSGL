@@ -13,6 +13,7 @@ static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl
 }
 
 static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
+    printf("rotation %i\n", rotation);
     switch (rotation) {
         default : {
             tsgl_driver_list list = {
@@ -35,7 +36,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 2 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {(1<<5) | (1<<6) | (1<<2) | (1<<4)}, 1, -1}
+                    {0x36, {(1<<5) | (1<<7)}, 1, -1}
                 }
             };
             return list;
