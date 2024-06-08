@@ -84,7 +84,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
         // init display
         _doCommands(display, driver->init);
         tsgl_display_selectAll(display);
-        tsgl_display_clear(display, display->black);
     } else {
         free(display->interface);
     }
@@ -164,7 +163,10 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-
+    tsgl_display_fill(display, x, y, width, 1, color);
+    tsgl_display_fill(display, x, y + (height - 1), width, 1, color);
+    tsgl_display_fill(display, x, y + 1, 1, height - 2, color);
+    tsgl_display_fill(display, x + (width - 1), y + 1, 1, height - 2, color);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {

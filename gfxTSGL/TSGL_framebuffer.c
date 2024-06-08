@@ -72,7 +72,6 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         return ESP_FAIL;
     } else {
         ESP_LOGI(TAG, "framebuffer has been successfully allocated: %ix%ix%i", width, height, framebuffer->colorsize);
-        tsgl_framebuffer_clear(framebuffer, framebuffer->black);
         return ESP_OK;
     }
 }

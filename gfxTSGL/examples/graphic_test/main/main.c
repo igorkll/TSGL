@@ -54,6 +54,7 @@ void app_main() {
     printFreeRamSize("after display init");
     hue();
 
+    // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_GREEN, COLORMODE));
