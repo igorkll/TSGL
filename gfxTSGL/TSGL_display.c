@@ -45,6 +45,7 @@ static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos widt
             y2 = (y + height) - 1;
             break;
         case 1:
+
             break;
         case 2:
             x2 = display->defaultWidth - x - 1;
@@ -125,6 +126,9 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
             display->width = display->defaultHeight;
             display->height = display->defaultWidth;
             break;
+    }
+    if (display->driver->rotate != NULL) {
+        _doCommandList(display, display->driver->rotate(rotation))
     }
     _selectLast(display);
 }

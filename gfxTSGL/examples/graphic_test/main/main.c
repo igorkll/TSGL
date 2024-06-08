@@ -72,8 +72,6 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
 
-    _rotate(2);
-
     // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -115,7 +113,7 @@ void app_main() {
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
-            //_rotate(rotation);
+            _rotate(rotation);
 
             step = 0;
             hue();
