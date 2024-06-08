@@ -98,7 +98,7 @@ static const tsgl_driver st7789_rgb565 = {
     .rotate = _st7789_rotate
 };
 
-static const tsgl_driver st7789_rgb888 = {
+static const tsgl_driver st7789_rgb666 = {
     .colormode = tsgl_rgb888,
     .init = {
         /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
