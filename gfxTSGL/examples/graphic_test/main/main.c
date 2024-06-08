@@ -16,7 +16,15 @@
 #define WITHOUT_FRAMEBUFFER
 
 
-#ifndef WITHOUT_FRAMEBUFFER
+#ifdef WITHOUT_FRAMEBUFFER
+    #define currentWidth display.width
+    #define currentHeight display.height
+    #define _set(...) tsgl_display_set(&display, __VA_ARGS__)
+    #define _fill(...) tsgl_display_fill(&display, __VA_ARGS__)
+    #define _rect(...) tsgl_display_rect(&display, __VA_ARGS__)
+    #define _clear(...) tsgl_display_clear(&display, __VA_ARGS__)
+    #define _rotate(...) tsgl_display_rotate(&display, __VA_ARGS__)
+#else
     tsgl_framebuffer framebuffer;
     #define currentWidth framebuffer.width
     #define currentHeight framebuffer.height
@@ -25,14 +33,6 @@
     #define _rect(...) tsgl_framebuffer_rect(&framebuffer, __VA_ARGS__)
     #define _clear(...) tsgl_framebuffer_clear(&framebuffer, __VA_ARGS__)
     #define _rotate(...) tsgl_framebuffer_rotate(&framebuffer, __VA_ARGS__)
-#else
-    #define currentWidth display.width
-    #define currentHeight display.height
-    #define _set(...) tsgl_display_set(&display, __VA_ARGS__)
-    #define _fill(...) tsgl_display_fill(&display, __VA_ARGS__)
-    #define _rect(...) tsgl_display_rect(&display, __VA_ARGS__)
-    #define _clear(...) tsgl_display_clear(&display, __VA_ARGS__)
-    #define _rotate(...) tsgl_display_rotate(&display, __VA_ARGS__)
 #endif
 tsgl_display display;
 
@@ -71,6 +71,8 @@ void app_main() {
     #endif
     ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
+
+    _rotate(2);
 
     // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
@@ -113,7 +115,7 @@ void app_main() {
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
-            _rotate(rotation);
+            //_rotate(rotation);
 
             step = 0;
             hue();

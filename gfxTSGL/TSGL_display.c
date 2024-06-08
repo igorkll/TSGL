@@ -47,10 +47,10 @@ static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos widt
         case 1:
             break;
         case 2:
-            x = display->defaultWidth - x - 1;
-            y = display->defaultHeight - y - 1;
-            x2 = (x - width) + 1;
-            y2 = (y - height) + 1;
+            x2 = display->defaultWidth - x - 1;
+            y2 = display->defaultHeight - y - 1;
+            x = (x2 - width) + 1;
+            y = (y2 - height) + 1;
             break;
         case 3:
             break;
