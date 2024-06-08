@@ -38,8 +38,12 @@ static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
     }
 }
 
-static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->defaultWidth)) * framebuffer->colorsize;
+}
+
+static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    return _getRawBufferIndex(framebuffer, x, y) * framebuffer->colorsize;
 }
 
 static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
@@ -101,20 +105,22 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
-    size_t index = _getBufferIndex(framebuffer, x, y);
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
-            if (index & 1 == 0) {
+            size_t rawindex = _getRawBufferIndex(framebuffer, x, y);
+            size_t index = index * framebuffer->colorsize;
+            if ((rawindex & 1) == 0) {
                 framebuffer->buffer[index] = (color.arr[1] << 4) || color.arr[2];
                 framebuffer->buffer[index+1] = color.arr[3] << 4;
             } else {
-                framebuffer->buffer[index] = (color.arr[1] << 4) || color.arr[2];
-                framebuffer->buffer[index+1] = color.arr[3] << 4;
+                framebuffer->buffer[index] |= color.arr[1];
+                framebuffer->buffer[index+1] = (color.arr[2] << 4) || color.arr[3];
             }
             break;
         
         default:
+            size_t index = _getBufferIndex(framebuffer, x, y);
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 framebuffer->buffer[index + i] = color.arr[i];
             }
