@@ -81,7 +81,7 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
 
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size == 0) return;
+    if (size <= 0) return;
     Pre_transfer_info pre_transfer_info = {
         .pin = display->dc,
         .state = true
@@ -113,6 +113,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 }
 
 void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
+    if (size <= 0 || flood <= 0) return;
     size_t part = (_getPartSize() / size) * size;
     size_t bytesCount = flood * size;
     size_t offset = 0;

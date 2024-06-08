@@ -37,11 +37,22 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
 }
 
 static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    switch (display->rotation) {
+        case 1:
+            break;
+        case 2:
+            x = framebuffer->defaultWidth - x - 1;
+            y = framebuffer->defaultHeight - y - 1;
+            width = -width;
+            height = -height;
+            break;
+        case 3:
+    }
     _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
 }
 
 static void _selectLast(tsgl_display* display) {
-    tsgl_display_select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
+    _select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
 }
 
 
@@ -108,6 +119,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
             display->height = display->defaultWidth;
             break;
     }
+    _selectLast(display);
 }
 
 void tsgl_display_selectAll(tsgl_display* display) {
@@ -178,6 +190,7 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
 }
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+    if (width <= 0 || height <= 0) return;
     _select(display, x, y, width, height);
     tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
     _selectLast(display);
