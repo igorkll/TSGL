@@ -58,6 +58,11 @@ static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos widt
             y = (y2 - height) + 1;
             break;
         case 3:
+            tsgl_pos oy = y;
+            y = display->defaultHeight - width - 1;
+            x = oy;
+            x2 = (x + height) - 1;
+            y2 = (y + width) - 1;
             break;
     }
     _doCommandList(display, display->driver->select(x, y, x2, y2));
