@@ -67,12 +67,12 @@ void app_main() {
     printFreeRamSize("before display init");
     ESP_ERROR_CHECK(tsgl_spi_init(WIDTH * HEIGHT * tsgl_colormodeSizes[COLORMODE], TSGL_HOST1));
     #ifndef WITHOUT_FRAMEBUFFER
-        ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
+        ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, HEIGHT, WIDTH, MALLOC_CAP_SPIRAM));
     #endif
     ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
 
-    tsgl_display_rotate(&display, 2);
+    tsgl_display_rotate(&display, 1);
 
     // drawing without buffer
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_RED, COLORMODE));
