@@ -173,7 +173,3 @@ void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
     tsgl_display_fill(display, 0, 0, display->width, display->height, color);
 }
-
-tsgl_rawcolor tsgl_display_get(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
-    
-}

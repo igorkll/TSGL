@@ -43,4 +43,3 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color);
-tsgl_rawcolor tsgl_display_get(tsgl_display* display, tsgl_pos x, tsgl_pos y);
