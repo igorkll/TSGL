@@ -37,18 +37,25 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
 }
 
 static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    tsgl_pos x2 = 0;
+    tsgl_pos y2 = 0;
     switch (display->rotation) {
+        case 0:
+            x2 = (x + width) - 1;
+            y2 = (y + height) - 1;
+            break;
         case 1:
             break;
         case 2:
-            x = framebuffer->defaultWidth - x - 1;
-            y = framebuffer->defaultHeight - y - 1;
-            width = -width;
-            height = -height;
+            x = display->defaultWidth - x - 1;
+            y = display->defaultHeight - y - 1;
+            x2 = (x - width) + 1;
+            y2 = (y - height) + 1;
             break;
         case 3:
+            break;
     }
-    _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
+    _doCommandList(display, display->driver->select(x, y, x2, y2));
 }
 
 static void _selectLast(tsgl_display* display) {
