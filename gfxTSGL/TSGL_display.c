@@ -132,7 +132,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
             break;
     }
     if (display->driver->rotate != NULL) {
-        _doCommandList(display, display->driver->rotate(rotation))
+        _doCommandList(display, display->driver->rotate(rotation));
     }
     _selectLast(display);
 }
