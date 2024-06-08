@@ -145,6 +145,20 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
             rawcolor.arr[2] = color.r;
             break;
         }
+
+        case tsgl_rgb444 : {
+            rawcolor.arr[0] = color.r >> 4;
+            rawcolor.arr[1] = color.g >> 4;
+            rawcolor.arr[2] = color.b >> 4;
+            break;
+        }
+
+        case tsgl_bgr444 : {
+            rawcolor.arr[0] = color.b >> 4;
+            rawcolor.arr[1] = color.g >> 4;
+            rawcolor.arr[2] = color.r >> 4;
+            break;
+        }
     }
     return rawcolor;
 }
@@ -189,6 +203,24 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
                 .r = rawcolor.arr[2],
                 .g = rawcolor.arr[1],
                 .b = rawcolor.arr[0]
+            };
+            return color;
+        }
+
+        case tsgl_rgb444 : {
+            tsgl_color color = {
+                .r = rawcolor.arr[0] << 4,
+                .g = rawcolor.arr[1] << 4,
+                .b = rawcolor.arr[2] << 4
+            };
+            return color;
+        }
+
+        case tsgl_bgr444 : {
+            tsgl_color color = {
+                .r = rawcolor.arr[2] << 4,
+                .g = rawcolor.arr[1] << 4,
+                .b = rawcolor.arr[1] << 4
             };
             return color;
         }

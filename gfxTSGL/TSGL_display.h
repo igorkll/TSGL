@@ -25,7 +25,7 @@ typedef struct {
     tsgl_pos lastSelectWidth;
     tsgl_pos lastSelectHeight;
     tsgl_colormode colormode;
-    uint8_t colorsize;
+    float colorsize;
     tsgl_rawcolor black;
 } tsgl_display;
 
