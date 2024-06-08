@@ -39,7 +39,7 @@ static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 }
 
 static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->defaultWidth)) * framebuffer->colorsize;
+    return (_rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->defaultWidth));
 }
 
 static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
@@ -114,8 +114,7 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
                 framebuffer->buffer[index] = (color.arr[1] << 4) | color.arr[2];
                 framebuffer->buffer[index+1] = (color.arr[3] << 4) | ((framebuffer->buffer[index+1] << 4) >> 4);
             } else {
-                framebuffer->buffer[index] = (framebuffer->buffer[index] >> 4) << 4;
-                framebuffer->buffer[index] |= color.arr[1];
+                framebuffer->buffer[index] = color.arr[1] | ((framebuffer->buffer[index] >> 4) << 4);
                 framebuffer->buffer[index+1] = (color.arr[2] << 4) | color.arr[3];
             }
             break;
