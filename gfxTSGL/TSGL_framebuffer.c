@@ -107,17 +107,18 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
     if (!_pointInFrame(framebuffer, x, y)) return;
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
-        case tsgl_bgr444:
+        case tsgl_bgr444: {
             size_t rawindex = _getRawBufferIndex(framebuffer, x, y);
-            size_t index = index * framebuffer->colorsize;
+            size_t index = rawindex * framebuffer->colorsize;
             if ((rawindex & 1) == 0) {
-                framebuffer->buffer[index] = (color.arr[1] << 4) || color.arr[2];
+                framebuffer->buffer[index] = (color.arr[1] << 4) | color.arr[2];
                 framebuffer->buffer[index+1] = color.arr[3] << 4;
             } else {
                 framebuffer->buffer[index] |= color.arr[1];
-                framebuffer->buffer[index+1] = (color.arr[2] << 4) || color.arr[3];
+                framebuffer->buffer[index+1] = (color.arr[2] << 4) | color.arr[3];
             }
             break;
+        }
         
         default:
             size_t index = _getBufferIndex(framebuffer, x, y);
