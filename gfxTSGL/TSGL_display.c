@@ -44,6 +44,7 @@ static void _selectLast(tsgl_display* display) {
     tsgl_display_select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
 }
 
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
@@ -55,6 +56,9 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
 
     display->width = width;
     display->height = height;
+    display->defaultWidth = width;
+    display->defaultHeight = height;
+    display->rotation = 0;
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
@@ -88,6 +92,22 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
         free(display->interface);
     }
     return result;
+}
+
+void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
+    display->rotation = rotation % 4;
+    switch (display->rotation) {
+        case 0:
+        case 2:
+            display->width = display->defaultWidth;
+            display->height = display->defaultHeight;
+            break;
+        case 1:
+        case 3:
+            display->width = display->defaultHeight;
+            display->height = display->defaultWidth;
+            break;
+    }
 }
 
 void tsgl_display_selectAll(tsgl_display* display) {

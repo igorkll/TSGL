@@ -13,6 +13,9 @@ typedef enum {
 typedef struct {
     tsgl_pos width;
     tsgl_pos height;
+    tsgl_pos defaultWidth;
+    tsgl_pos defaultHeight;
+    uint8_t rotation;
     tsgl_display_interfaceType interfaceType;
     void* interface;
     int8_t dc;

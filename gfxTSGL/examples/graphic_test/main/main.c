@@ -24,6 +24,7 @@
     #define _fill(...) tsgl_framebuffer_fill(&framebuffer, __VA_ARGS__)
     #define _rect(...) tsgl_framebuffer_rect(&framebuffer, __VA_ARGS__)
     #define _clear(...) tsgl_framebuffer_clear(&framebuffer, __VA_ARGS__)
+    #define _rotate(...) tsgl_framebuffer_rotate(&framebuffer, __VA_ARGS__)
 #else
     #define currentWidth display.width
     #define currentHeight display.height
@@ -31,6 +32,7 @@
     #define _fill(...) tsgl_display_fill(&display, __VA_ARGS__)
     #define _rect(...) tsgl_display_rect(&display, __VA_ARGS__)
     #define _clear(...) tsgl_display_clear(&display, __VA_ARGS__)
+    #define _rotate(...) tsgl_display_rotate(&display, __VA_ARGS__)
 #endif
 tsgl_display display;
 
@@ -111,9 +113,7 @@ void app_main() {
         step++;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
-            #ifndef WITHOUT_FRAMEBUFFER
-                tsgl_framebuffer_rotate(&framebuffer, rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
-            #endif
+            _rotate(rotation);
 
             step = 0;
             hue();
