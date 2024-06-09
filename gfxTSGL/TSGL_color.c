@@ -230,3 +230,14 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
         }
     }
 }
+
+void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) {
+    size_t index = rawindex * 1.5;
+    if ((rawindex & 1) == 0) {
+        buffer[index] = (color.arr[0] << 4) | color.arr[1];
+        buffer[index+1] = (color.arr[2] << 4) | (buffer[index+1] & 0b1111);
+    } else {
+        buffer[index] = (buffer[index] & 0b11110000) | color.arr[0];
+        buffer[index+1] = (color.arr[1] << 4) | color.arr[2];
+    }
+}
