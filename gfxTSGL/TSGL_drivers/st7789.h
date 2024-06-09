@@ -52,6 +52,20 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
     }
 }
 
+#define _ST7789_SERVICE_CODE \
+.enable = { \
+    {0x11, {0}, 0, 100}, \
+    {0x38, {0}, 0, 0}, \
+    {0x29, {0}, 0, -1} \
+}, \
+.disable = { \
+    {0x28, {0}, 0, 0}, \
+    {0x39, {0}, 0, 0}, \
+    {0x10, {0}, 0, -1} \
+}, \
+.select = _st7789_select, \
+.rotate = _st7789_rotate
+
 static const tsgl_driver st7789_rgb444 = {
     .colormode = tsgl_rgb444,
     .init = {
@@ -86,16 +100,7 @@ static const tsgl_driver st7789_rgb444 = {
         /* Display On */
         {0x29, {0}, 0, -1}
     },
-    .enable = {
-        {0x11, {0}, 0, 100},
-        {0x29, {0}, 0, -1}
-    },
-    .disable = {
-        {0x28, {0}, 0, 100},
-        {0x10, {0}, 0, -1}
-    },
-    .select = _st7789_select,
-    .rotate = _st7789_rotate
+    _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb565 = {
@@ -132,16 +137,7 @@ static const tsgl_driver st7789_rgb565 = {
         /* Display On */
         {0x29, {0}, 0, -1}
     },
-    .enable = {
-        {0x11, {0}, 0, 100},
-        {0x29, {0}, 0, -1}
-    },
-    .disable = {
-        {0x28, {0}, 0, 100},
-        {0x10, {0}, 0, -1}
-    },
-    .select = _st7789_select,
-    .rotate = _st7789_rotate
+    _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb666 = { //3 bytes per pixel. 6 bits are not used
@@ -178,16 +174,7 @@ static const tsgl_driver st7789_rgb666 = { //3 bytes per pixel. 6 bits are not u
         /* Display On */
         {0x29, {0}, 0, -1}
     },
-    .enable = {
-        {0x11, {0}, 0, 100},
-        {0x29, {0}, 0, -1}
-    },
-    .disable = {
-        {0x28, {0}, 0, 100},
-        {0x10, {0}, 0, -1}
-    },
-    .select = _st7789_select,
-    .rotate = _st7789_rotate
+    _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb888 = {
@@ -224,14 +211,5 @@ static const tsgl_driver st7789_rgb888 = {
         /* Display On */
         {0x29, {0}, 0, -1}
     },
-    .enable = {
-        {0x11, {0}, 0, 100},
-        {0x29, {0}, 0, -1}
-    },
-    .disable = {
-        {0x28, {0}, 0, 100},
-        {0x10, {0}, 0, -1}
-    },
-    .select = _st7789_select,
-    .rotate = _st7789_rotate
+    _ST7789_SERVICE_CODE
 };
