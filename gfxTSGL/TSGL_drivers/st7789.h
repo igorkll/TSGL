@@ -71,6 +71,31 @@ static tsgl_driver_list _st7789_invert(bool invert) {
 }
 
 #define _ST7789_SERVICE_CODE \
+    /* Memory Data Access Control */ \
+    {0x36, {(1<<5)|(1<<6)}, 1}, \
+    /* Porch Setting */ \
+    {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5}, \
+    /* Gate Control, Vgh=13.65V, Vgl=-10.43V */ \
+    {0xB7, {0x45}, 1}, \
+    /* VCOM Setting, VCOM=1.175V */ \
+    {0xBB, {0x2B}, 1}, \
+    /* LCM Control, XOR: BGR, MX, MH */ \
+    {0xC0, {0x2C}, 1}, \
+    /* VDV and VRH Command Enable, enable=1 */ \
+    {0xC2, {0x01, 0xff}, 2}, \
+    /* VRH Set, Vap=4.4+... */ \
+    {0xC3, {0x11}, 1}, \
+    /* VDV Set, VDV=0 */ \
+    {0xC4, {0x20}, 1}, \
+    /* Frame Rate Control, 60Hz, inversion=0 */ \
+    {0xC6, {0x0f}, 1}, \
+    /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */ \
+    {0xD0, {0xA4, 0xA1}, 1}, \
+    /* Positive Voltage Gamma Control */ \
+    {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14}, \
+    /* Negative Voltage Gamma Control */ \
+    {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14, -1} \
+}, \
 .enable = { \
     {0x11, {0}, 0, 100}, \
     {0x38, {0}, 0, 0}, \
@@ -88,131 +113,27 @@ static tsgl_driver_list _st7789_invert(bool invert) {
 static const tsgl_driver st7789_rgb444 = {
     .colormode = tsgl_rgb444,
     .init = {
-        /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-        {0x36, {(1<<5)|(1<<6)}, 1},
-        /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-        {0x3A, {0x03}, 1},
-        /* Porch Setting */
-        {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-        /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
-        {0xB7, {0x45}, 1},
-        /* VCOM Setting, VCOM=1.175V */
-        {0xBB, {0x2B}, 1},
-        /* LCM Control, XOR: BGR, MX, MH */
-        {0xC0, {0x2C}, 1},
-        /* VDV and VRH Command Enable, enable=1 */
-        {0xC2, {0x01, 0xff}, 2},
-        /* VRH Set, Vap=4.4+... */
-        {0xC3, {0x11}, 1},
-        /* VDV Set, VDV=0 */
-        {0xC4, {0x20}, 1},
-        /* Frame Rate Control, 60Hz, inversion=0 */
-        {0xC6, {0x0f}, 1},
-        /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */
-        {0xD0, {0xA4, 0xA1}, 1},
-        /* Positive Voltage Gamma Control */
-        {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-        /* Negative Voltage Gamma Control */
-        {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14}
-    },
+        {0x3A, {0x03}, 1}, //444
     _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb565 = {
     .colormode = tsgl_rgb565_be,
     .init = {
-        /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-        {0x36, {(1<<5)|(1<<6)}, 1},
-        /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-        {0x3A, {0x05}, 1},
-        /* Porch Setting */
-        {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-        /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
-        {0xB7, {0x45}, 1},
-        /* VCOM Setting, VCOM=1.175V */
-        {0xBB, {0x2B}, 1},
-        /* LCM Control, XOR: BGR, MX, MH */
-        {0xC0, {0x2C}, 1},
-        /* VDV and VRH Command Enable, enable=1 */
-        {0xC2, {0x01, 0xff}, 2},
-        /* VRH Set, Vap=4.4+... */
-        {0xC3, {0x11}, 1},
-        /* VDV Set, VDV=0 */
-        {0xC4, {0x20}, 1},
-        /* Frame Rate Control, 60Hz, inversion=0 */
-        {0xC6, {0x0f}, 1},
-        /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */
-        {0xD0, {0xA4, 0xA1}, 1},
-        /* Positive Voltage Gamma Control */
-        {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-        /* Negative Voltage Gamma Control */
-        {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14}
-    },
+        {0x3A, {0x05}, 1}, //565
     _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb666 = { //3 bytes per pixel. 6 bits are not used
     .colormode = tsgl_rgb888,
     .init = {
-        /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-        {0x36, {(1<<5)|(1<<6)}, 1},
-        /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
-        {0x3A, {0x06}, 1},
-        /* Porch Setting */
-        {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-        /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
-        {0xB7, {0x45}, 1},
-        /* VCOM Setting, VCOM=1.175V */
-        {0xBB, {0x2B}, 1},
-        /* LCM Control, XOR: BGR, MX, MH */
-        {0xC0, {0x2C}, 1},
-        /* VDV and VRH Command Enable, enable=1 */
-        {0xC2, {0x01, 0xff}, 2},
-        /* VRH Set, Vap=4.4+... */
-        {0xC3, {0x11}, 1},
-        /* VDV Set, VDV=0 */
-        {0xC4, {0x20}, 1},
-        /* Frame Rate Control, 60Hz, inversion=0 */
-        {0xC6, {0x0f}, 1},
-        /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */
-        {0xD0, {0xA4, 0xA1}, 1},
-        /* Positive Voltage Gamma Control */
-        {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-        /* Negative Voltage Gamma Control */
-        {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14}
-    },
+        {0x3A, {0x06}, 1}, //666
     _ST7789_SERVICE_CODE
 };
 
 static const tsgl_driver st7789_rgb888 = {
     .colormode = tsgl_rgb888,
     .init = {
-        /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
-        {0x36, {(1<<5)|(1<<6)}, 1},
-        /* Interface Pixel Format, 16bits/pixel for RGB/MCU interface */
         {0x3A, {0x07}, 1}, //16M truncated - truncated true color support. that's what it says in the documentation
-        /* Porch Setting */
-        {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-        /* Gate Control, Vgh=13.65V, Vgl=-10.43V */
-        {0xB7, {0x45}, 1},
-        /* VCOM Setting, VCOM=1.175V */
-        {0xBB, {0x2B}, 1},
-        /* LCM Control, XOR: BGR, MX, MH */
-        {0xC0, {0x2C}, 1},
-        /* VDV and VRH Command Enable, enable=1 */
-        {0xC2, {0x01, 0xff}, 2},
-        /* VRH Set, Vap=4.4+... */
-        {0xC3, {0x11}, 1},
-        /* VDV Set, VDV=0 */
-        {0xC4, {0x20}, 1},
-        /* Frame Rate Control, 60Hz, inversion=0 */
-        {0xC6, {0x0f}, 1},
-        /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */
-        {0xD0, {0xA4, 0xA1}, 1},
-        /* Positive Voltage Gamma Control */
-        {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-        /* Negative Voltage Gamma Control */
-        {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14}
-    },
     _ST7789_SERVICE_CODE
 };
