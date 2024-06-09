@@ -219,7 +219,16 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     if (width <= 0 || height <= 0) return;
     _select(display, x, y, width, height);
-    tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
+    switch (display->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            tsgl_display_sendFlood(display, tsgl_color_make444(color).arr, 3, (width * height) / 2);
+            break;
+        
+        default:
+            tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
+            break;
+    }
     _selectLast(display);
 }
 

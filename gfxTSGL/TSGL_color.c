@@ -243,16 +243,49 @@ void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) 
 }
 
 tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
-    tsgl_rawcolor color;
+    tsgl_rawcolor result;
     size_t index = rawindex * 1.5;
     if ((rawindex & 1) == 0) {
-        color.arr[0] = buffer[index] >> 4;
-        color.arr[1] = buffer[index] & 0b1111;
-        color.arr[2] = buffer[index+1] >> 4;
+        result.arr[0] = buffer[index] >> 4;
+        result.arr[1] = buffer[index] & 0b1111;
+        result.arr[2] = buffer[index+1] >> 4;
     } else {
-        color.arr[0] = buffer[index] & 0b1111;
-        color.arr[1] = buffer[index+1] >> 4;
-        color.arr[2] = buffer[index+1] & 0b1111;
+        result.arr[0] = buffer[index] & 0b1111;
+        result.arr[1] = buffer[index+1] >> 4;
+        result.arr[2] = buffer[index+1] & 0b1111;
     }
-    return color;
+    return result;
+}
+
+tsgl_rawcolor tsgl_color_make444(tsgl_rawcolor color) {
+    tsgl_rawcolor result = {
+        .arr = {
+            (color.arr[0] << 4) | color.arr[1],
+            (color.arr[2] << 4) | color.arr[0],
+            (color.arr[1] << 4) | color.arr[2]
+        }
+    };
+    return result;
+}
+
+tsgl_rawcolor tsgl_color_parse444_1(tsgl_rawcolor color) {
+    tsgl_rawcolor result = {
+        .arr = {
+            color.arr[0] >> 4,
+            color.arr[0] & 0b1111,
+            color.arr[1] >> 4
+        }
+    };
+    return result;
+}
+
+tsgl_rawcolor tsgl_color_parse444_2(tsgl_rawcolor color) {
+    tsgl_rawcolor result = {
+        .arr = {
+            color.arr[1] & 0b1111,
+            color.arr[2] >> 4,
+            color.arr[2] & 0b1111
+        }
+    };
+    return result;
 }

@@ -44,3 +44,7 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
 
 void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color);
 tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer);
+
+tsgl_rawcolor tsgl_color_make444(tsgl_rawcolor color);
+tsgl_rawcolor tsgl_color_parse444_1(tsgl_rawcolor color);
+tsgl_rawcolor tsgl_color_parse444_2(tsgl_rawcolor color);
