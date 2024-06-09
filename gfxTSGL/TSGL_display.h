@@ -27,6 +27,8 @@ typedef struct {
     tsgl_colormode colormode;
     float colorsize;
     tsgl_rawcolor black;
+    bool enable;
+    bool invert;
 } tsgl_display;
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);

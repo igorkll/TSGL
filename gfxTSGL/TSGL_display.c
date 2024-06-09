@@ -117,6 +117,8 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
 
         // init display
         _doCommands(display, driver->init);
+        _doCommands(display, driver->enable);
+        display->enable = true;
         tsgl_display_selectAll(display);
     } else {
         free(display->interface);
@@ -190,18 +192,24 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 }
 
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
-    if (state) {
-        _doCommands(display, display->driver->enable);
-        _selectLast(display);
-    } else {
-        _doCommands(display, display->driver->disable);
+    if (display->enable != state) {
+        if (state) {
+            _doCommands(display, display->driver->enable);
+            _selectLast(display);
+        } else {
+            _doCommands(display, display->driver->disable);
+        }
+        display->enable = state;
     }
 }
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
-    if (display->driver->invert != NULL) {
-        _doCommandList(display, display->driver->invert(state));
-        _selectLast(display);
+    if (display->invert != state) {
+        if (display->driver->invert != NULL) {
+            _doCommandList(display, display->driver->invert(state));
+            _selectLast(display);
+        }
+        display->invert = state;
     }
 }
 
