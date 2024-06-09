@@ -97,13 +97,19 @@ static tsgl_driver_list _st7789_invert(bool invert) {
     {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14, -1} \
 }, \
 .enable = { \
+    /* Sleep Out */ \
     {0x11, {0}, 0, 100}, \
+    /* Idle mode off */ \
     {0x38, {0}, 0, 0}, \
+    /* Display On */ \
     {0x29, {0}, 0, -1} \
 }, \
 .disable = { \
+    /* Display Off */ \
     {0x28, {0}, 0, 0}, \
+    /* Idle mode on */ \
     {0x39, {0}, 0, 0}, \
+    /* Sleep In */ \
     {0x10, {0}, 0, -1} \
 }, \
 .select = _st7789_select, \
