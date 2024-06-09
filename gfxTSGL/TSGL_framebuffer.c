@@ -167,7 +167,7 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
-    //TSGL_GFX_RECT(&framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, strokelen);
+    TSGL_GFX_RECT(&framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, strokelen);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {

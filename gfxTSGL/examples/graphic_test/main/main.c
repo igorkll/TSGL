@@ -13,7 +13,7 @@
 #define WIDTH     240
 #define HEIGHT    320
 #define DRIVER    st7789_rgb565
-#define WITHOUT_FRAMEBUFFER
+//#define WITHOUT_FRAMEBUFFER
 
 
 #ifdef WITHOUT_FRAMEBUFFER
@@ -82,6 +82,7 @@ void app_main() {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_CYAN, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    tsgl_display_selectAll(&display);
 
     hue();
     uint16_t step = 0;
@@ -122,6 +123,7 @@ void app_main() {
             _rotate(rotation);
 
             tsgl_display_clear(&display, tsgl_color_raw(TSGL_LIME, COLORMODE));
+            tsgl_display_selectAll(&display);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
 
             step = 0;

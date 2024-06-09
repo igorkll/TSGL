@@ -36,10 +36,6 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
     _doCommands(display, list.list);
 }
 
-static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-    _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
-}
-
 
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
@@ -118,15 +114,7 @@ void tsgl_display_selectAll(tsgl_display* display) {
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-    display->lastSelectX = x;
-    display->lastSelectY = y;
-    display->lastSelectWidth = width;
-    display->lastSelectHeight = height;
-    _select(display, x, y, width, height);
-}
-
-void tsgl_display_selectLast(tsgl_display* display) {
-    _select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
+    _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
@@ -165,7 +153,6 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     if (state) {
         _doCommands(display, display->driver->enable);
-        tsgl_display_selectLast(display);
     } else {
         _doCommands(display, display->driver->disable);
     }
@@ -174,7 +161,6 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
         _doCommandList(display, display->driver->invert(state));
-        tsgl_display_selectLast(display);
     }
 }
 
@@ -191,7 +177,7 @@ void tsgl_display_free(tsgl_display* display) {
 // graphic
 
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
-    _select(display, x, y, 1, 1);
+    tsgl_display_select(display, x, y, 1, 1);
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -206,7 +192,7 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     if (width <= 0 || height <= 0) return;
-    _select(display, x, y, width, height);
+    tsgl_display_select(display, x, y, width, height);
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
