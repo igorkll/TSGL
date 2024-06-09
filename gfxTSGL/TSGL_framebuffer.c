@@ -39,7 +39,7 @@ static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 }
 
 static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return _rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->defaultWidth);
+    return _rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->rotationWidth);
 }
 
 static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
@@ -59,6 +59,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->height = height;
     framebuffer->defaultWidth = width;
     framebuffer->defaultHeight = height;
+    framebuffer->rotationWidth = width;
     framebuffer->rotation = 0;
     framebuffer->realRotation = 0;
     framebuffer->colormode = colormode;
@@ -86,12 +87,14 @@ void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
 }
 
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
-    framebuffer->realRotation = rotation;
     tsgl_framebuffer_hardwareRotate(framebuffer, rotation);
+    framebuffer->realRotation = rotation;
+    framebuffer->rotationWidth = framebuffer->defaultWidth;
 }
 
 void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->rotation = rotation % 4;
+    framebuffer->realRotation = 0;
     switch (framebuffer->rotation) {
         case 0:
         case 2:
@@ -104,6 +107,7 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
             framebuffer->height = framebuffer->defaultWidth;
             break;
     }
+    framebuffer->rotationWidth = framebuffer->width;
 }
 
 
