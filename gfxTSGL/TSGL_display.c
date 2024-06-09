@@ -215,7 +215,7 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
-            tsgl_display_sendData(display, tsgl_color_make444(color).arr, 3);
+            tsgl_display_sendData(display, tsgl_color_make444(color).arr, 2);
             break;
         
         default:

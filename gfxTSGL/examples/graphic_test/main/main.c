@@ -106,6 +106,9 @@ void app_main() {
         colorBox(13, TSGL_GREEN);
         colorBox(14, TSGL_RED);
         colorBox(15, TSGL_BLACK);
+        for (int i = 0; i < umin(currentWidth, currentHeight); i++) {
+            _set(i, i, tsgl_color_raw(TSGL_PINK, COLORMODE));
+        }
         #ifndef WITHOUT_FRAMEBUFFER
             tsgl_display_send(&display, &framebuffer);
         #endif
