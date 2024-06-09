@@ -98,8 +98,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
     display->colormode = driver->colormode;
     display->colorsize = tsgl_colormodeSizes[driver->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, driver->colormode);
-    display->enable = false;
-    display->invert = false;
 
     esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
     if (result == ESP_OK) {
@@ -122,7 +120,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
         // init display
         _doCommands(display, driver->init);
         _doCommands(display, driver->enable);
-        display->enable = true;
         tsgl_display_selectAll(display);
     } else {
         free(display->interface);
@@ -197,24 +194,18 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 }
 
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
-    if (display->enable != state) {
-        if (state) {
-            _doCommands(display, display->driver->enable);
-            _selectLast(display);
-        } else {
-            _doCommands(display, display->driver->disable);
-        }
-        display->enable = state;
+    if (state) {
+        _doCommands(display, display->driver->enable);
+        _selectLast(display);
+    } else {
+        _doCommands(display, display->driver->disable);
     }
 }
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
-    if (display->invert != state) {
-        if (display->driver->invert != NULL) {
-            _doCommandList(display, display->driver->invert(state));
-            _selectLast(display);
-        }
-        display->invert = state;
+    if (display->driver->invert != NULL) {
+        _doCommandList(display, display->driver->invert(state));
+        _selectLast(display);
     }
 }
 

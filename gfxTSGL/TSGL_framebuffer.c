@@ -94,7 +94,6 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
 
 void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->rotation = rotation % 4;
-    framebuffer->realRotation = 0;
     switch (framebuffer->rotation) {
         case 0:
         case 2:
@@ -107,6 +106,7 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
             framebuffer->height = framebuffer->defaultWidth;
             break;
     }
+    framebuffer->realRotation = 0;
     framebuffer->rotationWidth = framebuffer->width;
 }
 
