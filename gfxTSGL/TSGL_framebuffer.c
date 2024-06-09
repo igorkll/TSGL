@@ -121,10 +121,37 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
 }
 
 void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    for (tsgl_pos ix = x; ix < x + width; ix++) {
-        for (tsgl_pos iy = y; iy < y + height; iy++) {
-            tsgl_framebuffer_set(framebuffer, ix, iy, color);
-        }
+    if (x < 0) {
+        width = width + x;
+        x = 0;
+    }
+    if (y < 0) {
+        height = height + y;
+        y = 0;
+    }
+    if (width + x > framebuffer->width) width = framebuffer->width - x;
+    if (height + y > framebuffer->height) height = framebuffer->height - y;
+    if (width <= 0 || height <= 0) return;
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            for (tsgl_pos ix = x; ix < x + width; ix++) {
+                for (tsgl_pos iy = y; iy < y + height; iy++) {
+                    tsgl_color_444write(_getRawBufferIndex(framebuffer, ix, iy), framebuffer->buffer, color);
+                }
+            }
+            break;
+        
+        default:
+            for (tsgl_pos ix = x; ix < x + width; ix++) {
+                for (tsgl_pos iy = y; iy < y + height; iy++) {
+                    size_t index = _getBufferIndex(framebuffer, ix, iy);
+                    for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+                        framebuffer->buffer[index + i] = color.arr[i];
+                    }
+                }
+            }
+            break;
     }
 }
 
@@ -144,11 +171,7 @@ void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
-    for (tsgl_pos x = 0; x < framebuffer->width; x++) {
-        for (tsgl_pos y = 0; y < framebuffer->height; y++) {
-            tsgl_framebuffer_set(framebuffer, x, y, color);
-        }
-    }
+    tsgl_framebuffer_fill(framebuffer, 0, 0, framebuffer->width, framebuffer->height, color);
 }
 
 tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
