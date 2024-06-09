@@ -13,7 +13,7 @@
 #define WIDTH     240
 #define HEIGHT    320
 #define DRIVER    st7789_rgb565
-#define STEP 8
+#define STEP 1
 #define WITHOUT_FRAMEBUFFER
 
 
@@ -33,7 +33,8 @@
     #define _fill(...) tsgl_framebuffer_fill(&framebuffer, __VA_ARGS__)
     #define _rect(...) tsgl_framebuffer_rect(&framebuffer, __VA_ARGS__)
     #define _clear(...) tsgl_framebuffer_clear(&framebuffer, __VA_ARGS__)
-    #define _rotate(...) {tsgl_framebuffer_hardwareRotate(&framebuffer, __VA_ARGS__); tsgl_display_rotate(&display, __VA_ARGS__);}
+    //#define _rotate(...) {tsgl_framebuffer_hardwareRotate(&framebuffer, __VA_ARGS__); tsgl_display_rotate(&display, __VA_ARGS__);}
+    #define _rotate(...) tsgl_framebuffer_rotate(&framebuffer, __VA_ARGS__)
 #endif
 tsgl_display display;
 
