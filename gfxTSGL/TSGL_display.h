@@ -44,6 +44,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not r
 
 void tsgl_display_selectAll(tsgl_display* display);
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
+void tsgl_display_selectLast(tsgl_display* display); //returns to the last selected zone on the screen. you need to call this method after call any methods in graphic section(if you want to return to your area)
 
 void tsgl_display_setEnable(tsgl_display* display, bool state);
 void tsgl_display_setInvert(tsgl_display* display, bool state);
@@ -51,5 +52,5 @@ void tsgl_display_setInvert(tsgl_display* display, bool state);
 // graphic
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
-void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color);
+void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen);
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color);

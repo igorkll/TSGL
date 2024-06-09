@@ -40,11 +40,6 @@ static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos widt
     _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
 }
 
-static void _selectLast(tsgl_display* display) {
-    _select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
-}
-
-
 
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
@@ -130,6 +125,10 @@ void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos
     _select(display, x, y, width, height);
 }
 
+void tsgl_display_selectLast(tsgl_display* display) {
+    _select(display, display->lastSelectX, display->lastSelectY, display->lastSelectWidth, display->lastSelectHeight);
+}
+
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
@@ -166,7 +165,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     if (state) {
         _doCommands(display, display->driver->enable);
-        _selectLast(display);
+        tsgl_display_selectLast(display);
     } else {
         _doCommands(display, display->driver->disable);
     }
@@ -175,7 +174,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
         _doCommandList(display, display->driver->invert(state));
-        _selectLast(display);
+        tsgl_display_selectLast(display);
     }
 }
 
@@ -203,7 +202,6 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
             tsgl_display_sendData(display, (const uint8_t*)color.arr, display->colorsize);
             break;
     }
-    _selectLast(display);
 }
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
@@ -219,14 +217,13 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
             tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
             break;
     }
-    _selectLast(display);
 }
 
-void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    tsgl_display_fill(display, x, y, width, 1, color);
-    tsgl_display_fill(display, x, y + (height - 1), width, 1, color);
-    tsgl_display_fill(display, x, y + 1, 1, height - 2, color);
-    tsgl_display_fill(display, x + (width - 1), y + 1, 1, height - 2, color);
+void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
+    tsgl_display_fill(display, x, y, width, strokelen, color);
+    tsgl_display_fill(display, x, (y + height) - strokelen, width, strokelen, color);
+    tsgl_display_fill(display, x, y + 1, strokelen, height - 2, color);
+    tsgl_display_fill(display, (x + width) - strokelen, y + 1, strokelen, height - 2, color);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {

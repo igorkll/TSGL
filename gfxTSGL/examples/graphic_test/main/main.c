@@ -92,7 +92,7 @@ void app_main() {
     TickType_t oldFPSCheckTime = 0;
     while (true) {
         tsgl_color current = tsgl_color_combine(fmap(step, 0, stepMax, 0, 1), TSGL_RED, TSGL_LIME);
-        _rect(step, step, currentWidth - (step * 2), currentHeight - (step * 2), tsgl_color_raw(current, COLORMODE));
+        _rect(step, step, currentWidth - (step * 2), currentHeight - (step * 2), tsgl_color_raw(current, COLORMODE), STEP);
         colorBox(0, TSGL_WHITE);
         colorBox(1, TSGL_ORANGE);
         colorBox(2, TSGL_MAGENTA);

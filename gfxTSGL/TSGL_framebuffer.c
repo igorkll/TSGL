@@ -2,6 +2,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
 #include "TSGL_spi.h"
+#include "TSGL_gfx.h"
 #include <esp_heap_caps.h>
 #include <esp_err.h>
 #include <esp_log.h>
@@ -10,8 +11,6 @@ const char* TAG = "TSGL_framebuffer";
 
 static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->realRotation) {
-        case 0:
-            return x;
         case 1:
             return framebuffer->defaultWidth - y - 1;
         case 2:
@@ -25,8 +24,6 @@ static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 
 static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->realRotation) {
-        case 0:
-            return y;
         case 1:
             return x;
         case 2:
@@ -39,7 +36,11 @@ static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 }
 
 static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return _rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->rotationWidth);
+    if (framebuffer->realRotation == 0) {
+        return x + (y * framebuffer->rotationWidth);
+    } else {
+        return _rotateX(framebuffer, x, y) + (_rotateY(framebuffer, x, y) * framebuffer->rotationWidth);
+    }
 }
 
 static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
@@ -165,19 +166,8 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     }
 }
 
-void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    tsgl_pos endX = (x + width) - 1;
-    tsgl_pos endY = (y + height) - 1;
-
-    for (tsgl_pos ix = x + 1; ix < endX; ix++) {
-        tsgl_framebuffer_set(framebuffer, ix, y, color);
-        tsgl_framebuffer_set(framebuffer, ix, endY, color);
-    }
-
-    for (tsgl_pos iy = y; iy < y + height; iy++) {
-        tsgl_framebuffer_set(framebuffer, x, iy, color);
-        tsgl_framebuffer_set(framebuffer, endX, iy, color);
-    }
+void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
+    //TSGL_GFX_RECT(&framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, strokelen);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
