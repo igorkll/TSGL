@@ -12,13 +12,17 @@ typedef struct {
     tsgl_pos defaultHeight;
     float colorsize;
     uint8_t rotation;
+    uint8_t realRotation;
     tsgl_colormode colormode;
     tsgl_rawcolor black;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
+
+// control
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
+void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //it is assumed that this method will be used together with screen rotation via the tsgl_display_rotate method
 
 // graphic
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);

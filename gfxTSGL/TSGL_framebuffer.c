@@ -9,7 +9,7 @@
 const char* TAG = "TSGL_framebuffer";
 
 static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    switch (framebuffer->rotation) {
+    switch (framebuffer->realRotation) {
         case 0:
             return x;
         case 1:
@@ -24,7 +24,7 @@ static tsgl_pos _rotateX(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) 
 }
 
 static tsgl_pos _rotateY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    switch (framebuffer->rotation) {
+    switch (framebuffer->realRotation) {
         case 0:
             return y;
         case 1:
@@ -60,6 +60,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->defaultWidth = width;
     framebuffer->defaultHeight = height;
     framebuffer->rotation = 0;
+    framebuffer->realRotation = 0;
     framebuffer->colormode = colormode;
     framebuffer->buffersize = width * height * framebuffer->colorsize;
     if (caps == 0) {
@@ -85,6 +86,11 @@ void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
 }
 
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+    framebuffer->realRotation = rotation;
+    tsgl_framebuffer_hardwareRotate(framebuffer, rotation);
+}
+
+void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->rotation = rotation % 4;
     switch (framebuffer->rotation) {
         case 0:
