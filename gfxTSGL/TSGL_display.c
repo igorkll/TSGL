@@ -212,7 +212,16 @@ void tsgl_display_free(tsgl_display* display) {
 
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     _select(display, x, y, 1, 1);
-    tsgl_display_sendData(display, (const uint8_t*)color.arr, display->colorsize);
+    switch (display->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            tsgl_display_sendData(display, tsgl_color_make444(color).arr, 3);
+            break;
+        
+        default:
+            tsgl_display_sendData(display, (const uint8_t*)color.arr, display->colorsize);
+            break;
+    }
     _selectLast(display);
 }
 
