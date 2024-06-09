@@ -215,7 +215,7 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
-            tsgl_display_sendData(display, tsgl_color_make444(color).arr, 2);
+            tsgl_display_sendData(display, color.arr, 2);
             break;
         
         default:
@@ -231,7 +231,7 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
-            tsgl_display_sendFlood(display, tsgl_color_make444(color).arr, 3, (width * height) / 2);
+            tsgl_display_sendFlood(display, color.arr, 3, (width * height) / 2);
             break;
         
         default:

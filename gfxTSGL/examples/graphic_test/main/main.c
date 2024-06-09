@@ -12,7 +12,7 @@
 
 #define WIDTH     320
 #define HEIGHT    240
-#define DRIVER    st7789_rgb444
+#define DRIVER    st7789_rgb565
 //#define WITHOUT_FRAMEBUFFER
 
 

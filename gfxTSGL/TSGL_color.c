@@ -150,9 +150,9 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
             uint8_t r = color.r >> 4;
             uint8_t g = color.g >> 4;
             uint8_t b = color.b >> 4;
-            rawcolor.arr[0] = (r << 4) | g,
-            rawcolor.arr[1] = (b << 4) | r,
-            rawcolor.arr[2] = (g << 4) | b
+            rawcolor.arr[0] = (r << 4) | g;
+            rawcolor.arr[1] = (b << 4) | r;
+            rawcolor.arr[2] = (g << 4) | b;
             break;
         }
 
@@ -160,9 +160,9 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
             uint8_t r = color.r >> 4;
             uint8_t g = color.g >> 4;
             uint8_t b = color.b >> 4;
-            rawcolor.arr[0] = (b << 4) | g,
-            rawcolor.arr[1] = (r << 4) | b,
-            rawcolor.arr[2] = (g << 4) | r
+            rawcolor.arr[0] = (b << 4) | g;
+            rawcolor.arr[1] = (r << 4) | b;
+            rawcolor.arr[2] = (g << 4) | r;
             break;
         }
     }
@@ -215,18 +215,18 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
 
         case tsgl_rgb444 : {
             tsgl_color color = {
-                .r = color.arr[0] & 0b11110000,
-                .g = (color.arr[0] & 0b1111) << 4,
-                .b = color.arr[1] & 0b11110000
+                .r = rawcolor.arr[0] & 0b11110000,
+                .g = (rawcolor.arr[0] & 0b1111) << 4,
+                .b = rawcolor.arr[1] & 0b11110000
             };
             return color;
         }
 
         case tsgl_bgr444 : {
             tsgl_color color = {
-                .b = color.arr[0] & 0b11110000,
-                .g = (color.arr[0] & 0b1111) << 4,
-                .r = color.arr[1] & 0b11110000
+                .b = rawcolor.arr[0] & 0b11110000,
+                .g = (rawcolor.arr[0] & 0b1111) << 4,
+                .r = rawcolor.arr[1] & 0b11110000
             };
             return color;
         }
@@ -240,57 +240,33 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
 void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) {
     size_t index = rawindex * 1.5;
     if ((rawindex & 1) == 0) {
-        buffer[index] = (color.arr[0] << 4) | color.arr[1];
-        buffer[index+1] = (color.arr[2] << 4) | (buffer[index+1] & 0b1111);
+        buffer[index] = color.arr[0];
+        buffer[index+1] = (color.arr[1] & 0b11110000) | (buffer[index+1] & 0b1111);
     } else {
-        buffer[index] = (buffer[index] & 0b11110000) | color.arr[0];
-        buffer[index+1] = (color.arr[1] << 4) | color.arr[2];
+        buffer[index] = (color.arr[1] & 0b00001111) | (buffer[index] & 0b11110000);
+        buffer[index+1] = color.arr[2];
     }
 }
 
 tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
-    tsgl_rawcolor result;
     size_t index = rawindex * 1.5;
+    uint8_t v0 = 0;
+    uint8_t v1 = 0;
+    uint8_t v2 = 0;
     if ((rawindex & 1) == 0) {
-        result.arr[0] = buffer[index] >> 4;
-        result.arr[1] = buffer[index] & 0b1111;
-        result.arr[2] = buffer[index+1] >> 4;
+        v0 = buffer[index] >> 4;
+        v1 = buffer[index] & 0b1111;
+        v2 = buffer[index+1] >> 4;
     } else {
-        result.arr[0] = buffer[index] & 0b1111;
-        result.arr[1] = buffer[index+1] >> 4;
-        result.arr[2] = buffer[index+1] & 0b1111;
+        v0 = buffer[index] & 0b1111;
+        v1 = buffer[index+1] >> 4;
+        v2 = buffer[index+1] & 0b1111;
     }
-    return result;
-}
-
-tsgl_rawcolor tsgl_color_make444(tsgl_rawcolor color) {
     tsgl_rawcolor result = {
         .arr = {
-            (color.arr[0] << 4) | color.arr[1],
-            (color.arr[2] << 4) | color.arr[0],
-            (color.arr[1] << 4) | color.arr[2]
-        }
-    };
-    return result;
-}
-
-tsgl_rawcolor tsgl_color_parse444_1(tsgl_rawcolor color) {
-    tsgl_rawcolor result = {
-        .arr = {
-            color.arr[0] >> 4,
-            color.arr[0] & 0b1111,
-            color.arr[1] >> 4
-        }
-    };
-    return result;
-}
-
-tsgl_rawcolor tsgl_color_parse444_2(tsgl_rawcolor color) {
-    tsgl_rawcolor result = {
-        .arr = {
-            color.arr[1] & 0b1111,
-            color.arr[2] >> 4,
-            color.arr[2] & 0b1111
+            (v0 << 4) | v1,
+            (v2 << 4) | v0,
+            (v1 << 4) | v2
         }
     };
     return result;
