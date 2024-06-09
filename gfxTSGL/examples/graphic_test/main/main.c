@@ -10,10 +10,11 @@
 
 #include <TSGL_drivers/st7789.h>
 
-#define WIDTH     320
-#define HEIGHT    240
+#define WIDTH     240
+#define HEIGHT    320
 #define DRIVER    st7789_rgb565
-//#define WITHOUT_FRAMEBUFFER
+#define STEP 8
+#define WITHOUT_FRAMEBUFFER
 
 
 #ifdef WITHOUT_FRAMEBUFFER
@@ -113,16 +114,16 @@ void app_main() {
             tsgl_display_send(&display, &framebuffer);
         #endif
 
-        step++;
+        step += STEP;
         if (step > stepMax) {
             rotation = (rotation + 1) % 4;
             _rotate(rotation);
 
-            step = 0;
-            hue();
-
             tsgl_display_clear(&display, tsgl_color_raw(TSGL_LIME, COLORMODE));
             vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+            step = 0;
+            hue();
         }
         
         currentFrame++;

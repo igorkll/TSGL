@@ -1,5 +1,10 @@
+#pragma once
 #include "../TSGL.h"
-#include <stdint.h>
+
+#define _ST7789_ROTATION_0 0
+#define _ST7789_ROTATION_1 (1<<2) //Right to Left
+#define _ST7789_ROTATION_2 (1<<4) //Bottom to Top
+#define _ST7789_ROTATION_3 (1<<2) | (1<<4) //Right to Left | Bottom to Top
 
 static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
     tsgl_driver_list list = {
@@ -17,7 +22,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         default : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {(1<<5) | (1<<6)}, 1, -1}
+                    {0x36, {_ST7789_ROTATION_0}, 1, -1}
                 }
             };
             return list;
@@ -26,7 +31,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 1 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {(1<<5)}, 1, -1}
+                    {0x36, {_ST7789_ROTATION_1}, 1, -1}
                 }
             };
             return list;
@@ -35,7 +40,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 2 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {(1<<5) | (1<<7)}, 1, -1}
+                    {0x36, {_ST7789_ROTATION_2}, 1, -1}
                 }
             };
             return list;
@@ -44,7 +49,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 3 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {(1<<5) | (1<<6) | (1<<7)}, 1, -1}
+                    {0x36, {_ST7789_ROTATION_3}, 1, -1}
                 }
             };
             return list;
@@ -72,7 +77,7 @@ static tsgl_driver_list _st7789_invert(bool invert) {
 
 #define _ST7789_SERVICE_CODE \
     /* Memory Data Access Control */ \
-    {0x36, {(1<<5)|(1<<6)}, 1}, \
+    {0x36, {_ST7789_ROTATION_0}, 1}, \
     /* Porch Setting */ \
     {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5}, \
     /* Gate Control, Vgh=13.65V, Vgl=-10.43V */ \
@@ -115,6 +120,8 @@ static tsgl_driver_list _st7789_invert(bool invert) {
 .select = _st7789_select, \
 .rotate = _st7789_rotate, \
 .invert = _st7789_invert
+
+
 
 static const tsgl_driver st7789_rgb444 = {
     .colormode = tsgl_rgb444,
