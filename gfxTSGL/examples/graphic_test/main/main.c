@@ -80,9 +80,6 @@ void app_main() {
     tsgl_display_clear(&display, tsgl_color_raw(TSGL_CYAN, COLORMODE));
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
-    tsgl_display_rotate(&display, 1);
-
     hue();
     uint16_t step = 0;
     uint16_t stepMax = umin(currentWidth, currentHeight) / 2;
@@ -123,6 +120,9 @@ void app_main() {
 
             step = 0;
             hue();
+
+            tsgl_display_clear(&display, tsgl_color_raw(TSGL_LIME, COLORMODE));
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         
         currentFrame++;
