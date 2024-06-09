@@ -147,22 +147,16 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
         }
 
         case tsgl_rgb444 : {
-            uint8_t r = color.r >> 4;
-            uint8_t g = color.g >> 4;
-            uint8_t b = color.b >> 4;
-            rawcolor.arr[0] = (r << 4) | g,
-            rawcolor.arr[1] = (b << 4) | r,
-            rawcolor.arr[2] = (g << 4) | b
+            rawcolor.arr[0] = color.r >> 4;
+            rawcolor.arr[1] = color.g >> 4;
+            rawcolor.arr[2] = color.b >> 4;
             break;
         }
 
         case tsgl_bgr444 : {
-            uint8_t r = color.r >> 4;
-            uint8_t g = color.g >> 4;
-            uint8_t b = color.b >> 4;
-            rawcolor.arr[0] = (b << 4) | g,
-            rawcolor.arr[1] = (r << 4) | b,
-            rawcolor.arr[2] = (g << 4) | r
+            rawcolor.arr[0] = color.b >> 4;
+            rawcolor.arr[1] = color.g >> 4;
+            rawcolor.arr[2] = color.r >> 4;
             break;
         }
     }
@@ -215,18 +209,18 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
 
         case tsgl_rgb444 : {
             tsgl_color color = {
-                .r = color.arr[0] & 0b11110000,
-                .g = (color.arr[0] & 0b1111) << 4,
-                .b = color.arr[1] & 0b11110000
+                .r = rawcolor.arr[0] << 4,
+                .g = rawcolor.arr[1] << 4,
+                .b = rawcolor.arr[2] << 4
             };
             return color;
         }
 
         case tsgl_bgr444 : {
             tsgl_color color = {
-                .b = color.arr[0] & 0b11110000,
-                .g = (color.arr[0] & 0b1111) << 4,
-                .r = color.arr[1] & 0b11110000
+                .r = rawcolor.arr[2] << 4,
+                .g = rawcolor.arr[1] << 4,
+                .b = rawcolor.arr[1] << 4
             };
             return color;
         }
