@@ -206,10 +206,7 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
-    tsgl_display_fill(display, x, y, width, strokelen, color);
-    tsgl_display_fill(display, x, (y + height) - strokelen, width, strokelen, color);
-    tsgl_display_fill(display, x, y + 1, strokelen, height - 2, color);
-    tsgl_display_fill(display, (x + width) - strokelen, y + 1, strokelen, height - 2, color);
+    TSGL_GFX_RECT(display, tsgl_display_fill, x, y, width, height, color, strokelen);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
