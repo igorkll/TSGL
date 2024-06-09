@@ -144,7 +144,7 @@ static const tsgl_driver st7789_rgb565 = {
     .rotate = _st7789_rotate
 };
 
-static const tsgl_driver st7789_rgb666 = {
+static const tsgl_driver st7789_rgb666 = { //3 bytes per pixel. 6 bits are not used
     .colormode = tsgl_rgb888,
     .init = {
         /* Memory Data Access Control, MX=MV=1, MY=ML=MH=0, RGB=0 */
