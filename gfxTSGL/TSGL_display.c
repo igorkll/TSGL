@@ -156,11 +156,6 @@ void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos
     _select(display, x, y, width, height);
 }
 
-void tsgl_display_enable(tsgl_display* display) {
-    _doCommands(display, display->driver->enable);
-    _selectLast(display);
-}
-
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
@@ -194,8 +189,20 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
 }
 
-void tsgl_display_disable(tsgl_display* display) {
-    _doCommands(display, display->driver->disable);
+void tsgl_display_setEnable(tsgl_display* display, bool state) {
+    if (state) {
+        _doCommands(display, display->driver->enable);
+        _selectLast(display);
+    } else {
+        _doCommands(display, display->driver->disable);
+    }
+}
+
+void tsgl_display_setInvert(tsgl_display* display, bool state) {
+    if (display->driver->invert != NULL) {
+        _doCommandList(display, display->driver->invert(state));
+        _selectLast(display);
+    }
 }
 
 void tsgl_display_free(tsgl_display* display) {

@@ -120,6 +120,9 @@ void app_main() {
 
             step = 0;
             hue();
+
+            tsgl_display_setInvert(&display, rotation == 1);
+            tsgl_display_setEnable(&display, rotation != 2);
         }
         
         currentFrame++;

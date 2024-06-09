@@ -52,6 +52,24 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
     }
 }
 
+static tsgl_driver_list _st7789_invert(bool invert) {
+    if (invert) {
+        tsgl_driver_list list = {
+            .list = {
+                {0x21, {}, 0, -1}
+            }
+        };
+        return list;
+    } else {
+        tsgl_driver_list list = {
+            .list = {
+                {0x20, {}, 0, -1}
+            }
+        };
+        return list;
+    }
+}
+
 #define _ST7789_SERVICE_CODE \
 .enable = { \
     {0x11, {0}, 0, 100}, \
@@ -64,7 +82,8 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
     {0x10, {0}, 0, -1} \
 }, \
 .select = _st7789_select, \
-.rotate = _st7789_rotate
+.rotate = _st7789_rotate, \
+.invert = _st7789_invert
 
 static const tsgl_driver st7789_rgb444 = {
     .colormode = tsgl_rgb444,

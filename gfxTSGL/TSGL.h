@@ -36,4 +36,5 @@ typedef struct {
     tsgl_driver_command disable[8];
     tsgl_driver_list (*select) (tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
     tsgl_driver_list (*rotate) (uint8_t rotation);
+    tsgl_driver_list (*invert) (bool invert);
 } tsgl_driver;

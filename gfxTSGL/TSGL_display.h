@@ -45,8 +45,8 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not r
 void tsgl_display_selectAll(tsgl_display* display);
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 
-void tsgl_display_enable(tsgl_display* display);
-void tsgl_display_disable(tsgl_display* display);
+void tsgl_display_setEnable(tsgl_display* display, bool state);
+void tsgl_display_setInvert(tsgl_display* display, bool state);
 
 // graphic
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
