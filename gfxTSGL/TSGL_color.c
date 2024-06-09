@@ -241,3 +241,18 @@ void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) 
         buffer[index+1] = (color.arr[1] << 4) | color.arr[2];
     }
 }
+
+tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
+    tsgl_rawcolor color;
+    size_t index = rawindex * 1.5;
+    if ((rawindex & 1) == 0) {
+        color.arr[0] = buffer[index] >> 4;
+        color.arr[1] = buffer[index] & 0b1111;
+        color.arr[2] = buffer[index+1] >> 4;
+    } else {
+        color.arr[0] = buffer[index] & 0b1111;
+        color.arr[1] = buffer[index+1] >> 4;
+        color.arr[2] = buffer[index+1] & 0b1111;
+    }
+    return color;
+}
