@@ -121,12 +121,13 @@ void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y,
             tsgl_color_444write(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
             break;
         
-        default:
+        default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 framebuffer->buffer[index + i] = color.arr[i];
             }
             break;
+        }
     }
 }
 
@@ -180,12 +181,13 @@ tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, ts
         case tsgl_bgr444:
             return tsgl_color_444read(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer);
         
-        default:
+        default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
             tsgl_rawcolor rawcolor;
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 rawcolor.arr[i] = framebuffer->buffer[index + i];
             }
             return rawcolor;
+        }
     }
 }
