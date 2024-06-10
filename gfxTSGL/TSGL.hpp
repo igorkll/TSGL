@@ -15,7 +15,7 @@ class TSGL_Display {
     tsgl_pos& width = display.width;
     tsgl_pos& height = display.height;
 
-    TSGL_Display (const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
         tsgl_spi_init(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost);
         if (buffered) {
@@ -26,7 +26,7 @@ class TSGL_Display {
         ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
     }
 
-    TSGL_Display (const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
+    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
         tsgl_spi_initManual(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost, mosi, miso, clk);
         if (buffered) {
             ESP_ERROR_CHECK(tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM));
@@ -34,10 +34,14 @@ class TSGL_Display {
         ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
     }
 
-    ~TSGL_Display () {
+    void free() {
         tsgl_display_free(&display);
         tsgl_framebuffer_free(framebuffer);
-        free(framebuffer);
+        ::free(framebuffer);
+    }
+
+    ~TSGL_Display () {
+        free();
     }
 
     void setInvert(bool state) {
