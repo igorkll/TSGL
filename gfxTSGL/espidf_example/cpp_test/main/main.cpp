@@ -18,8 +18,14 @@ tsgl_driver_settings driverSettings = {
 
 TSGL_Display display;
 
+float fmap(float value, float low, float high, float low_2, float high_2) {
+    float relative_value = (value - low) / (high - low);
+    float scaled_value = low_2 + (high_2 - low_2) * relative_value;
+    return scaled_value;
+}
+
 extern "C" void app_main() {
-    display.begin(&st7789_rgb565, driverSettings, true, TSGL_HOST1, 20000000, DC, CS, RST);
+    display.begin(&st7789_rgb565, driverSettings, true, TSGL_HOST1, 60000000, DC, CS, RST);
 
     display.clear(TSGL_GREEN);
     display.update();
@@ -37,7 +43,21 @@ extern "C" void app_main() {
     display.update();
     vTaskDelay(500 / portTICK_PERIOD_MS);
 
-    while (true) {
+    for (uint8_t i = 0; i < 4; i++) {
+        display.setRotation(i);
+        display.clear(TSGL_BROWN);
+        display.fill(10, 10, 25, 25, TSGL_LIME);
+        display.rect(10, 10, display.width - 20, display.height - 20, TSGL_RED, 10);
+        display.update();
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
 
+    for (uint8_t i = 0; i < 4; i++) {
+        display.setRotation(i);
+        for (tsgl_pos pos = 0; pos < display.width; pos++) {
+            display.fill(pos, 0, 1, display.height, tsgl_color_hsv(fmap(pos, 0, display.width - 1, 0, 255), 255, 255));
+        }
+        display.update();
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

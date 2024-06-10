@@ -161,7 +161,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     if (state) {
         _doCommands(display, display->driver->enable);
-        tsgl_display_rotate(display, display->rotation);
+        tsgl_display_selectAll(display);
     } else {
         _doCommands(display, display->driver->disable);
     }
@@ -171,6 +171,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
         _doCommandList(display, display->driver->invert(state ^ display->driver_settings.invert));
+        tsgl_display_selectAll(display);
     }
     display->invert = state;
 }
