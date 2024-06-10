@@ -5,8 +5,10 @@ tsgl_driver_settings driverSettings = {
     .width = 240,
     .height = 320
 };
-
-TSGL_Display display(&st7789_rgb565, driverSettings, true, );
+#define DC 21 
+#define CS 22
+#define RST 18
+TSGL_Display display(&st7789_rgb565, driverSettings, true, TSGL_HOST1, 20000000, DC, CS, RST);
 
 void setup() {
   
