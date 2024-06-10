@@ -23,7 +23,19 @@ extern "C" void app_main() {
 
     display.clear(TSGL_GREEN);
     display.update();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    display.clear(TSGL_YELLOW);
+    display.update();
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    display.clear(TSGL_BLUE);
+    display.update();
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    display.clear(TSGL_PURPLE);
+    display.update();
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     while (true) {
 
