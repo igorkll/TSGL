@@ -20,6 +20,7 @@ class TSGL_Display {
         tsgl_spi_init(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost);
         if (buffered) {
             //attempt to allocate a buffer in external memory
+            framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
             ESP_ERROR_CHECK(tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM));
         }
         ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
