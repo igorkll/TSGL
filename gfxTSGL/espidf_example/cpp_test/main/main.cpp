@@ -1,4 +1,7 @@
-#pragma GCC diagnostic ignored "-Werror=narrowing"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wnarrowing"
+#pragma GCC diagnostic push
+
 #include <TSGL.hpp>
 #include <TSGL_drivers/st7789.h>
 
