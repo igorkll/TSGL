@@ -36,12 +36,26 @@ class TSGL_Display {
         free(framebuffer);
     }
 
-    void invertDisplay(bool state) {
+    void setInvert(bool state) {
         tsgl_display_setInvert(&display, state);
     }
 
-    void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
-        tsgl_rawcolor color = tsgl_color_raw(color, display.colormode);
+    void setEnable(bool state) {
+        tsgl_display_setEnable(&display, state);
+    }
+
+    void setRotation(uint8_t rotation) {
+        if (framebuffer == NULL) {
+            tsgl_display_rotate(&display, rotation);
+        } else {
+            tsgl_framebuffer_hardwareRotate(framebuffer, rotation);
+            tsgl_display_rotate(&display, rotation);
+        }
+    }
+
+    // --------------------- graphic
+
+    void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
         if (framebuffer == NULL) {
             tsgl_display_set(&display, x, y, color);
         } else {
@@ -49,8 +63,7 @@ class TSGL_Display {
         }
     }
 
-    void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
-        tsgl_rawcolor color = tsgl_color_raw(color, display.colormode);
+    void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
         if (framebuffer == NULL) {
             tsgl_display_fill(&display, x, y, width, height, color);
         } else {
@@ -58,8 +71,7 @@ class TSGL_Display {
         }
     }
     
-    void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color, tsgl_pos strokelen) {
-        tsgl_rawcolor color = tsgl_color_raw(color, display.colormode);
+    void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
         if (framebuffer == NULL) {
             tsgl_display_rect(&display, x, y, width, height, color, strokelen);
         } else {
@@ -67,8 +79,7 @@ class TSGL_Display {
         }
     }
 
-    void clear(tsgl_color color) {
-        tsgl_rawcolor color = tsgl_color_raw(color, display.colormode);
+    void clear(tsgl_rawcolor color) {
         if (framebuffer == NULL) {
             tsgl_display_clear(&display, color);
         } else {
@@ -76,11 +87,33 @@ class TSGL_Display {
         }
     }
     
-    tsgl_color tsgl_framebuffer_get(tsgl_pos x, tsgl_pos y) {
+    tsgl_rawcolor get(tsgl_pos x, tsgl_pos y) {
         if (framebuffer == NULL) {
             return TSGL_BLACK; //temporarily unavailable
         } else {
-            return tsgl_color_uraw(tsgl_framebuffer_get(framebuffer, x, y), display.colormode);
+            return tsgl_framebuffer_get(framebuffer, x, y);
         }
+    }
+
+    // --------------------- high-level color API
+
+    void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
+        set(x, y, tsgl_color_raw(color, display.colormode));
+    }
+
+    void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
+        fill(x, y, width, height, tsgl_color_raw(color, display.colormode));
+    }
+    
+    void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color, tsgl_pos strokelen) {
+        rect(x, y, width, height, tsgl_color_raw(color, display.colormode), strokelen);
+    }
+
+    void clear(tsgl_color color) {
+        clear(tsgl_color_raw(color, display.colormode));
+    }
+    
+    tsgl_color get(tsgl_pos x, tsgl_pos y) {
+        return tsgl_color_uraw(get(x, y), display.colormode);
     }
 };
