@@ -1,10 +1,12 @@
 #pragma once
-#include "TSGL.h"
-#include "TSGL_framebuffer.h"
-#include "TSGL_display.h"
-#include "TSGL_color.h"
-#include "TSGL_spi.h"
-#include <esp_heap_caps.h>
+extern "C" {
+    #include "TSGL.h"
+    #include "TSGL_framebuffer.h"
+    #include "TSGL_display.h"
+    #include "TSGL_color.h"
+    #include "TSGL_spi.h"
+    #include <esp_heap_caps.h>
+}
 
 class TSGL_Display {
     public:
@@ -20,7 +22,7 @@ class TSGL_Display {
             //attempt to allocate a buffer in external memory
             ESP_ERROR_CHECK(tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM));
         }
-        ESP_ERROR_CHECK(tsgl_display_spi(&display, &driver, driver_settings, spihost, freq, dc, cs, rst));
+        ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
     }
 
     TSGL_Display (const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
@@ -28,7 +30,7 @@ class TSGL_Display {
         if (buffered) {
             ESP_ERROR_CHECK(tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM));
         }
-        ESP_ERROR_CHECK(tsgl_display_spi(&display, &driver, driver_settings, spihost, freq, dc, cs, rst));
+        ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
     }
 
     ~TSGL_Display () {
@@ -92,9 +94,9 @@ class TSGL_Display {
         }
     }
     
-    tsgl_rawcolor get(tsgl_pos x, tsgl_pos y) {
+    tsgl_rawcolor rawGet(tsgl_pos x, tsgl_pos y) {
         if (framebuffer == NULL) {
-            return TSGL_BLACK; //temporarily unavailable
+            return display.black; //temporarily unavailable
         } else {
             return tsgl_framebuffer_get(framebuffer, x, y);
         }
@@ -119,6 +121,6 @@ class TSGL_Display {
     }
     
     tsgl_color get(tsgl_pos x, tsgl_pos y) {
-        return tsgl_color_uraw(get(x, y), display.colormode);
+        return tsgl_color_uraw(rawGet(x, y), display.colormode);
     }
 };
