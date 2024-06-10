@@ -51,10 +51,10 @@ esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
             ESP_LOGE(TAG, "%i spihost is unknown, tsgl_spi_init cannot be used", host);
             return ESP_ERR_INVALID_ARG;
     }
-    return tsgl_spi_initManual(maxlen, host, miso, mosi, clk);
+    return tsgl_spi_initManual(maxlen, host, mosi, miso, clk);
 }
 
-esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t miso, int8_t mosi, int8_t clk) {
+esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t mosi, int8_t miso, int8_t clk) {
     spi_bus_config_t buscfg={
         .miso_io_num=miso,
         .mosi_io_num=mosi,
