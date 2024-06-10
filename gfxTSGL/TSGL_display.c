@@ -122,7 +122,7 @@ void tsgl_display_selectAll(tsgl_display* display) {
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     tsgl_pos offsetX = display->driver_settings.offsetX;
     tsgl_pos offsetY = display->driver_settings.offsetY;
-    _doCommandList(display, display->driver->select(offsetX + x, offsetY + y, (x + width) - 1, (y + height) - 1));
+    _doCommandList(display, display->driver->select(offsetX + x, offsetY + y, (offsetX + x + width) - 1, (offsetY + y + height) - 1));
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
