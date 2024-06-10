@@ -4,6 +4,7 @@
 #include "TSGL_display.h"
 #include "TSGL_color.h"
 #include "TSGL_spi.h"
+#include <esp_heap_caps.h>
 
 class TSGL_Display {
     public:
@@ -51,6 +52,10 @@ class TSGL_Display {
             tsgl_framebuffer_hardwareRotate(framebuffer, rotation);
             tsgl_display_rotate(&display, rotation);
         }
+    }
+
+    void update() {
+        if (framebuffer != NULL) tsgl_display_send(&display, framebuffer);
     }
 
     // --------------------- graphic
