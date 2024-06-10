@@ -6,6 +6,7 @@
 #include <freertos/task.h>
 #include <TSGL.hpp>
 #include <TSGL_drivers/st7789.h>
+#include <esp_timer.h>
 
 #define DC 21
 #define CS 22
@@ -22,6 +23,10 @@ float fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);
     float scaled_value = low_2 + (high_2 - low_2) * relative_value;
     return scaled_value;
+}
+
+int imap(int value, int low, int high, int low_2, int high_2) {
+    return (int)(fmap(value, low, high, low_2, high_2) + 0.5);
 }
 
 extern "C" void app_main() {
@@ -71,6 +76,17 @@ extern "C" void app_main() {
             }
             display.update();
             vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+
+        display.setRotation(1);
+        for (uint8_t i = 0; i < 255;) {
+            int64_t t1 = esp_timer_get_time();
+            for (tsgl_pos pos = 0; pos < display.width; pos++) {
+                display.fill(pos, 0, 1, display.height, tsgl_color_hsv((imap(pos, 0, display.width - 1, 0, 255) - i) % 256, 255, 255));
+            }
+            int64_t t2 = esp_timer_get_time();
+            display.update();
+            i += ((t2 - t1) / 1000000) * 64;
         }
     }
 }
