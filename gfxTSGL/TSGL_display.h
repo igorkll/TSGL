@@ -20,12 +20,15 @@ typedef struct {
     void* interface;
     int8_t dc;
     const tsgl_driver* driver;
+    tsgl_driver_settings driver_settings;
     tsgl_colormode colormode;
     float colorsize;
     tsgl_rawcolor black;
+    bool enable;
+    bool invert;
 } tsgl_display;
 
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, const tsgl_driver_settings driver_settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);
 void tsgl_display_free(tsgl_display* display);
 
 // ---------------- low level methods (it is not recommended to use)

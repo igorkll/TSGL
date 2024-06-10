@@ -15,6 +15,10 @@
 #define DRIVER    st7789_rgb565
 //#define WITHOUT_FRAMEBUFFER
 
+tsgl_driver_settings driverSettings = {
+    .width = WIDTH,
+    .height = HEIGHT
+};
 
 #ifdef WITHOUT_FRAMEBUFFER
     #define currentWidth display.width
@@ -72,7 +76,7 @@ void app_main() {
     #ifndef WITHOUT_FRAMEBUFFER
         ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, WIDTH, HEIGHT, MALLOC_CAP_SPIRAM));
     #endif
-    ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, WIDTH, HEIGHT, TSGL_HOST1, 60000000, 21, 22, 18));
+    ESP_ERROR_CHECK(tsgl_display_spi(&display, &DRIVER, driverSettings, TSGL_HOST1, 60000000, 21, 22, 18));
     printFreeRamSize("after display init");
 
     // drawing without buffer

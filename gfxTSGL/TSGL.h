@@ -3,15 +3,19 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+// ---------------- base
+
+typedef int16_t tsgl_pos;
+
 #define TSGL_GFX_RECT(arg, fill, x, y, width, height, color, strokelen) \
 fill(arg, x, y, width, strokelen, color); \
 fill(arg, x, (y + height) - strokelen, width, strokelen, color); \
 fill(arg, x, y + 1, strokelen, height - 2, color); \
 fill(arg, (x + width) - strokelen, y + 1, strokelen, height - 2, color)
 
-typedef int16_t tsgl_pos;
-extern const float tsgl_colormodeSizes[];
+// ---------------- color
 
+extern const float tsgl_colormodeSizes[];
 typedef enum {
     tsgl_rgb565_le,
     tsgl_rgb565_be,
@@ -22,6 +26,8 @@ typedef enum {
     tsgl_rgb444,
     tsgl_bgr444,
 } tsgl_colormode;
+
+// ---------------- driver
 
 typedef struct {
     uint8_t cmd;
@@ -43,3 +49,13 @@ typedef struct {
     tsgl_driver_list (*rotate) (uint8_t rotation);
     tsgl_driver_list (*invert) (bool invert);
 } tsgl_driver;
+
+// ---------------- settings
+
+typedef struct {
+    bool invert;
+    tsgl_pos width;
+    tsgl_pos height;
+    tsgl_pos offsetX;
+    tsgl_pos offsetY;
+} tsgl_driver_settings;

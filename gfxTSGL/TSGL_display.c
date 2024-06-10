@@ -38,7 +38,7 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
 
 
 
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsgl_pos width, tsgl_pos height, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, const tsgl_driver_settings driver_settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
         .mode = 0,
@@ -47,10 +47,11 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
         .pre_cb = tsgl_spi_pre_transfer_callback
     };
 
-    display->width = width;
-    display->height = height;
-    display->defaultWidth = width;
-    display->defaultHeight = height;
+    memcpy(&display->driver_settings, &driver_settings, sizeof(driver_settings));
+    display->width = driver_settings.width;
+    display->height = driver_settings.height;
+    display->defaultWidth = driver_settings.width;
+    display->defaultHeight = driver_settings.height;
     display->rotation = 0;
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
@@ -80,8 +81,13 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, tsg
 
         // init display
         _doCommands(display, driver->init);
+        tsgl_display_setInvert(display, false);
+        tsgl_display_rotate(display, 0);
+        tsgl_display_clear(display, display->black);
+
+        // enable display
         _doCommands(display, driver->enable);
-        tsgl_display_selectAll(display);
+        tsgl_display_rotate(display, 0);
     } else {
         free(display->interface);
     }
@@ -114,7 +120,9 @@ void tsgl_display_selectAll(tsgl_display* display) {
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-    _doCommandList(display, display->driver->select(x, y, (x + width) - 1, (y + height) - 1));
+    tsgl_pos offsetX = display->driver_settings.offsetX;
+    tsgl_pos offsetY = display->driver_settings.offsetY;
+    _doCommandList(display, display->driver->select(offsetX + x, offsetY + y, (x + width) - 1, (y + height) - 1));
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
@@ -153,15 +161,18 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     if (state) {
         _doCommands(display, display->driver->enable);
+        tsgl_display_rotate(display, display->rotation);
     } else {
         _doCommands(display, display->driver->disable);
     }
+    display->enable = state;
 }
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
-        _doCommandList(display, display->driver->invert(state));
+        _doCommandList(display, display->driver->invert(state ^ display->driver_settings.invert));
     }
+    display->invert = state;
 }
 
 void tsgl_display_free(tsgl_display* display) {
