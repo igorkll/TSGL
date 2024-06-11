@@ -83,7 +83,7 @@ extern "C" void app_main() {
         for (tsgl_pos iy = 0; iy < display.height; iy += 8) {
             display.line(0, 0, display.width, iy, TSGL_LIME);
         }
-        display.line(0, 0, display.width, display.height, TSGL_BLUE);
+        display.line(0, 0, display.width, display.height, TSGL_BLUE, 3);
         display.update();
         vTaskDelay(2000 / portTICK_PERIOD_MS);
 

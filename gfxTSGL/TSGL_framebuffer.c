@@ -205,8 +205,8 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     }
 }
 
-void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color) {
-    TSGL_GFX_LINE(framebuffer, tsgl_framebuffer_set, tsgl_framebuffer_fill, x1, y1, x2, y2, color);
+void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
+    TSGL_GFX_LINE(framebuffer, tsgl_framebuffer_set, tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke);
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
@@ -249,8 +249,8 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     }
 }
 
-void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos strokelen) {
-    TSGL_GFX_RECT(framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, strokelen);
+void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
+    TSGL_GFX_RECT(framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, stroke);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
