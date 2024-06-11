@@ -30,7 +30,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    display.begin(&st7789_rgb565, driverSettings, TSGL_NOBUFFER, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
     tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);
@@ -63,7 +63,7 @@ extern "C" void app_main() {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
 
-        display.setRotation(0);
+        display.setRotation(1);
         waittime = 25;
         for (uint8_t i = 0; i < 2; i++) {
             for (tsgl_pos pos = 0; pos < display.width;) {

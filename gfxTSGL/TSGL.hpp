@@ -81,7 +81,7 @@ class TSGL_Display {
 
     void push(tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
         if (framebuffer == NULL) {
-            
+            tsgl_display_push(&display, x, y, rotation, sprite);
         } else {
             tsgl_framebuffer_push(framebuffer, x, y, rotation, sprite);
         }
