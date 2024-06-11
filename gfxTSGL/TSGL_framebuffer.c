@@ -122,7 +122,7 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
-tsgl_rawcolor _rawget(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+static tsgl_rawcolor _ignoreRotationGet(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -139,15 +139,52 @@ tsgl_rawcolor _rawget(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     }
 }
 
+static void _setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            tsgl_color_444write(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
+            break;
+        
+        default: {
+            size_t index = _getBufferIndex(framebuffer, x, y);
+            for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+                framebuffer->buffer[index + i] = color.arr[i];
+            }
+            break;
+        }
+    }
+}
+
 static bool warn1Printed = false;
 static bool warn2Printed = false;
+
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+    tsgl_pos spriteWidth;
+    tsgl_pos spriteHeight;
+    switch (framebuffer->rotation) {
+        case 0:
+        case 2:
+            spriteWidth = sprite->defaultWidth;
+            spriteHeight = sprite->defaultHeight;
+            break;
+        case 1:
+        case 3:
+            spriteWidth = sprite->defaultHeight;
+            spriteHeight = sprite->defaultWidth;
+            break;
+    }
+
+    tsgl_pos startX = 0;
+    tsgl_pos startY = 0;
+    if (x < 0) startX = -x;
+    if (y < 0) startY = -y;
+
     if (framebuffer->colormode != sprite->colormode) {
         if (!warn1Printed) {
             ESP_LOGE(TAG, "pushing a framebuffer to a framebuffer with a different color mode can lead to a drop in performance");
             warn1Printed = true;
         }
-
     } else {
         switch (framebuffer->colormode) {
             case tsgl_rgb444:
@@ -159,16 +196,20 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
                 break;
             
             default: {
-                for (tsgl_pos posx = 0; posx < sprite->defaultWidth; posx++) {
-                    tsgl_pos setPosX = posx + x;
-                    for (tsgl_pos posy = 0; posy < sprite->defaultHeight; posy++) {
-                        
-                    }
-                    if (setPosX >= ) 
-                }
-                break;
+                
+                return; //simple copying will not be started in this mode
             }
         }
+    }
+
+    for (tsgl_pos posX = startX; posX < sprite->defaultWidth; posX++) { //simple copying
+        tsgl_pos setPosX = posX + x;
+        if (setPosX >= framebuffer->defaultWidth) break;
+        for (tsgl_pos posY = startY; posY < sprite->defaultHeight; posY++) {
+            tsgl_pos setPosY = posY + y;
+            if (setPosY >= framebuffer->defaultHeight) break;
+            _setWithoutCheck(framebuffer, setPosX, setPosY, _ignoreRotationGet(sprite, posX, posY));
+        } 
     }
 }
 
