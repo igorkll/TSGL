@@ -190,21 +190,10 @@ void tsgl_display_free(tsgl_display* display) {
 // graphic
 
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
-    rotation = ((uint8_t)-rotation) % (uint8_t)4;
-
     if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate(rotation));
+        _doCommandList(display, display->driver->rotate(((uint8_t)(display->rotation - rotation)) % (uint8_t)4));
 
-    tsgl_pos spriteWidth = sprite->defaultWidth;
-    tsgl_pos spriteHeight = sprite->defaultHeight;
-    switch (rotation) {
-        case 1:
-        case 3:
-            spriteWidth = sprite->defaultHeight;
-            spriteHeight = sprite->defaultWidth;
-            break;
-    }
-    tsgl_display_select(display, x, y, spriteWidth, spriteHeight);
+    tsgl_display_select(display, x, y, sprite->defaultWidth, sprite->defaultHeight);
     tsgl_display_sendData(display, sprite->buffer, sprite->buffersize);
 
     if (display->driver->rotate != NULL)

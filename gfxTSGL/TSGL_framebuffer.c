@@ -174,7 +174,7 @@ static void _setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos
 
 
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
-    rotation = ((uint8_t)-rotation) % (uint8_t)4;
+    rotation = ((uint8_t)(-rotation)) % (uint8_t)4;
 
     if (sprite->hardwareRotate) {
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
