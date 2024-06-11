@@ -15,22 +15,24 @@ class TSGL_Display {
     tsgl_pos& width = display.width;
     tsgl_pos& height = display.height;
 
-    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
         tsgl_spi_init(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost);
-        if (buffered) {
-            //attempt to allocate a buffer in external memory
-            framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
-            ESP_ERROR_CHECK(tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM));
+        if (caps != MALLOC_CAP_INVALID) {
+            if (tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, caps) != ESP_OK) {
+                ::free(framebuffer);
+                framebuffer = NULL;
+            }
         }
         ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
     }
 
-    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, bool buffered, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
+    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
         tsgl_spi_initManual(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost, mosi, miso, clk);
-        if (buffered) {
-            if (tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, MALLOC_CAP_SPIRAM) != ESP_OK) {
+        if (caps != MALLOC_CAP_INVALID) {
+            if (tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, caps) != ESP_OK) {
                 ::free(framebuffer);
+                framebuffer = NULL;
             }
         }
         ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));

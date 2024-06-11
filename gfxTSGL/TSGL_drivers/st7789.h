@@ -2,9 +2,9 @@
 #include "../TSGL.h"
 
 #define _ST7789_ROTATION_0 0
-#define _ST7789_ROTATION_1 (1<<5) | (1<<6)
-#define _ST7789_ROTATION_2 (1<<6) | (1<<7)
-#define _ST7789_ROTATION_3 (1<<5) | (1<<7)
+#define _ST7789_ROTATION_1 (1<<5) | (1<<6) | (1<<2)
+#define _ST7789_ROTATION_2 (1<<6) | (1<<7) | (1<<2) | (1<<4)
+#define _ST7789_ROTATION_3 (1<<5) | (1<<7) | (1<<4)
 
 static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
     tsgl_driver_list list = {
