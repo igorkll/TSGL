@@ -114,8 +114,31 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
+static bool warn1Printed = false;
+static bool warn2Printed = false;
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+    if (framebuffer->colormode != sprite->colormode) {
+        if (!warn1Printed) {
+            ESP_LOGE(TAG, "pushing a framebuffer to a framebuffer with a different color mode can lead to a drop in performance");
+            warn1Printed = true;
+        }
 
+    } else {
+        switch (framebuffer->colormode) {
+            case tsgl_rgb444:
+            case tsgl_bgr444:
+                if (!warn2Printed) {
+                    ESP_LOGE(TAG, "pushing framebuffers in 444 color mode can lead to a drop in performance");
+                    warn2Printed = true;
+                }
+                break;
+            
+            default: {
+                
+                break;
+            }
+        }
+    }
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
