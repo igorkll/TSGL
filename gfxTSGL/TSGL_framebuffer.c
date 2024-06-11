@@ -114,6 +114,10 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
+void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+
+}
+
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
     switch (framebuffer->colormode) {

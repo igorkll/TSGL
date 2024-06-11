@@ -75,7 +75,7 @@ class TSGL_Display {
         if (framebuffer != NULL) tsgl_display_send(&display, framebuffer);
     }
 
-    // --------------------- graphic
+    // --------------------- tsgl_rawcolor graphic
 
     void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
         if (framebuffer == NULL) {
@@ -121,7 +121,7 @@ class TSGL_Display {
         }
     }
 
-    // --------------------- high-level color API
+    // --------------------- tsgl_color graphic
 
     void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
         set(x, y, tsgl_color_raw(color, display.colormode));
@@ -145,5 +145,31 @@ class TSGL_Display {
     
     tsgl_color get(tsgl_pos x, tsgl_pos y) {
         return tsgl_color_uraw(rawGet(x, y), display.colormode);
+    }
+
+    // --------------------- tsgl_color graphic
+
+    void set(tsgl_pos x, tsgl_pos y, uint32_t color) {
+        set(x, y, tsgl_color_fromHex(color));
+    }
+
+    void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, uint32_t color) {
+        fill(x, y, width, height, tsgl_color_fromHex(color));
+    }
+    
+    void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, uint32_t color, tsgl_pos strokelen) {
+        rect(x, y, width, height, tsgl_color_fromHex(color), strokelen);
+    }
+
+    void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, uint32_t color) {
+        rect(x, y, width, height, tsgl_color_fromHex(color), 1);
+    }
+
+    void clear(uint32_t color) {
+        clear(tsgl_color_fromHex(color));
+    }
+    
+    uint32_t hexGet(tsgl_pos x, tsgl_pos y) {
+        return tsgl_color_toHex(get(x, y));
     }
 };

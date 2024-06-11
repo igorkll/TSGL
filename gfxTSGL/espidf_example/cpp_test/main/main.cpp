@@ -78,6 +78,17 @@ extern "C" void app_main() {
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
+        for (uint8_t i = 0; i < 4; i++) {
+            display.setRotation(i);
+            for (tsgl_pos posx = 0; posx < display.width; posx++) {
+                for (tsgl_pos posy = 0; posy < display.height; posy++) {
+                    display.set(posx, posy, tsgl_color_pack(posx % 256, posy % 256, (display.width - posx - 1) % 256));
+                }
+            }
+            display.update();
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+
         float waittime = 250 / portTICK_PERIOD_MS;
         display.setRotation(1);
         for (uint16_t i = 0; i < 255 * 2;) {
