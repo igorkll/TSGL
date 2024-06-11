@@ -30,7 +30,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    display.begin(&st7789_rgb565, driverSettings, MALLOC_CAP_INVALID, TSGL_HOST1, 60000000, DC, CS, RST);
+    display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     while (true) {
         display.clear(TSGL_GREEN);
@@ -80,7 +80,7 @@ extern "C" void app_main() {
 
         float waittime = 250 / portTICK_PERIOD_MS;
         display.setRotation(1);
-        for (uint16_t i = 0; i < 255;) {
+        for (uint16_t i = 0; i < 255 * 2;) {
             int64_t t1 = esp_timer_get_time();
             for (tsgl_pos pos = 0; pos < display.width; pos++) {
                 display.fill(pos, 0, 1, display.height, tsgl_color_hsv((imap(pos, 0, display.width - 1, 0, 255) - i) % 256, 255, 255));
@@ -92,6 +92,7 @@ extern "C" void app_main() {
             float delay = waittime - exectime;
             if (delay > 0) {
                 vTaskDelay(delay);
+                i++;
             } else {
                 i += exectime / waittime;
             }

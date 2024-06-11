@@ -23,7 +23,7 @@ typedef struct {
 static size_t _getPartSize() {
     multi_heap_info_t info;
     heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.largest_free_block / 2;
+    return info.largest_free_block;
 }
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
