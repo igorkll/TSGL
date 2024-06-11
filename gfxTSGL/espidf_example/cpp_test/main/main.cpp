@@ -54,7 +54,7 @@ extern "C" void app_main() {
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
-        waittime = 25;
+        waittime = 10;
         for (uint8_t i = 0; i < 2; i++) {
             for (tsgl_pos pos = 0; pos < display.width;) {
                 int64_t t1 = esp_timer_get_time();
@@ -125,10 +125,10 @@ extern "C" void app_main() {
                 }
             }
             display.update();
-            vTaskDelay(500 / portTICK_PERIOD_MS);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
 
-        waittime = 25;
+        waittime = 10;
         display.setRotation(1);
         for (uint16_t i = 0; i < 255 * 2;) {
             int64_t t1 = esp_timer_get_time();
