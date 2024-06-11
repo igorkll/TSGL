@@ -30,7 +30,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    display.begin(&st7789_rgb565, driverSettings, TSGL_NOBUFFER, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    display.begin(&st7789_rgb565, driverSettings, TSGL_BUFFER, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
     tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);
@@ -45,25 +45,15 @@ extern "C" void app_main() {
     float waittime;
 
     while (true) {
-        for (uint8_t i = 0; i < 4; i++) {
-            display.setRotation(i);
-            display.clear(TSGL_WHITE);
-            display.fill(0, 0, 16, 16, TSGL_RED);
-            display.push(32, 32, 1, &framebuffer);
-            display.update();
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-
-        for (uint8_t i = 0; i < 4; i++) {
-            display.setRotation(i);
-            display.clear(TSGL_WHITE);
-            display.fill(0, 0, 16, 16, TSGL_RED);
-            display.push(32, 32, 0, &framebuffer);
-            display.update();
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-
         display.setRotation(1);
+        for (uint8_t i = 0; i < 4; i++) {
+            display.clear(TSGL_WHITE);
+            display.fill(0, 0, 16, 16, TSGL_RED);
+            display.push(32, 32, i, &framebuffer);
+            display.update();
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+
         waittime = 25;
         for (uint8_t i = 0; i < 2; i++) {
             for (tsgl_pos pos = 0; pos < display.width;) {

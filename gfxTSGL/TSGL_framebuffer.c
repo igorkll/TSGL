@@ -55,7 +55,7 @@ static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_po
 }
 
 static size_t _rawRotateGetBufferIndex(tsgl_framebuffer* framebuffer, uint8_t rotation, tsgl_pos x, tsgl_pos y) {
-    if (framebuffer->realRotation == 0) {
+    if (rotation == 0) {
         return x + (y * framebuffer->rotationWidth);
     } else {
         return _customRotateX(framebuffer, rotation, x, y) + (_customRotateY(framebuffer, rotation, x, y) * framebuffer->rotationWidth);
@@ -88,7 +88,6 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     if (caps == 0) {
         framebuffer->buffer = malloc(framebuffer->buffersize);
     } else {
-        ESP_LOGI(TAG, "");
         framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
         if (framebuffer->buffer == NULL) {
             ESP_LOGW(TAG, "failed to allocate framebuffer with caps. attempt to allocate without caps");
@@ -173,6 +172,8 @@ static void _setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos
 
 
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+    rotation = ((uint8_t)-rotation) % (uint8_t)4;
+
     if (sprite->hardwareRotate) {
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
     }
