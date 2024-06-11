@@ -2,6 +2,8 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
 #include "TSGL_spi.h"
+#include "_TSGL_internal_gfx.h"
+
 #include <esp_heap_caps.h>
 #include <esp_err.h>
 #include <esp_log.h>

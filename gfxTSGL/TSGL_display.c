@@ -3,6 +3,7 @@
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_spi.h"
+#include "_TSGL_internal_gfx.h"
 
 #include <esp_system.h>
 #include <esp_err.h>
@@ -189,8 +190,10 @@ void tsgl_display_free(tsgl_display* display) {
 // graphic
 
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+    rotation = ((uint8_t)-rotation) % (uint8_t)4;
+
     if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate((display->rotation + rotation) % 4));
+        _doCommandList(display, display->driver->rotate(rotation));
 
     tsgl_pos spriteWidth = sprite->defaultWidth;
     tsgl_pos spriteHeight = sprite->defaultHeight;
