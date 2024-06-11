@@ -206,7 +206,7 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color) {
-    TSGL_GFX_LINE(framebuffer, tsgl_framebuffer_set, x1, y1, x2, y2, color);
+    TSGL_GFX_LINE(framebuffer, tsgl_framebuffer_set, tsgl_framebuffer_fill, x1, y1, x2, y2, color);
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {

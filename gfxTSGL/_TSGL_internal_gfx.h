@@ -7,7 +7,14 @@
     fill(arg, (x + width) - strokelen, y + 1, strokelen, height - 2, color); \
 }
 
-#define TSGL_GFX_LINE(arg, set, x1, y1, x2, y2, color) { \
+#define TSGL_GFX_LINE(arg, set, fill, x1, y1, x2, y2, color) { \
+    if (y1 == y2) { \
+        fill(arg, x1, y1, abs(x2 - x1), 1, color); \
+        return; \
+    } else if (x1 == x2) { \
+        fill(arg, x1, y1, 1, abs(x2 - x1), color); \
+        return; \
+    } \
     tsgl_pos inLoopValueFrom; \
     tsgl_pos inLoopValueTo; \
     tsgl_pos outLoopValueFrom; \
