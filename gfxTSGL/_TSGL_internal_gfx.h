@@ -52,8 +52,8 @@
  \
     tsgl_pos outLoopValue = outLoopValueFrom; \
     tsgl_pos outLoopValueCounter = 1; \
-    tsgl_pos outLoopValueTriggerIncrement = inLoopValueDelta / outLoopValueDelta; \
-    tsgl_pos outLoopValueTrigger = outLoopValueTriggerIncrement; \
+    float outLoopValueTriggerIncrement = (float)inLoopValueDelta / (float)outLoopValueDelta; \
+    float outLoopValueTrigger = outLoopValueTriggerIncrement; \
  \
     for (tsgl_pos inLoopValue = inLoopValueFrom; inLoopValue <= inLoopValueTo; inLoopValue += (inLoopValueFrom < inLoopValueTo ? 1 : -1)) { \
         if (isReversed) { \
