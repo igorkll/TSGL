@@ -211,6 +211,10 @@ void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t ro
         _doCommandList(display, display->driver->rotate(display->rotation));
 }
 
+void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color) {
+    TSGL_GFX_LINE(display, tsgl_display_set, x1, y1, x2, y2, color);
+}
+
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     tsgl_display_select(display, x, y, 1, 1);
     switch (display->colormode) {

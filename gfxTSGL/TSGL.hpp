@@ -89,6 +89,14 @@ class TSGL_Display {
 
     // --------------------- tsgl_rawcolor graphic
 
+    void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color) {
+        if (framebuffer == NULL) {
+            tsgl_display_line(&display, x1, y1, x2, y2, color);
+        } else {
+            tsgl_framebuffer_line(framebuffer, x1, y1, x2, y2, color);
+        }
+    }
+
     void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
         if (framebuffer == NULL) {
             tsgl_display_set(&display, x, y, color);
@@ -135,6 +143,10 @@ class TSGL_Display {
 
     // --------------------- tsgl_color graphic
 
+    void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_color color) {
+        line(x1, y1, x2, y2, tsgl_color_raw(color, display.colormode));
+    }
+
     void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
         set(x, y, tsgl_color_raw(color, display.colormode));
     }
@@ -160,6 +172,10 @@ class TSGL_Display {
     }
 
     // --------------------- tsgl_color graphic
+
+    void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, uint32_t color) {
+        line(x1, y1, x2, y2, tsgl_color_fromHex(color));
+    }
 
     void set(tsgl_pos x, tsgl_pos y, uint32_t color) {
         set(x, y, tsgl_color_fromHex(color));

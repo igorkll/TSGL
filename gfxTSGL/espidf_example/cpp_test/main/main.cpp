@@ -77,6 +77,8 @@ extern "C" void app_main() {
 
         display.setRotation(0);
         display.clear(TSGL_GREEN);
+        display.line(5, 5, 128, 128, TSGL_RED);
+        display.line(256, 256, 2, 4, TSGL_ORANGE);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
 
