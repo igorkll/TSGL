@@ -177,14 +177,9 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
     }
 
-    tsgl_pos spriteWidth;
-    tsgl_pos spriteHeight;
+    tsgl_pos spriteWidth = sprite->defaultWidth;
+    tsgl_pos spriteHeight = sprite->defaultHeight;
     switch (rotation) {
-        case 0:
-        case 2:
-            spriteWidth = sprite->defaultWidth;
-            spriteHeight = sprite->defaultHeight;
-            break;
         case 1:
         case 3:
             spriteWidth = sprite->defaultHeight;
@@ -209,7 +204,7 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(framebuffer, x, y)) return;
-    _setWithoutCheck(x, y, color);
+    _setWithoutCheck(framebuffer, x, y, color);
 }
 
 void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {

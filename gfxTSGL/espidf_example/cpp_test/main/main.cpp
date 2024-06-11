@@ -32,7 +32,21 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 extern "C" void app_main() {
     display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
+    tsgl_framebuffer framebuffer;
+    tsgl_framebuffer_init(&framebuffer, display.colormode, 64, 64, TSGL_SPIRAM);
+    for (tsgl_pos posx = 0; posx < framebuffer.width; posx++) {
+        for (tsgl_pos posy = 0; posy < framebuffer.height; posy++) {
+            tsgl_color hue = tsgl_color_hsv(fmap(posx + posy, 0, (framebuffer.width - 1) + (framebuffer.height - 1), 0, 255), 255, 255);
+            tsgl_framebuffer_set(&framebuffer, posx, posy, tsgl_color_raw(hue, display.colormode));
+        }
+    }
+
     while (true) {
+        display.clear(TSGL_WHITE);
+        tsgl_framebuffer_push(display.framebuffer, 64, 64, 0, &framebuffer);
+        display.update();
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+
         display.clear(TSGL_GREEN);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -72,17 +86,6 @@ extern "C" void app_main() {
             for (tsgl_pos posx = 0; posx < display.width; posx++) {
                 for (tsgl_pos posy = 0; posy < display.height; posy++) {
                     display.set(posx, posy, tsgl_color_hsv(fmap(posx + posy, 0, (display.width - 1) + (display.height - 1), 0, 255), 255, 255));
-                }
-            }
-            display.update();
-            vTaskDelay(500 / portTICK_PERIOD_MS);
-        }
-
-        for (uint8_t i = 0; i < 4; i++) {
-            display.setRotation(i);
-            for (tsgl_pos posx = 0; posx < display.width; posx++) {
-                for (tsgl_pos posy = 0; posy < display.height; posy++) {
-                    display.set(posx, posy, tsgl_color_pack(posx % 256, posy % 256, (display.width - posx - 1) % 256));
                 }
             }
             display.update();

@@ -18,6 +18,8 @@ class TSGL_Display {
     tsgl_framebuffer* framebuffer = NULL;
     tsgl_pos& width = display.width;
     tsgl_pos& height = display.height;
+    tsgl_colormode& colormode = display.colormode;
+    float& colorsize = display.colorsize;
 
     void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
