@@ -5,11 +5,8 @@ extern "C" {
     #include "TSGL_display.h"
     #include "TSGL_color.h"
     #include "TSGL_spi.h"
-    #include <esp_heap_caps.h>
 }
 
-#define TSGL_SPIRAM   MALLOC_CAP_SPIRAM
-#define TSGL_BUFFER   0
 #define TSGL_NOBUFFER MALLOC_CAP_INVALID
 
 class TSGL_Display {

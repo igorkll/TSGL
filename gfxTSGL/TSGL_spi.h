@@ -1,9 +1,13 @@
 #pragma once
+#include <esp_heap_caps.h>
 #include <driver/spi_master.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <esp_err.h>
 #include "TSGL_display.h"
+
+#define TSGL_SPIRAM   MALLOC_CAP_SPIRAM
+#define TSGL_BUFFER   0
 
 // recommended SPI pins to get the maximum frequency, if you change at least one pin, the maximum frequency will drop to 20 megahertz
 #ifdef CONFIG_IDF_TARGET_ESP32
