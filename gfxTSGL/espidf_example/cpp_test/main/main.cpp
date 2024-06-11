@@ -76,11 +76,15 @@ extern "C" void app_main() {
         }
 
         display.setRotation(0);
-        display.clear(TSGL_GREEN);
-        display.line(5, 5, 128, 128, TSGL_RED);
-        display.line(256, 256, 2, 4, TSGL_ORANGE);
+        display.clear(TSGL_BLACK);
+        for (tsgl_pos ix = 0; ix < display.width; ix += 8) {
+            display.line(0, 0, ix, display.height, TSGL_RED);
+        }
+        for (tsgl_pos iy = 0; iy < display.height; iy += 8) {
+            display.line(0, 0, display.width, ix, TSGL_LIME);
+        }
         display.update();
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
 
         display.clear(TSGL_YELLOW);
         display.update();
