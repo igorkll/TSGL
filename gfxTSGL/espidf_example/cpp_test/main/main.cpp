@@ -33,21 +33,59 @@ extern "C" void app_main() {
     display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
-    tsgl_framebuffer_init(&framebuffer, display.colormode, display.width / 2, display.height / 2, TSGL_SPIRAM);
+    tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);
     for (tsgl_pos posx = 0; posx < framebuffer.width; posx++) {
         for (tsgl_pos posy = 0; posy < framebuffer.height; posy++) {
             tsgl_color hue = tsgl_color_hsv(fmap(posx + posy, 0, (framebuffer.width - 1) + (framebuffer.height - 1), 0, 255), 255, 255);
             tsgl_framebuffer_set(&framebuffer, posx, posy, tsgl_color_raw(hue, display.colormode));
         }
     }
+    tsgl_framebuffer_fill(&framebuffer, 0, 0, 64, 64, tsgl_color_raw(TSGL_LIME, display.colormode));
+
+    float waittime;
 
     while (true) {
-        display.setRotation(0);
-        display.clear(TSGL_WHITE);
-        tsgl_framebuffer_push(display.framebuffer, 32, 32, 1, &framebuffer);
-        display.update();
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        for (uint8_t i = 0; i < 4; i++) {
+            display.setRotation(i);
+            display.clear(TSGL_WHITE);
+            display.fill(0, 0, 16, 16, TSGL_RED);
+            display.push(32, 32, 1, &framebuffer);
+            display.update();
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
 
+        for (uint8_t i = 0; i < 4; i++) {
+            display.setRotation(i);
+            display.clear(TSGL_WHITE);
+            display.fill(0, 0, 16, 16, TSGL_RED);
+            display.push(32, 32, 0, &framebuffer);
+            display.update();
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+
+        display.setRotation(0);
+        waittime = 25;
+        for (uint8_t i = 0; i < 2; i++) {
+            for (tsgl_pos pos = 0; pos < display.width;) {
+                int64_t t1 = esp_timer_get_time();
+                display.clear(TSGL_WHITE);
+                display.fill(0, 0, 16, 16, TSGL_RED);
+                display.push(pos, 18, 0, &framebuffer);
+                display.update();
+                int64_t t2 = esp_timer_get_time();
+
+                int64_t exectime = (t2 - t1) / 1000;
+                float delay = waittime - exectime;
+                if (delay > 0) {
+                    vTaskDelay(delay / portTICK_PERIOD_MS);
+                    pos++;
+                } else {
+                    pos += exectime / waittime;
+                }
+            }
+        }
+
+        display.setRotation(0);
         display.clear(TSGL_GREEN);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -93,7 +131,7 @@ extern "C" void app_main() {
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
-        float waittime = 250 / portTICK_PERIOD_MS;
+        waittime = 25;
         display.setRotation(1);
         for (uint16_t i = 0; i < 255 * 2;) {
             int64_t t1 = esp_timer_get_time();
@@ -106,7 +144,7 @@ extern "C" void app_main() {
             int64_t exectime = (t2 - t1) / 1000;
             float delay = waittime - exectime;
             if (delay > 0) {
-                vTaskDelay(delay);
+                vTaskDelay(delay / portTICK_PERIOD_MS);
                 i++;
             } else {
                 i += exectime / waittime;

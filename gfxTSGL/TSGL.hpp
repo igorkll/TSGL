@@ -77,6 +77,16 @@ class TSGL_Display {
         if (framebuffer != NULL) tsgl_display_send(&display, framebuffer);
     }
 
+    // --------------------- graphic
+
+    void push(tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
+        if (framebuffer == NULL) {
+            
+        } else {
+            tsgl_framebuffer_push(framebuffer, x, y, rotation, sprite);
+        }
+    }
+
     // --------------------- tsgl_rawcolor graphic
 
     void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
