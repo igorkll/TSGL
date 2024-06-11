@@ -46,6 +46,14 @@ static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_po
     return _getRawBufferIndex(framebuffer, x, y) * framebuffer->colorsize;
 }
 
+static size_t _getIngoreRotationRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    return x + (y * framebuffer->rotationWidth);
+}
+
+static size_t _getIngoreRotationBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    return _getIngoreRotationRawBufferIndex(framebuffer, x, y) * framebuffer->colorsize;
+}
+
 static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
 }
@@ -114,6 +122,23 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
+tsgl_rawcolor _rawget(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            return tsgl_color_444read(_getIngoreRotationRawBufferIndex(framebuffer, x, y), framebuffer->buffer);
+        
+        default: {
+            size_t index = _getIngoreRotationBufferIndex(framebuffer, x, y);
+            tsgl_rawcolor rawcolor;
+            for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+                rawcolor.arr[i] = framebuffer->buffer[index + i];
+            }
+            return rawcolor;
+        }
+    }
+}
+
 static bool warn1Printed = false;
 static bool warn2Printed = false;
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
@@ -134,7 +159,13 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
                 break;
             
             default: {
-                
+                for (tsgl_pos posx = 0; posx < sprite->defaultWidth; posx++) {
+                    tsgl_pos setPosX = posx + x;
+                    for (tsgl_pos posy = 0; posy < sprite->defaultHeight; posy++) {
+                        
+                    }
+                    if (setPosX >= ) 
+                }
                 break;
             }
         }
