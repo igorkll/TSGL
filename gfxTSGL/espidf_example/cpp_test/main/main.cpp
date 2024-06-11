@@ -33,7 +33,7 @@ extern "C" void app_main() {
     display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
-    tsgl_framebuffer_init(&framebuffer, display.colormode, 64, 64, TSGL_SPIRAM);
+    tsgl_framebuffer_init(&framebuffer, display.colormode, display.width / 2, display.height / 2, TSGL_SPIRAM);
     for (tsgl_pos posx = 0; posx < framebuffer.width; posx++) {
         for (tsgl_pos posy = 0; posy < framebuffer.height; posy++) {
             tsgl_color hue = tsgl_color_hsv(fmap(posx + posy, 0, (framebuffer.width - 1) + (framebuffer.height - 1), 0, 255), 255, 255);
@@ -42,8 +42,9 @@ extern "C" void app_main() {
     }
 
     while (true) {
+        display.setRotation(0);
         display.clear(TSGL_WHITE);
-        tsgl_framebuffer_push(display.framebuffer, 64, 64, 0, &framebuffer);
+        tsgl_framebuffer_push(display.framebuffer, 32, 32, 1, &framebuffer);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
 
