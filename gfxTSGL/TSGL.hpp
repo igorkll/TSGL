@@ -89,6 +89,14 @@ class TSGL_Display {
 
     // --------------------- tsgl_rawcolor graphic
 
+    void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+        if (framebuffer == NULL) {
+            tsgl_display_set(&display, x, y, color);
+        } else {
+            tsgl_framebuffer_set(framebuffer, x, y, color);
+        }
+    }
+
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
         if (framebuffer == NULL) {
             tsgl_display_line(&display, x1, y1, x2, y2, color, stroke);
@@ -99,14 +107,6 @@ class TSGL_Display {
 
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color) {
         line(x1, y1, x2, y2, color, 1);
-    }
-
-    void set(tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
-        if (framebuffer == NULL) {
-            tsgl_display_set(&display, x, y, color);
-        } else {
-            tsgl_framebuffer_set(framebuffer, x, y, color);
-        }
     }
 
     void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
@@ -147,16 +147,16 @@ class TSGL_Display {
 
     // --------------------- tsgl_color graphic
 
+    void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
+        set(x, y, tsgl_color_raw(color, display.colormode));
+    }
+
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_color color, tsgl_pos stroke) {
         line(x1, y1, x2, y2, tsgl_color_raw(color, display.colormode), stroke);
     }
 
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_color color) {
-        line(x1, y1, x2, y2, tsgl_color_raw(color, display.colormode), 1);
-    }
-
-    void set(tsgl_pos x, tsgl_pos y, tsgl_color color) {
-        set(x, y, tsgl_color_raw(color, display.colormode));
+        line(x1, y1, x2, y2, color, 1);
     }
 
     void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_color color) {
@@ -181,16 +181,16 @@ class TSGL_Display {
 
     // --------------------- tsgl_color graphic
 
+    void set(tsgl_pos x, tsgl_pos y, uint32_t color) {
+        set(x, y, tsgl_color_fromHex(color));
+    }
+
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, uint32_t color, tsgl_pos stroke) {
         line(x1, y1, x2, y2, tsgl_color_fromHex(color), stroke);
     }
 
     void line(tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, uint32_t color) {
-        line(x1, y1, x2, y2, tsgl_color_fromHex(color), 1);
-    }
-
-    void set(tsgl_pos x, tsgl_pos y, uint32_t color) {
-        set(x, y, tsgl_color_fromHex(color));
+        line(x1, y1, x2, y2, color, 1);
     }
 
     void fill(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, uint32_t color) {
@@ -202,7 +202,7 @@ class TSGL_Display {
     }
 
     void rect(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, uint32_t color) {
-        rect(x, y, width, height, tsgl_color_fromHex(color), 1);
+        rect(x, y, width, height, color, 1);
     }
 
     void clear(uint32_t color) {

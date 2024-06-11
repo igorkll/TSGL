@@ -90,8 +90,8 @@ static tsgl_driver_list _st7789_invert(bool invert) {
     {0xC3, {0x11}, 1}, \
     /* VDV Set, VDV=0 */ \
     {0xC4, {0x20}, 1}, \
-    /* Frame Rate Control, 60Hz, inversion=0 */ \
-    {0xC6, {0x0f}, 1}, \
+    /* Frame Rate Control, 111Hz, inversion=0. if your screen does not work stably at such a refresh rate, then set the 0x0f mode, which will be equal to 60 hertz */ \
+    {0xC6, {0x01}, 1}, \
     /* Power Control 1, AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V */ \
     {0xD0, {0xA4, 0xA1}, 1}, \
     /* Positive Voltage Gamma Control */ \
