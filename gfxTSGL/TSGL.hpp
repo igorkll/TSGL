@@ -1,4 +1,8 @@
 #pragma once
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wnarrowing"
+#pragma GCC diagnostic push
+
 extern "C" {
     #include "TSGL.h"
     #include "TSGL_framebuffer.h"
@@ -17,6 +21,24 @@ class TSGL_Display {
     tsgl_pos& height = display.height;
     tsgl_colormode& colormode = display.colormode;
     float& colorsize = display.colorsize;
+
+    // --------------------- init
+
+    void pushInitColor(tsgl_rawcolor color) {
+        tsgl_display_pushInitColor(color);
+    }
+
+    void pushInitColor(tsgl_color color, tsgl_colormode mode) {
+        tsgl_display_pushInitColor(tsgl_color_raw(color, mode));
+    }
+
+    void pushInitColor(uint32_t color, tsgl_colormode mode) {
+        tsgl_display_pushInitColor(tsgl_color_raw(tsgl_color_fromHex(color), mode));
+    }
+
+    void pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+        tsgl_display_pushInitFramebuffer(framebuffer, rotation);
+    }
 
     void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
@@ -52,6 +74,8 @@ class TSGL_Display {
     ~TSGL_Display () {
         free();
     }
+
+    // --------------------- control
 
     void setInvert(bool state) {
         tsgl_display_setInvert(&display, state);
