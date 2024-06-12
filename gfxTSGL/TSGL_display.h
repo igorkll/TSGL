@@ -28,6 +28,12 @@ typedef struct {
     bool invert;
 } tsgl_display;
 
+// ---------------- pre-initialization
+//these functions must be called before initializing the display, they act on initializing one display
+void tsgl_display_pushInitColor(tsgl_rawcolor color); //sets the default fill for the next initialized display
+void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation); //sets the framebuffer that will be used to fill the next initialized display
+
+// ---------------- initializing the display
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, const tsgl_driver_settings driver_settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);
 void tsgl_display_free(tsgl_display* display);
 

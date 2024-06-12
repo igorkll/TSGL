@@ -43,6 +43,23 @@ static void _floodCallback(void* arg, void* data, size_t size) {
 
 
 
+static uint8_t initType = 0;
+static tsgl_rawcolor initColor;
+static tsgl_framebuffer* initFramebuffer;
+static uint8_t initRotation;
+
+void tsgl_display_pushInitColor(tsgl_rawcolor color) {
+    initColor = color;
+    initRotation = 0;
+    initType = 1;
+}
+
+void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+    initFramebuffer = framebuffer;
+    initRotation = rotation;
+    initType = 2;
+}
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, const tsgl_driver_settings driver_settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
@@ -87,8 +104,21 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, con
         // init display
         _doCommands(display, driver->init);
         tsgl_display_setInvert(display, false);
-        tsgl_display_rotate(display, 0);
-        tsgl_display_clear(display, display->black);
+        tsgl_display_rotate(display, initRotation);
+        switch (initType) {
+            case 1:
+                tsgl_display_clear(display, initColor);
+                break;
+
+            case 2:
+                tsgl_display_send(display, initFramebuffer);
+                break;
+            
+            default:
+                tsgl_display_clear(display, display->black);
+                break;
+        }
+        initType = 0;
 
         // enable display
         _doCommands(display, driver->enable);
