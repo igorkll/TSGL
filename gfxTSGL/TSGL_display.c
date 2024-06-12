@@ -45,7 +45,8 @@ static void _floodCallback(void* arg, void* data, size_t size) {
 
 static uint8_t initType = 0;
 static tsgl_rawcolor initColor;
-static tsgl_framebuffer* initFramebuffer;
+static const uint8_t* initFramebuffer;
+static size_t initFramebufferSize;
 static uint8_t initRotation;
 
 void tsgl_display_pushInitColor(tsgl_rawcolor color) {
@@ -55,7 +56,15 @@ void tsgl_display_pushInitColor(tsgl_rawcolor color) {
 }
 
 void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+    initFramebuffer = framebuffer->buffer;
+    initFramebufferSize = framebuffer->buffersize;
+    initRotation = rotation;
+    initType = 2;
+}
+
+void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation) {
     initFramebuffer = framebuffer;
+    initFramebufferSize = size;
     initRotation = rotation;
     initType = 2;
 }
@@ -111,7 +120,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, con
                 break;
 
             case 2:
-                tsgl_display_send(display, initFramebuffer);
+                tsgl_display_sendData(display, initFramebuffer, initFramebufferSize);
                 break;
             
             default:

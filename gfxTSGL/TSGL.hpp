@@ -24,20 +24,24 @@ class TSGL_Display {
 
     // --------------------- init
 
-    void pushInitColor(tsgl_rawcolor color) {
+    static void pushInitColor(tsgl_rawcolor color) {
         tsgl_display_pushInitColor(color);
     }
 
-    void pushInitColor(tsgl_color color, tsgl_colormode mode) {
+    static void pushInitColor(tsgl_color color, tsgl_colormode mode) {
         tsgl_display_pushInitColor(tsgl_color_raw(color, mode));
     }
 
-    void pushInitColor(uint32_t color, tsgl_colormode mode) {
+    static void pushInitColor(uint32_t color, tsgl_colormode mode) {
         tsgl_display_pushInitColor(tsgl_color_raw(tsgl_color_fromHex(color), mode));
     }
 
-    void pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+    static void pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
         tsgl_display_pushInitFramebuffer(framebuffer, rotation);
+    }
+
+    static void pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation) {
+        tsgl_display_pushInitRawFramebuffer(framebuffer, size, rotation);
     }
 
     void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
