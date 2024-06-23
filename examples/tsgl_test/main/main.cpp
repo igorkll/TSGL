@@ -31,18 +31,16 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 
 extern "C" void app_main() {
     TSGL_Display::pushInitColor(TSGL_RED, tsgl_display_reColormode(settings, settings.driver->colormode));
-    display.begin(settings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    display.init(settings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
     //display.enableAsyncSending(TSGL_SPIRAM);
 
-    tsgl_framebuffer framebuffer;
-    tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);
-    for (tsgl_pos posx = 0; posx < framebuffer.width; posx++) {
-        for (tsgl_pos posy = 0; posy < framebuffer.height; posy++) {
-            tsgl_color hue = tsgl_color_hsv(fmap(posx + posy, 0, (framebuffer.width - 1) + (framebuffer.height - 1), 0, 255), 255, 255);
-            tsgl_framebuffer_set(&framebuffer, posx, posy, tsgl_color_raw(hue, display.colormode));
+    TSGL_Sprite sprite = display.createSprite(128, 256);
+    for (tsgl_pos posx = 0; posx < sprite.width; posx++) {
+        for (tsgl_pos posy = 0; posy < sprite.height; posy++) {
+            tsgl_color hue = tsgl_color_hsv(fmap(posx + posy, 0, (sprite.width - 1) + (sprite.height - 1), 0, 255), 255, 255);
+            sprite.set(posx, posy, tsgl_color_raw(hue, display.colormode));
         }
     }
-    tsgl_framebuffer_fill(&framebuffer, 0, 0, 64, 64, tsgl_color_raw(TSGL_GREEN, display.colormode));
 
     float waittime;
     while (true) {
@@ -86,7 +84,7 @@ extern "C" void app_main() {
         for (uint8_t i = 0; i < 4; i++) {
             display.clear(TSGL_WHITE);
             display.fill(0, 0, 16, 16, TSGL_RED);
-            display.push(32, 32, i, &framebuffer);
+            display.push(32, 32, i, sprite);
             display.update();
             vTaskDelay(500 / portTICK_PERIOD_MS);
         }
@@ -97,7 +95,7 @@ extern "C" void app_main() {
                 int64_t t1 = esp_timer_get_time();
                 display.clear(TSGL_WHITE);
                 display.fill(0, 0, 16, 16, TSGL_RED);
-                display.push(pos, 18, 0, &framebuffer);
+                display.push(pos, 18, 0, sprite);
                 display.update();
                 int64_t t2 = esp_timer_get_time();
 
