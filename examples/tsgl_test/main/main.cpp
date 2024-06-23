@@ -30,7 +30,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    TSGL_Display::pushInitColor(TSGL_RED, settings.driver->colormode);
+    TSGL_Display::pushInitColor(TSGL_RED, tsgl_display_reColormode(settings, settings.driver->colormode));
     display.begin(settings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
     //display.enableAsyncSending(TSGL_SPIRAM);
 

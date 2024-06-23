@@ -69,6 +69,19 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
     initType = 2;
 }
 
+tsgl_colormode tsgl_display_reColormode(tsgl_settings settings, tsgl_colormode colormode) {
+    if (settings.spawRGB) {
+        switch (colormode % 2) {
+            case 0:
+                return colormode + 1;
+            
+            case 1:
+                return colormode - 1;
+        }
+    }
+    return colormode;
+}
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
@@ -79,18 +92,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     };
 
     const tsgl_driver* driver = settings.driver;
-    tsgl_colormode colormode = driver->colormode;
-    if (settings.spawRGB) {
-        switch (colormode % 2) {
-            case 0:
-                colormode = driver->colormode + 1;
-                break;
-            
-            case 1:
-                colormode = driver->colormode - 1;
-                break;
-        }
-    }
+    tsgl_colormode colormode = tsgl_display_reColormode(settings, driver->colormode);
     memcpy(&display->storage, &driver->storage, sizeof(tsgl_driver_storage));
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;

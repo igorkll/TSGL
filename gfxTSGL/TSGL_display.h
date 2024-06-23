@@ -32,6 +32,8 @@ typedef struct {
 } tsgl_display;
 
 // ---------------- pre-initialization
+tsgl_colormode tsgl_display_reColormode(tsgl_settings settings, tsgl_colormode colormode);
+
 //these functions must be called before initializing the display, they act on initializing one display
 void tsgl_display_pushInitColor(tsgl_rawcolor color); //sets the default fill for the next initialized display
 void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation); //sets the framebuffer that will be used to fill the next initialized display

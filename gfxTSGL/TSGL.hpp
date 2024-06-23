@@ -15,6 +15,25 @@ extern "C" {
 #define TSGL_NOBUFFER MALLOC_CAP_INVALID
 const char* TAG = "TSGL++";
 
+class TSGL_Framebuffer {
+    public:
+    tsgl_framebuffer* framebuffer = NULL;
+
+    
+
+    void free() {
+        if (framebuffer != NULL) {
+            tsgl_framebuffer_free(framebuffer);
+            ::free(framebuffer);
+            framebuffer = NULL;
+        }
+    }
+
+    ~TSGL_Framebuffer () {
+        free();
+    }
+};
+
 class TSGL_Display {
     public:
     tsgl_display display;
