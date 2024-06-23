@@ -10,8 +10,8 @@ extern const float tsgl_colormodeSizes[];
 
 typedef enum {
     tsgl_rgb565_le,
-    tsgl_rgb565_be,
     tsgl_bgr565_le,
+    tsgl_rgb565_be,
     tsgl_bgr565_be,
     tsgl_rgb888,
     tsgl_bgr888,
@@ -36,21 +36,26 @@ typedef struct {
 } tsgl_driver_list;
 
 typedef struct {
+    size_t list[16];
+} tsgl_driver_storage;
+
+typedef struct {
     tsgl_colormode colormode;
     tsgl_driver_command init[64];
-    tsgl_driver_command enable[8];
-    tsgl_driver_command disable[8];
-    tsgl_driver_list (*select) (tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
-    tsgl_driver_list (*rotate) (uint8_t rotation);
-    tsgl_driver_list (*invert) (bool invert);
+    tsgl_driver_storage storage;
+    tsgl_driver_list (*enable) (const tsgl_driver_storage* storage, bool state);
+    tsgl_driver_list (*select) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
+    tsgl_driver_list (*rotate) (const tsgl_driver_storage* storage, uint8_t rotation);
+    tsgl_driver_list (*invert) (const tsgl_driver_storage* storage, bool invert);
 } tsgl_driver;
 
 // ---------------- settings
 
 typedef struct {
     bool invert;
+    bool spawRGB;
     tsgl_pos width;
     tsgl_pos height;
-    tsgl_pos offsetX;
+    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
     tsgl_pos offsetY;
 } tsgl_driver_settings;

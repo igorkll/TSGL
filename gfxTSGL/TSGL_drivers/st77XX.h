@@ -1,12 +1,12 @@
 #pragma once
 #include "../TSGL.h"
 
-#define _ST7789_ROTATION_0 0
-#define _ST7789_ROTATION_1 (1<<5) | (1<<6) | (1<<2)
-#define _ST7789_ROTATION_2 (1<<6) | (1<<7) | (1<<2) | (1<<4)
-#define _ST7789_ROTATION_3 (1<<5) | (1<<7) | (1<<4)
+#define _ST77XX_ROTATION_0 0
+#define _ST77XX_ROTATION_1 (1<<5) | (1<<6) | (1<<2)
+#define _ST77XX_ROTATION_2 (1<<6) | (1<<7) | (1<<2) | (1<<4)
+#define _ST77XX_ROTATION_3 (1<<5) | (1<<7) | (1<<4)
 
-static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
+static tsgl_driver_list _st77XX_select(const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
     tsgl_driver_list list = {
         .list = {
             {0x2A, {x >> 8, x & 0xff, x2 >> 8, x2 & 0xff}, 4},
@@ -17,12 +17,12 @@ static tsgl_driver_list _st7789_select(tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl
     return list;
 }
 
-static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
+static tsgl_driver_list _st77XX_rotate(const tsgl_driver_storage* storage, uint8_t rotation) {
     switch (rotation) {
         default : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {_ST7789_ROTATION_0}, 1, -1}
+                    {0x36, {_ST77XX_ROTATION_0}, 1, -1}
                 }
             };
             return list;
@@ -31,7 +31,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 1 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {_ST7789_ROTATION_1}, 1, -1}
+                    {0x36, {_ST77XX_ROTATION_1}, 1, -1}
                 }
             };
             return list;
@@ -40,7 +40,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 2 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {_ST7789_ROTATION_2}, 1, -1}
+                    {0x36, {_ST77XX_ROTATION_2}, 1, -1}
                 }
             };
             return list;
@@ -49,7 +49,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
         case 3 : {
             tsgl_driver_list list = {
                 .list = {
-                    {0x36, {_ST7789_ROTATION_3}, 1, -1}
+                    {0x36, {_ST77XX_ROTATION_3}, 1, -1}
                 }
             };
             return list;
@@ -57,7 +57,7 @@ static tsgl_driver_list _st7789_rotate(uint8_t rotation) {
     }
 }
 
-static tsgl_driver_list _st7789_invert(bool invert) {
+static tsgl_driver_list _st77XX_invert(const tsgl_driver_storage* storage, bool invert) {
     if (invert) {
         tsgl_driver_list list = {
             .list = {
@@ -75,7 +75,29 @@ static tsgl_driver_list _st7789_invert(bool invert) {
     }
 }
 
-#define _ST7789_SERVICE_CODE \
+static tsgl_driver_list _st77XX_enable(const tsgl_driver_storage* storage, bool state) {
+    if (state) {
+        tsgl_driver_list list = {
+            .list = {
+                {0x11, {0}, 0, 100}, //Sleep Out
+                {0x38, {0}, 0, 0}, //Idle mode off
+                {0x29, {0}, 0, -1} //Display On
+            }
+        };
+        return list;
+    } else {
+        tsgl_driver_list list = {
+            .list = {
+                {0x28, {0}, 0, 0}, //Display Off
+                {0x39, {0}, 0, 0}, //Idle mode on
+                {0x10, {0}, 0, -1} //Sleep In
+            }
+        };
+        return list;
+    }
+}
+
+#define _ST77XX_SERVICE_CODE \
     /* Porch Setting */ \
     {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5}, \
     /* Gate Control, Vgh=13.65V, Vgl=-10.43V */ \
@@ -103,52 +125,37 @@ static tsgl_driver_list _st7789_invert(bool invert) {
     /* Idle mode off */ \
     {0x38, {0}, 0, 0} \
 }, \
-.enable = { \
-    /* Sleep Out */ \
-    {0x11, {0}, 0, 100}, \
-    /* Idle mode off */ \
-    {0x38, {0}, 0, 0}, \
-    /* Display On */ \
-    {0x29, {0}, 0, -1} \
-}, \
-.disable = { \
-    /* Display Off */ \
-    {0x28, {0}, 0, 0}, \
-    /* Idle mode on */ \
-    {0x39, {0}, 0, 0}, \
-    /* Sleep In */ \
-    {0x10, {0}, 0, -1} \
-}, \
-.select = _st7789_select, \
-.rotate = _st7789_rotate, \
-.invert = _st7789_invert
+.enable = _st77XX_enable, \
+.select = _st77XX_select, \
+.rotate = _st77XX_rotate, \
+.invert = _st77XX_invert
 
 
 
-static const tsgl_driver st7789_rgb444 = {
+static const tsgl_driver st77XX_rgb444 = {
     .colormode = tsgl_rgb444,
     .init = {
         {0x3A, {0x03}, 1}, //444
-    _ST7789_SERVICE_CODE
+    _ST77XX_SERVICE_CODE
 };
 
-static const tsgl_driver st7789_rgb565 = {
+static const tsgl_driver st77XX_rgb565 = {
     .colormode = tsgl_rgb565_be,
     .init = {
         {0x3A, {0x05}, 1}, //565
-    _ST7789_SERVICE_CODE
+    _ST77XX_SERVICE_CODE
 };
 
-static const tsgl_driver st7789_rgb666 = { //3 bytes per pixel. 6 bits are not used
+static const tsgl_driver st77XX_rgb666 = { //3 bytes per pixel. 6 bits are not used
     .colormode = tsgl_rgb888,
     .init = {
         {0x3A, {0x06}, 1}, //666
-    _ST7789_SERVICE_CODE
+    _ST77XX_SERVICE_CODE
 };
 
-static const tsgl_driver st7789_rgb888 = {
+static const tsgl_driver st77XX_rgb888 = {
     .colormode = tsgl_rgb888,
     .init = {
         {0x3A, {0x07}, 1}, //16M truncated - truncated true color support. that's what it says in the documentation
-    _ST7789_SERVICE_CODE
+    _ST77XX_SERVICE_CODE
 };

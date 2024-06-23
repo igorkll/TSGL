@@ -1,7 +1,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <TSGL.hpp>
-#include <TSGL_drivers/st7789.h>
+#include <TSGL_drivers/st77XX.h>
 #include <esp_timer.h>
 
 #define DC 21
@@ -9,8 +9,9 @@
 #define RST 18
 
 tsgl_driver_settings driverSettings = {
-    .width = 240,
-    .height = 320
+    .invert = true,
+    .width = 320,
+    .height = 480
 };
 
 TSGL_Display display;
@@ -26,8 +27,8 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    TSGL_Display::pushInitColor(TSGL_GRAY, st7789_rgb565.colormode);
-    display.begin(&st7789_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    TSGL_Display::pushInitColor(TSGL_GRAY, st77XX_rgb565.colormode);
+    display.begin(&st77XX_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 80000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
     tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);

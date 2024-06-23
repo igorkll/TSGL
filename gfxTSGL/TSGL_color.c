@@ -111,17 +111,17 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
             break;
         }
 
-        case tsgl_rgb565_be : {
-            uint16_t color565 = tsgl_color_to565(color);
-            rawcolor.arr[0] = color565 >> 8;
-            rawcolor.arr[1] = color565 % 256;
-            break;
-        }
-
         case tsgl_bgr565_le : {
             uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
             rawcolor.arr[0] = color565 % 256;
             rawcolor.arr[1] = color565 >> 8;
+            break;
+        }
+
+        case tsgl_rgb565_be : {
+            uint16_t color565 = tsgl_color_to565(color);
+            rawcolor.arr[0] = color565 >> 8;
+            rawcolor.arr[1] = color565 % 256;
             break;
         }
 
@@ -175,16 +175,16 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
             return tsgl_color_from565(rawcolor.arr[0] + (rawcolor.arr[1] << 8));
         }
 
-        case tsgl_rgb565_be : {
-            return tsgl_color_from565((rawcolor.arr[0] << 8) + rawcolor.arr[1]);
-        }
-
         case tsgl_bgr565_le : {
             tsgl_color color = tsgl_color_from565(rawcolor.arr[0] + (rawcolor.arr[1] << 8));
             uint8_t t = color.b;
             color.b = color.r;
             color.r = t;
             return color;
+        }
+
+        case tsgl_rgb565_be : {
+            return tsgl_color_from565((rawcolor.arr[0] << 8) + rawcolor.arr[1]);
         }
 
         case tsgl_bgr565_be : {
