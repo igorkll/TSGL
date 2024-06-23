@@ -7,6 +7,7 @@
 #include <esp_heap_caps.h>
 #include <esp_err.h>
 #include <esp_log.h>
+#include <string.h>
 
 static const char* TAG = "TSGL_framebuffer";
 
@@ -254,7 +255,21 @@ void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
-    tsgl_framebuffer_fill(framebuffer, 0, 0, framebuffer->width, framebuffer->height, color);
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            size_t rawBuffersize = framebuffer->width * framebuffer->height;
+            for (size_t i = 0; i <= rawBuffersize; i++) {
+                tsgl_color_444write(i, framebuffer->buffer, color);
+            }
+            break;
+        
+        default:
+            for (size_t i = 0; i < framebuffer->buffersize; i += framebuffer->colorsize) {
+                memcpy(framebuffer->buffer + i, color.arr, framebuffer->colorsize);
+            }
+            break;
+    }
 }
 
 tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {

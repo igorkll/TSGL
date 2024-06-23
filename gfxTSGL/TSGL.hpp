@@ -9,14 +9,17 @@ extern "C" {
     #include "TSGL_display.h"
     #include "TSGL_color.h"
     #include "TSGL_spi.h"
+    #include "esp_log.h"
 }
 
 #define TSGL_NOBUFFER MALLOC_CAP_INVALID
+const char* TAG = "TSGL++";
 
 class TSGL_Display {
     public:
     tsgl_display display;
     tsgl_framebuffer* framebuffer = NULL;
+    tsgl_framebuffer* asyncFramebuffer = NULL;
     tsgl_pos& width = display.width;
     tsgl_pos& height = display.height;
     tsgl_colormode& colormode = display.colormode;
@@ -49,7 +52,7 @@ class TSGL_Display {
     void begin(const tsgl_settings settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
         tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], spihost);
-        if (caps != MALLOC_CAP_INVALID) {
+        if (caps != TSGL_NOBUFFER) {
             framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
             if (tsgl_framebuffer_init(framebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
                 ::free(framebuffer);
@@ -61,7 +64,7 @@ class TSGL_Display {
 
     void begin(const tsgl_settings settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
         tsgl_spi_initManual(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], spihost, mosi, miso, clk);
-        if (caps != MALLOC_CAP_INVALID) {
+        if (caps != TSGL_NOBUFFER) {
             framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
             if (tsgl_framebuffer_init(framebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
                 ::free(framebuffer);
@@ -71,10 +74,32 @@ class TSGL_Display {
         ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, spihost, freq, dc, cs, rst));
     }
 
+    void enableAsyncSending(const tsgl_settings settings, int64_t caps) {
+        if (asyncFramebuffer != NULL) {
+            ESP_LOGE(TAG, "asyncSending is already enabled");
+            return;
+        }
+
+        if (caps == TSGL_NOBUFFER) {
+            asyncFramebuffer = framebuffer;
+        } else {
+            asyncFramebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
+            if (tsgl_framebuffer_init(asyncFramebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
+                ::free(asyncFramebuffer);
+                asyncFramebuffer = NULL;
+            }
+        }
+    }
+
     void free() {
         if (display.interface != NULL) {
             tsgl_display_free(&display);
             display.interface = NULL;
+        }
+        if (asyncFramebuffer != NULL && asyncFramebuffer != framebuffer) {
+            tsgl_framebuffer_free(asyncFramebuffer);
+            ::free(asyncFramebuffer);
+            asyncFramebuffer = NULL;
         }
         if (framebuffer != NULL) {
             tsgl_framebuffer_free(framebuffer);
@@ -107,7 +132,11 @@ class TSGL_Display {
     }
 
     void update() {
-        if (framebuffer != NULL) tsgl_display_send(&display, framebuffer);
+        if (asyncFramebuffer != NULL) {
+            tsgl_display_asyncSend(&display, framebuffer, asyncFramebuffer);
+        } else if (framebuffer != NULL) {
+            tsgl_display_send(&display, framebuffer);
+        }
     }
 
     // --------------------- graphic

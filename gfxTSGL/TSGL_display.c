@@ -249,6 +249,39 @@ void tsgl_display_free(tsgl_display* display) {
     free(display->interface);
 }
 
+// async send
+
+static bool asyncSendActive = false;
+
+typedef struct {
+    tsgl_display* display;
+    tsgl_framebuffer* framebuffer;
+} _asyncData;
+
+static void _asyncSend(void* buffer) {
+    _asyncData* data = (_asyncData*)buffer;
+    if (data == NULL || data->display == NULL || data->framebuffer == NULL) {
+        vTaskDelete(NULL);
+        return;
+    }
+    tsgl_display_sendData(data->display, data->framebuffer->buffer, data->framebuffer->buffersize);
+    asyncSendActive = false;
+    vTaskDelete(NULL);
+} 
+
+void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* asyncFramebuffer) {
+    if (framebuffer != asyncFramebuffer)
+        memcpy(asyncFramebuffer->buffer, framebuffer->buffer, asyncFramebuffer->buffersize);
+
+    _asyncData data = {
+        .display = display,
+        .framebuffer = asyncFramebuffer
+    };
+
+    while (asyncSendActive) vTaskDelay(1);
+    asyncSendActive = true;
+    xTaskCreate(_asyncSend, NULL, 4096 * 8, (void*)(&data), 1, NULL);
+}
 
 // graphic
 

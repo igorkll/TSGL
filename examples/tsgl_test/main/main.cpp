@@ -32,6 +32,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 extern "C" void app_main() {
     TSGL_Display::pushInitColor(TSGL_GRAY, settings.driver->colormode);
     display.begin(settings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    display.enableAsyncSending(settings, TSGL_SPIRAM);
 
     tsgl_framebuffer framebuffer;
     tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);
@@ -45,7 +46,7 @@ extern "C" void app_main() {
 
     float waittime;
     while (true) {
-        display.setRotation(0);
+        display.setRotation(1);
         display.clear(TSGL_BLACK);
         display.fill(0, 0, 64, 64, TSGL_RED);
         display.fill(64, 0, 64, 64, TSGL_GREEN);
@@ -53,18 +54,35 @@ extern "C" void app_main() {
         display.update();
         vTaskDelay(2000 / portTICK_PERIOD_MS);
 
+        printf("fps test (minimal rendering)\n");
         display.clear(TSGL_BLACK);
         int64_t t1 = esp_timer_get_time();
-        for (uint16_t i = 0; i < 255; i++) {
+        for (uint16_t i = 0; i < 256; i++) {
             display.fill(0, 0, 16, 16, tsgl_color_hsv(i, 255, 255));
             display.update();
         }
         int64_t t2 = esp_timer_get_time();
         float exectime = (t2 - t1) / 1000 / 1000 / 256.0;
         printf("execute time: %f\n", exectime);
-        printf("FPS with minimal rendering: %f\n", exectime == 0 ? -1 : 1.0 / exectime);
+        printf("FPS: %f\n", exectime == 0 ? -1 : 1.0 / exectime);
 
-        display.setRotation(1);
+        printf("fps test (large rendering)\n");
+        t1 = esp_timer_get_time();
+        for (tsgl_pos i = 0; i < display.width; i++) {
+            uint8_t hue = i % 256;
+            display.clear(tsgl_color_hsv(hue, 255, 180));
+            tsgl_rawcolor color = tsgl_color_raw(tsgl_color_hsv(255 - hue, 140, 180), display.colormode);
+            for (tsgl_pos ix = 0; ix < display.width; ix += 8) {
+                display.line(0, 0, ix, display.height, color);
+            }
+            display.fill(i, 0, 16, display.height, tsgl_color_hsv(255 - hue, 180, 255));
+            display.update();
+        }
+        t2 = esp_timer_get_time();
+        exectime = (t2 - t1) / 1000 / 1000.0 / display.width;
+        printf("execute time: %f\n", exectime);
+        printf("FPS: %f\n", exectime == 0 ? -1 : 1.0 / exectime);
+
         for (uint8_t i = 0; i < 4; i++) {
             display.clear(TSGL_WHITE);
             display.fill(0, 0, 16, 16, TSGL_RED);
