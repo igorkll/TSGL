@@ -79,7 +79,11 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     };
 
     const tsgl_driver* driver = settings.driver;
-    memcpy(&display->settings, &settings, sizeof(settings));
+    tsgl_colormode colormode;
+    if (settings)
+    display->baseInvert = settings.invert;
+    display->offsetX = settings.offsetX;
+    display->offsetY = settings.offsetY;
     display->width = settings.width;
     display->height = settings.height;
     display->defaultWidth = settings.width;
@@ -90,8 +94,8 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->dc = dc;
     display->driver = driver;
     display->colormode = driver->colormode;
-    display->colorsize = tsgl_colormodeSizes[driver->colormode];
-    display->black = tsgl_color_raw(TSGL_BLACK, driver->colormode);
+    display->colorsize = tsgl_colormodeSizes[display->colormode];
+    display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
 
     esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
     if (result == ESP_OK) {

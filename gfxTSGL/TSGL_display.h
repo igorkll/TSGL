@@ -21,12 +21,14 @@ typedef struct {
     void* interface;
     int8_t dc;
     const tsgl_driver* driver;
-    tsgl_settings settings;
     tsgl_colormode colormode;
     float colorsize;
     tsgl_rawcolor black;
     bool enable;
     bool invert;
+    bool baseInvert;
+    tsgl_pos offsetX;
+    tsgl_pos offsetY;
 } tsgl_display;
 
 // ---------------- pre-initialization
