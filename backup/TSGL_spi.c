@@ -11,6 +11,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_heap_caps.h>
 
 static const char* TAG = "tsgl_spi";
 
@@ -18,15 +19,6 @@ typedef struct {
     int8_t pin;
     bool state;
 } Pre_transfer_info;
-
-typedef struct {
-    size_t size;
-    const uint8_t* data;
-    void* interface;
-    Pre_transfer_info pre_transfer_info;
-    int8_t dc_pin;
-    bool dc_state;
-} Transfer_info;
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
     int8_t miso;
@@ -53,10 +45,10 @@ esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
             ESP_LOGE(TAG, "%i spihost is unknown, tsgl_spi_init cannot be used", host);
             return ESP_ERR_INVALID_ARG;
     }
-    return tsgl_spi_initManual(maxlen, host, miso, mosi, clk);
+    return tsgl_spi_initManual(maxlen, host, mosi, miso, clk);
 }
 
-esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t miso, int8_t mosi, int8_t clk) {
+esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t mosi, int8_t miso, int8_t clk) {
     spi_bus_config_t buscfg={
         .miso_io_num=miso,
         .mosi_io_num=mosi,
@@ -82,38 +74,8 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
 }
 
 #define umin(a,b) (((a) < (b)) ? (a) : (b))
-
-static bool _transmiting = false;
-static void _transmitData(void* param) {
-    _transmiting = true;
-    Transfer_info* transfer_info = (Transfer_info*)param;
-    uint16_t part = 4092;
-    size_t offset = 0;
-    Pre_transfer_info pre_transfer_info = {
-        .pin = transfer_info->dc_pin,
-        .state = transfer_info->dc_state
-    };
-    
-    while (true) {
-        spi_transaction_t t = {
-            .length = umin(transfer_info->size - offset, part) * 8,
-            .tx_buffer = transfer_info->data + offset,
-            .user = (void*)(&pre_transfer_info)
-        };
-
-        vTaskDelay(1);
-        ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)transfer_info->interface), &t));
-        offset += part;
-        if (offset >= transfer_info->size) {
-            break;
-        }
-    }
-    _transmiting = false;
-    vTaskDelete(NULL);
-}
-
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size == 0) return;
+    if (size <= 0) return;
     Pre_transfer_info pre_transfer_info = {
         .pin = display->dc,
         .state = true
@@ -125,21 +87,34 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .user = (void*)(&pre_transfer_info)
     };
 
-    ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
-}
+    spi_device_handle_t handle = *((spi_device_handle_t*)display->interface);
 
-void tsgl_spi_asyncSendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size == 0) return;
-    Transfer_info transfer_info = {
-        .data = data,
-        .size = size,
-        .interface = display->interface,
-        .dc_pin = display->dc,
-        .dc_state = true
-    };
+    if (spi_device_transmit(handle, &t) != ESP_OK) {
+        size_t part = tsgl_getPartSize();
+        size_t offset = 0;
+        uint8_t index = 0;
+        while (true) {
+            spi_transaction_t t = {
+                .length = umin(size - offset, part) * 8,
+                .tx_buffer = data + offset,
+                .user = (void*)(&pre_transfer_info)
+            };
 
-    while (_transmiting) vTaskDelay(1);
-    xTaskCreate(_transmitData, NULL, 4096 * 4, (void*)(&transfer_info), 1, NULL);
+            //ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
+            ESP_ERROR_CHECK(spi_device_queue_trans(handle, &t, portMAX_DELAY));
+
+            offset += part;
+            index++;
+            if (offset >= size) {
+                break;
+            }
+        }
+
+        spi_transaction_t* ret_trans;
+        for (uint8_t i = 0; i < index; i++) {
+            ESP_ERROR_CHECK(spi_device_get_trans_result(handle, &ret_trans, portMAX_DELAY));
+        }
+    }
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
