@@ -11,7 +11,7 @@ typedef enum {
 } tsgl_display_interfaceType;
 
 typedef struct {
-    tsgl_driver_storage driverStorage;
+    tsgl_driver_storage storage;
     tsgl_pos width;
     tsgl_pos height;
     tsgl_pos defaultWidth;

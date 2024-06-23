@@ -91,9 +91,10 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
                 break;
         }
     }
-    display->driverStorage.flipX = settings.flipX;
-    display->driverStorage.flipY = settings.flipY;
-    display->driverStorage.flipXY = settings.flipXY;
+    memcpy(&display->storage, &driver->storage, sizeof(tsgl_driver_storage));
+    display->storage.flipX = settings.flipX;
+    display->storage.flipY = settings.flipY;
+    display->storage.flipXY = settings.flipXY;
     display->baseInvert = settings.invert;
     display->offsetX = settings.offsetX;
     display->offsetY = settings.offsetY;
@@ -148,7 +149,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         initType = 0;
 
         // enable display
-        _doCommandList(display, driver->enable(&driver->storage, true));
+        _doCommandList(display, driver->enable(&display->storage, true));
         tsgl_display_rotate(display, 0);
     } else {
         free(display->interface);
@@ -172,7 +173,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
     }
     if (display->driver->rotate != NULL) {
         //printf("r:%i\n", rotation);
-        _doCommandList(display, display->driver->rotate(&display->driver->storage, rotation));
+        _doCommandList(display, display->driver->rotate(&display->storage, rotation));
     }
     tsgl_display_selectAll(display);
 }
@@ -183,7 +184,7 @@ void tsgl_display_selectAll(tsgl_display* display) {
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     _doCommandList(display,
-        display->driver->select(&display->driver->storage,
+        display->driver->select(&display->storage,
         display->offsetX + x,
         display->offsetY + y, (display->offsetX + x + width) - 1,
         (display->offsetY + y + height) - 1)
@@ -225,7 +226,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     display->enable = state;
-    _doCommandList(display, display->driver->enable(&display->driver->storage, state));
+    _doCommandList(display, display->driver->enable(&display->storage, state));
     if (state) {
         tsgl_display_selectAll(display);
     }
@@ -233,7 +234,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
-        _doCommandList(display, display->driver->invert(&display->driver->storage, state ^ display->baseInvert));
+        _doCommandList(display, display->driver->invert(&display->storage, state ^ display->baseInvert));
         tsgl_display_selectAll(display);
     }
     display->invert = state;
@@ -253,13 +254,13 @@ void tsgl_display_free(tsgl_display* display) {
 
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
     if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate(&display->driver->storage, ((uint8_t)(display->rotation - rotation)) % (uint8_t)4));
+        _doCommandList(display, display->driver->rotate(&display->storage, ((uint8_t)(display->rotation - rotation)) % (uint8_t)4));
 
     tsgl_display_select(display, x, y, sprite->defaultWidth, sprite->defaultHeight);
     tsgl_display_sendData(display, sprite->buffer, sprite->buffersize);
 
     if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate(&display->driver->storage, display->rotation));
+        _doCommandList(display, display->driver->rotate(&display->storage, display->rotation));
 }
 
 void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
