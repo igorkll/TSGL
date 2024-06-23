@@ -7,7 +7,7 @@
 #define DC 21
 #define CS 22
 #define RST 18
-#define COLORMODE tsgl_rgb565_le
+#define COLORMODE tsgl_bgr565_be
 
 const tsgl_settings settings = {
     .driver = &st77XX_rgb565,
