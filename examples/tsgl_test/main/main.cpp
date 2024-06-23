@@ -40,7 +40,7 @@ extern "C" void app_main() {
             tsgl_framebuffer_set(&framebuffer, posx, posy, tsgl_color_raw(hue, display.colormode));
         }
     }
-    tsgl_framebuffer_fill(&framebuffer, 0, 0, 64, 64, tsgl_color_raw(TSGL_LIME, display.colormode));
+    tsgl_framebuffer_fill(&framebuffer, 0, 0, 64, 64, tsgl_color_raw(TSGL_GREEN, display.colormode));
 
     float waittime;
     while (true) {
@@ -80,7 +80,7 @@ extern "C" void app_main() {
             display.line(0, 0, ix, display.height, TSGL_RED);
         }
         for (tsgl_pos iy = 0; iy < display.height; iy += 8) {
-            display.line(0, 0, display.width, iy, TSGL_LIME);
+            display.line(0, 0, display.width, iy, TSGL_GREEN);
         }
         display.line(0, 0, display.width, display.height, TSGL_BLUE, 3);
         display.update();
@@ -90,18 +90,18 @@ extern "C" void app_main() {
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
 
-        display.clear(TSGL_BLUE);
+        display.clear(TSGL_CYAN);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
 
-        display.clear(TSGL_PURPLE);
+        display.clear(TSGL_BLUE);
         display.update();
         vTaskDelay(500 / portTICK_PERIOD_MS);
 
         for (uint8_t i = 0; i < 4; i++) {
             display.setRotation(i);
-            display.clear(TSGL_BROWN);
-            display.fill(10, 10, 25, 25, TSGL_LIME);
+            display.clear(TSGL_GRAY);
+            display.fill(10, 10, 25, 25, TSGL_GREEN);
             display.rect(10, 10, display.width - 20, display.height - 20, TSGL_RED, 10);
             display.update();
             vTaskDelay(500 / portTICK_PERIOD_MS);

@@ -15,16 +15,10 @@ typedef struct {
 extern const tsgl_color TSGL_WHITE;
 extern const tsgl_color TSGL_ORANGE;
 extern const tsgl_color TSGL_MAGENTA;
-extern const tsgl_color TSGL_LIGHT_BLUE;
 extern const tsgl_color TSGL_YELLOW;
-extern const tsgl_color TSGL_LIME;
-extern const tsgl_color TSGL_PINK;
 extern const tsgl_color TSGL_GRAY;
-extern const tsgl_color TSGL_LIGHT_GRAY;
 extern const tsgl_color TSGL_CYAN;
-extern const tsgl_color TSGL_PURPLE;
 extern const tsgl_color TSGL_BLUE;
-extern const tsgl_color TSGL_BROWN;
 extern const tsgl_color TSGL_GREEN;
 extern const tsgl_color TSGL_RED;
 extern const tsgl_color TSGL_BLACK;

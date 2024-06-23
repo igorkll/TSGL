@@ -7,6 +7,54 @@ const tsgl_color TSGL_WHITE = {
     .b = 255
 };
 
+const tsgl_color TSGL_ORANGE = {
+    .r = 255,
+    .g = 180,
+    .b = 0
+};
+
+const tsgl_color TSGL_MAGENTA = {
+    .r = 255,
+    .g = 0,
+    .b = 255
+};
+
+const tsgl_color TSGL_YELLOW = {
+    .r = 255,
+    .g = 255,
+    .b = 0
+};
+
+const tsgl_color TSGL_GRAY = {
+    .r = 127,
+    .g = 127,
+    .b = 127
+};
+
+const tsgl_color TSGL_CYAN = {
+    .r = 0,
+    .g = 255,
+    .b = 255
+};
+
+const tsgl_color TSGL_BLUE = {
+    .r = 0,
+    .g = 0,
+    .b = 255
+};
+
+const tsgl_color TSGL_GREEN = {
+    .r = 0,
+    .g = 255,
+    .b = 0
+};
+
+const tsgl_color TSGL_RED = {
+    .r = 255,
+    .g = 0,
+    .b = 0
+};
+
 const tsgl_color TSGL_BLACK = {
     .r = 0,
     .g = 0,
