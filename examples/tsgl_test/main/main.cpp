@@ -29,7 +29,7 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    TSGL_Display::pushInitColor(TSGL_GRAY, st77XX_rgb888.colormode);
+    TSGL_Display::pushInitColor(TSGL_GRAY, settings.driver->colormode);
     display.begin(settings, TSGL_SPIRAM, TSGL_HOST1, 60000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;

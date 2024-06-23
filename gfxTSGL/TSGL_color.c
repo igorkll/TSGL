@@ -1,6 +1,18 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 
+const tsgl_color TSGL_WHITE = {
+    .r = 255,
+    .g = 255,
+    .b = 255
+};
+
+const tsgl_color TSGL_BLACK = {
+    .r = 0,
+    .g = 0,
+    .b = 0
+};
+
 tsgl_color tsgl_color_pack(uint8_t r, uint8_t g, uint8_t b) {
     tsgl_color result = {
         .r = r,
