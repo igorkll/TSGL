@@ -72,7 +72,10 @@ class TSGL_Display {
     }
 
     void free() {
-        tsgl_display_free(&display);
+        if (display.interface != NULL) {
+            tsgl_display_free(&display);
+            display.interface = NULL;
+        }
         if (framebuffer != NULL) {
             tsgl_framebuffer_free(framebuffer);
             ::free(framebuffer);
