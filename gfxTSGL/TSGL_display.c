@@ -70,14 +70,6 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
 }
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
-    spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = freq,
-        .mode = 0,
-        .spics_io_num = cs,
-        .queue_size = 7,
-        .pre_cb = tsgl_spi_pre_transfer_callback
-    };
-
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
@@ -90,13 +82,22 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->defaultWidth = settings.width;
     display->defaultHeight = settings.height;
     display->rotation = 0;
-    display->interfaceType = tsgl_display_interface_spi;
-    display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
     display->driver = settings.driver;
     display->colormode = settings.driver->colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
+
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = freq,
+        .mode = 0,
+        .spics_io_num = cs,
+        .queue_size = 7,
+        .pre_cb = tsgl_spi_pre_transfer_callback
+    };
+    
+    display->interfaceType = tsgl_display_interface_spi;
+    display->interface = malloc(sizeof(spi_device_handle_t));
 
     esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
     if (result == ESP_OK) {

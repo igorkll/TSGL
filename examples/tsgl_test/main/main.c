@@ -62,17 +62,16 @@ void app_main() {
         tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, COLORMODE), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, display.height, tsgl_color_raw(TSGL_BLUE, COLORMODE), 5);
         tsgl_display_send(&display, &framebuffer);
-        delay(1000);
+        delay(3000);
 
         for (tsgl_pos i = 0; i < display.width; i++) {
             tsgl_framebuffer_clear(&framebuffer, display.black);
             tsgl_rawcolor color = tsgl_color_raw(TSGL_YELLOW, COLORMODE);
             for (tsgl_pos pos = 0; pos < display.width; pos++) {
-                uint16_t y = (display.height / 2) + (sin(fmap((pos + i) % 256, 0, 255, 0, M_PI * 2)) * display.height * 0.4);
+                uint16_t y = (display.height / 2) + (sin(fmap((pos - i) % 256, 0, 255, 0, M_PI * 2)) * display.height * 0.4);
                 tsgl_framebuffer_set(&framebuffer, pos, y, color);
             }
             tsgl_display_send(&display, &framebuffer);
-            delay(100);
         }
     }
 }
