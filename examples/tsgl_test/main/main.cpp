@@ -8,10 +8,11 @@
 #define CS 22
 #define RST 18
 
-tsgl_settings settings = {
+const tsgl_settings settings = {
     .driver = &st77XX_rgb565,
     .invert = true,
     .spawRGB = true,
+    .flipX = true,
     .width = 320,
     .height = 480
 };
@@ -44,6 +45,14 @@ extern "C" void app_main() {
 
     float waittime;
     while (true) {
+        display.setRotation(0);
+        display.clear(TSGL_BLACK);
+        display.fill(0, 0, 64, 64, TSGL_RED);
+        display.fill(64, 0, 64, 64, TSGL_GREEN);
+        display.fill(0, 64, 64, 64, TSGL_BLUE);
+        display.update();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+
         display.setRotation(1);
         for (uint8_t i = 0; i < 4; i++) {
             display.clear(TSGL_WHITE);

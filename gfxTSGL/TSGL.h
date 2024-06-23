@@ -55,6 +55,8 @@ typedef struct {
     const tsgl_driver* driver;
     bool invert;
     bool spawRGB;
+    bool flipX;
+    bool flipY;
     tsgl_pos width;
     tsgl_pos height;
     tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning

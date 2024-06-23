@@ -91,6 +91,8 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
                 break;
         }
     }
+    display->flipX = settings.flipX;
+    display->flipY = settings.flipY;
     display->baseInvert = settings.invert;
     display->offsetX = settings.offsetX;
     display->offsetY = settings.offsetY;

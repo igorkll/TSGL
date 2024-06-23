@@ -132,7 +132,7 @@ static tsgl_driver_list _st77XX_enable(const tsgl_driver_storage* storage, bool 
 
 
 
-static const tsgl_driver st77XX_rgb444 = {
+static const tsgl_driver st77XX_rgb444 = { //does not work on st7796
     .colormode = tsgl_rgb444,
     .init = {
         {0x3A, {0x03}, 1}, //444
@@ -153,9 +153,9 @@ static const tsgl_driver st77XX_rgb666 = { //3 bytes per pixel. 6 bits are not u
     _ST77XX_SERVICE_CODE
 };
 
-static const tsgl_driver st77XX_rgb888 = {
+static const tsgl_driver st77XX_rgb888 = { //does not work on st7735
     .colormode = tsgl_rgb888,
     .init = {
-        {0x3A, {0x07}, 1}, //16M truncated - truncated true color support. that's what it says in the documentation
+        {0x3A, {0x07}, 1}, //on st7789 16M truncated - truncated true color support. that's what it says in the documentation
     _ST77XX_SERVICE_CODE
 };
