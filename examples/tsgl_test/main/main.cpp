@@ -9,7 +9,7 @@
 #define RST 18
 
 tsgl_settings settings = {
-    .driver = &st77XX_rgb888,
+    .driver = &st77XX_rgb565,
     .invert = true,
     .spawRGB = true,
     .width = 320,
