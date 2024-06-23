@@ -9,7 +9,7 @@ typedef int16_t tsgl_pos;
 extern const float tsgl_colormodeSizes[];
 
 typedef enum {
-    tsgl_rgb565_le,
+    tsgl_rgb565_le = 0,
     tsgl_bgr565_le,
     tsgl_rgb565_be,
     tsgl_bgr565_be,

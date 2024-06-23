@@ -79,8 +79,18 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     };
 
     const tsgl_driver* driver = settings.driver;
-    tsgl_colormode colormode;
-    if (settings)
+    tsgl_colormode colormode = driver->colormode;
+    if (settings.spawRGB) {
+        switch (colormode % 2) {
+            case 0:
+                colormode = driver->colormode + 1;
+                break;
+            
+            case 1:
+                colormode = driver->colormode - 1;
+                break;
+        }
+    }
     display->baseInvert = settings.invert;
     display->offsetX = settings.offsetX;
     display->offsetY = settings.offsetY;
@@ -93,7 +103,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
     display->driver = driver;
-    display->colormode = driver->colormode;
+    display->colormode = colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
 
@@ -169,9 +179,12 @@ void tsgl_display_selectAll(tsgl_display* display) {
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-    tsgl_pos offsetX = display->settings.offsetX;
-    tsgl_pos offsetY = display->settings.offsetY;
-    _doCommandList(display, display->driver->select(&display->driver->storage, offsetX + x, offsetY + y, (offsetX + x + width) - 1, (offsetY + y + height) - 1));
+    _doCommandList(display,
+        display->driver->select(&display->driver->storage,
+        display->offsetX + x,
+        display->offsetY + y, (display->offsetX + x + width) - 1,
+        (display->offsetY + y + height) - 1)
+    );
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
@@ -217,7 +230,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
-        _doCommandList(display, display->driver->invert(&display->driver->storage, state ^ display->settings.invert));
+        _doCommandList(display, display->driver->invert(&display->driver->storage, state ^ display->baseInvert));
         tsgl_display_selectAll(display);
     }
     display->invert = state;
