@@ -22,7 +22,7 @@ class TSGL_Display {
     tsgl_colormode& colormode = display.colormode;
     float& colorsize = display.colorsize;
 
-    // --------------------- init
+    // --------------------- static
 
     static void pushInitColor(tsgl_rawcolor color) {
         tsgl_display_pushInitColor(color);
@@ -43,6 +43,8 @@ class TSGL_Display {
     static void pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation) {
         tsgl_display_pushInitRawFramebuffer(framebuffer, size, rotation);
     }
+
+    // --------------------- init
 
     void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
@@ -71,8 +73,11 @@ class TSGL_Display {
 
     void free() {
         tsgl_display_free(&display);
-        tsgl_framebuffer_free(framebuffer);
-        ::free(framebuffer);
+        if (framebuffer != NULL) {
+            tsgl_framebuffer_free(framebuffer);
+            ::free(framebuffer);
+            framebuffer = NULL;
+        }
     }
 
     ~TSGL_Display () {
