@@ -7,11 +7,11 @@
 #define DC 21
 #define CS 22
 #define RST 18
+#define COLORMODE tsgl_rgb565_le
 
 const tsgl_settings settings = {
     .driver = &st77XX_rgb565,
     .invert = true,
-    .spawRGB = true,
     .flipX = true,
     .width = 320,
     .height = 480
@@ -42,17 +42,25 @@ int imap(int value, int low, int high, int low_2, int high_2) {
     return (int)(fmap(value, low, high, low_2, high_2) + 0.5);
 }
 
+void delay(int time) {
+    vTaskDelay(time / portTICK_PERIOD_MS);
+}
+
 void app_main() {
-    tsgl_colormode colormode = settings.driver->colormode;
-    ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[colormode], SPI));
-    tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, tsgl_display_reColormode(settings, colormode)));
+    ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[COLORMODE], SPI));
+    tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, COLORMODE));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, colormode, settings.width, settings.height, BUFFER));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, settings.width, settings.height, BUFFER));
+
+    tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
+    tsgl_display_rotate(&display, 1);
 
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, colormode), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, 0, tsgl_color_raw(TSGL_RED, COLORMODE), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, COLORMODE), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, 0, display.height, tsgl_color_raw(TSGL_BLUE, COLORMODE), 5);
         tsgl_display_send(&display, &framebuffer);
-        vTaskDelay(1);
+        delay(1000);
     }
 }

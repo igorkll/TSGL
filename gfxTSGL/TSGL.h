@@ -57,7 +57,6 @@ typedef struct {
 typedef struct {
     const tsgl_driver* driver;
     bool invert;
-    bool spawRGB;
     bool flipX;
     bool flipY;
     bool flipXY;

@@ -69,19 +69,6 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
     initType = 2;
 }
 
-tsgl_colormode tsgl_display_reColormode(tsgl_settings settings, tsgl_colormode colormode) {
-    if (settings.spawRGB) {
-        switch (colormode % 2) {
-            case 0:
-                return colormode + 1;
-            
-            case 1:
-                return colormode - 1;
-        }
-    }
-    return colormode;
-}
-
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = freq,
@@ -91,9 +78,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         .pre_cb = tsgl_spi_pre_transfer_callback
     };
 
-    const tsgl_driver* driver = settings.driver;
-    tsgl_colormode colormode = tsgl_display_reColormode(settings, driver->colormode);
-    memcpy(&display->storage, &driver->storage, sizeof(tsgl_driver_storage));
+    memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
     display->storage.flipXY = settings.flipXY;
@@ -108,8 +93,8 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
     display->dc = dc;
-    display->driver = driver;
-    display->colormode = colormode;
+    display->driver = settings.driver;
+    display->colormode = settings.driver->colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
 
@@ -132,7 +117,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         }
 
         // init display
-        _doCommands(display, driver->init);
+        _doCommands(display, settings.driver->init);
         tsgl_display_setInvert(display, false);
         tsgl_display_rotate(display, initRotation);
         switch (initType) {
@@ -151,7 +136,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         initType = 0;
 
         // enable display
-        _doCommandList(display, driver->enable(&display->storage, true));
+        _doCommandList(display, settings.driver->enable(&display->storage, true));
         tsgl_display_rotate(display, 0);
     } else {
         free(display->interface);
