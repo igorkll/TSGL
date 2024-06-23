@@ -53,6 +53,17 @@ extern "C" void app_main() {
         display.update();
         vTaskDelay(2000 / portTICK_PERIOD_MS);
 
+        display.clear(TSGL_BLACK);
+        int64_t t1 = esp_timer_get_time();
+        for (uint16_t i = 0; i < 255; i++) {
+            display.fill(0, 0, 16, 16, tsgl_color_hsv(i, 255, 255));
+            display.update();
+        }
+        int64_t t2 = esp_timer_get_time();
+        float exectime = (t2 - t1) / 1000 / 1000 / 256.0;
+        printf("execute time: %f\n", exectime);
+        printf("FPS with minimal rendering: %f\n", exectime == 0 ? -1 : 1.0 / exectime);
+
         display.setRotation(1);
         for (uint8_t i = 0; i < 4; i++) {
             display.clear(TSGL_WHITE);
