@@ -74,7 +74,7 @@ class TSGL_Display {
         ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, spihost, freq, dc, cs, rst));
     }
 
-    void enableAsyncSending(const tsgl_settings settings, int64_t caps) {
+    void enableAsyncSending(int64_t caps) {
         if (asyncFramebuffer != NULL) {
             ESP_LOGE(TAG, "asyncSending is already enabled");
             return;
@@ -84,7 +84,7 @@ class TSGL_Display {
             asyncFramebuffer = framebuffer;
         } else {
             asyncFramebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
-            if (tsgl_framebuffer_init(asyncFramebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
+            if (tsgl_framebuffer_init(asyncFramebuffer, framebuffer->colormode, framebuffer->defaultWidth, framebuffer->defaultHeight, caps) != ESP_OK) {
                 ::free(asyncFramebuffer);
                 asyncFramebuffer = NULL;
             }

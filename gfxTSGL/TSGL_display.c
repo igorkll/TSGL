@@ -260,11 +260,8 @@ typedef struct {
 
 static void _asyncSend(void* buffer) {
     _asyncData* data = (_asyncData*)buffer;
-    if (data == NULL || data->display == NULL || data->framebuffer == NULL) {
-        vTaskDelete(NULL);
-        return;
-    }
     tsgl_display_sendData(data->display, data->framebuffer->buffer, data->framebuffer->buffersize);
+    free(data);
     asyncSendActive = false;
     vTaskDelete(NULL);
 } 
@@ -273,14 +270,13 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
     if (framebuffer != asyncFramebuffer)
         memcpy(asyncFramebuffer->buffer, framebuffer->buffer, asyncFramebuffer->buffersize);
 
-    _asyncData data = {
-        .display = display,
-        .framebuffer = asyncFramebuffer
-    };
+    _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
+    data->display = display;
+    data->framebuffer = asyncFramebuffer;
 
     while (asyncSendActive) vTaskDelay(1);
     asyncSendActive = true;
-    xTaskCreate(_asyncSend, NULL, 4096 * 8, (void*)(&data), 1, NULL);
+    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
 }
 
 // graphic
