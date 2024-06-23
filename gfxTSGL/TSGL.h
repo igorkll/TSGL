@@ -37,6 +37,9 @@ typedef struct {
 
 typedef struct {
     size_t list[16];
+    bool flipX;
+    bool flipY;
+    bool flipXY;
 } tsgl_driver_storage;
 
 typedef struct {
@@ -57,6 +60,7 @@ typedef struct {
     bool spawRGB;
     bool flipX;
     bool flipY;
+    bool flipXY;
     tsgl_pos width;
     tsgl_pos height;
     tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning

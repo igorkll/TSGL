@@ -29,8 +29,6 @@ typedef struct {
     bool baseInvert;
     tsgl_pos offsetX;
     tsgl_pos offsetY;
-    bool flipX;
-    bool flipY;
 } tsgl_display;
 
 // ---------------- pre-initialization

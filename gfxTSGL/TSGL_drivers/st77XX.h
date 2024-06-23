@@ -18,43 +18,35 @@ static tsgl_driver_list _st77XX_select(const tsgl_driver_storage* storage, tsgl_
 }
 
 static tsgl_driver_list _st77XX_rotate(const tsgl_driver_storage* storage, uint8_t rotation) {
+    uint8_t regvalue = 0;
     switch (rotation) {
-        default : {
-            tsgl_driver_list list = {
-                .list = {
-                    {0x36, {_ST77XX_ROTATION_0}, 1, -1}
-                }
-            };
-            return list;
-        }
+        default:
+            regvalue = _ST77XX_ROTATION_0;
+            break;
 
-        case 1 : {
-            tsgl_driver_list list = {
-                .list = {
-                    {0x36, {_ST77XX_ROTATION_1}, 1, -1}
-                }
-            };
-            return list;
-        }
+        case 1:
+            regvalue = _ST77XX_ROTATION_1;
+            break;
 
-        case 2 : {
-            tsgl_driver_list list = {
-                .list = {
-                    {0x36, {_ST77XX_ROTATION_2}, 1, -1}
-                }
-            };
-            return list;
-        }
+        case 2:
+            regvalue = _ST77XX_ROTATION_2;
+            break;
 
-        case 3 : {
-            tsgl_driver_list list = {
-                .list = {
-                    {0x36, {_ST77XX_ROTATION_3}, 1, -1}
-                }
-            };
-            return list;
-        }
+        case 3:
+            regvalue = _ST77XX_ROTATION_3;
+            break;
     }
+
+    if (storage->flipX) regvalue ^= (1 << 6);
+    if (storage->flipY) regvalue ^= (1 << 7);
+    if (storage->flipXY) regvalue ^= (1 << 5);
+
+    tsgl_driver_list list = {
+        .list = {
+            {0x36, {regvalue}, 1, -1}
+        }
+    };
+    return list;
 }
 
 static tsgl_driver_list _st77XX_invert(const tsgl_driver_storage* storage, bool invert) {
