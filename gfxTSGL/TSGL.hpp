@@ -46,29 +46,29 @@ class TSGL_Display {
 
     // --------------------- init
 
-    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+    void begin(const tsgl_settings settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
         //without checking because the SPI may already be initialized
-        tsgl_spi_init(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost);
+        tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], spihost);
         if (caps != MALLOC_CAP_INVALID) {
             framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
-            if (tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, caps) != ESP_OK) {
+            if (tsgl_framebuffer_init(framebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
                 ::free(framebuffer);
                 framebuffer = NULL;
             }
         }
-        ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
+        ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, spihost, freq, dc, cs, rst));
     }
 
-    void begin(const tsgl_driver* driver, const tsgl_driver_settings driver_settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
-        tsgl_spi_initManual(driver_settings.width * driver_settings.height * tsgl_colormodeSizes[driver->colormode], spihost, mosi, miso, clk);
+    void begin(const tsgl_settings settings, int64_t caps, spi_host_device_t spihost, size_t freq, int8_t mosi, int8_t miso, int8_t clk, int8_t dc, int8_t cs, int8_t rst) {
+        tsgl_spi_initManual(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], spihost, mosi, miso, clk);
         if (caps != MALLOC_CAP_INVALID) {
             framebuffer = (tsgl_framebuffer*)malloc(sizeof(tsgl_framebuffer));
-            if (tsgl_framebuffer_init(framebuffer, driver->colormode, driver_settings.width, driver_settings.height, caps) != ESP_OK) {
+            if (tsgl_framebuffer_init(framebuffer, settings.driver->colormode, settings.width, settings.height, caps) != ESP_OK) {
                 ::free(framebuffer);
                 framebuffer = NULL;
             }
         }
-        ESP_ERROR_CHECK(tsgl_display_spi(&display, driver, driver_settings, spihost, freq, dc, cs, rst));
+        ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, spihost, freq, dc, cs, rst));
     }
 
     void free() {

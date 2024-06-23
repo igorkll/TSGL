@@ -8,7 +8,8 @@
 #define CS 22
 #define RST 18
 
-tsgl_driver_settings driverSettings = {
+tsgl_settings settings = {
+    .driver = &st77XX_rgb888,
     .invert = true,
     .width = 320,
     .height = 480
@@ -27,8 +28,8 @@ int imap(int value, int low, int high, int low_2, int high_2) {
 }
 
 extern "C" void app_main() {
-    TSGL_Display::pushInitColor(TSGL_GRAY, st77XX_rgb565.colormode);
-    display.begin(&st77XX_rgb565, driverSettings, TSGL_SPIRAM, TSGL_HOST1, 80000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
+    TSGL_Display::pushInitColor(TSGL_GRAY, st77XX_rgb888.colormode);
+    display.begin(settings, TSGL_SPIRAM, TSGL_HOST1, 80000000, DC, CS, RST); //TSGL_SPIRAM, TSGL_BUFFER, TSGL_NOBUFFER
 
     tsgl_framebuffer framebuffer;
     tsgl_framebuffer_init(&framebuffer, display.colormode, 128, 256, TSGL_SPIRAM);

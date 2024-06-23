@@ -21,7 +21,7 @@ typedef struct {
     void* interface;
     int8_t dc;
     const tsgl_driver* driver;
-    tsgl_driver_settings driver_settings;
+    tsgl_settings settings;
     tsgl_colormode colormode;
     float colorsize;
     tsgl_rawcolor black;
@@ -36,7 +36,7 @@ void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rot
 void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation);
 
 // ---------------- initializing the display
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_driver* driver, const tsgl_driver_settings driver_settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst);
 void tsgl_display_free(tsgl_display* display);
 
 // ---------------- low level methods (it is not recommended to use)
