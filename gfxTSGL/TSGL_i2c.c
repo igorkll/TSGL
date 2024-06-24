@@ -1,4 +1,4 @@
-#include <driver/i2c_master.h>
+#include <driver/i2c.h>
 #include <driver/gpio.h>
 #include <esp_err.h>
 
@@ -9,7 +9,7 @@ esp_err_t tsgl_i2c_init(i2c_port_t host, gpio_num_t sda, gpio_num_t scl) {
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_io_num = scl,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+        .master.clk_speed = 400000,
         .clk_flags = 0,
     };
 
