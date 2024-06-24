@@ -250,8 +250,8 @@ void tsgl_display_free(tsgl_display* display) {
     free(display->interface);
 }
 
-esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin) {
-    display->backlightLedcChannel = tsgl_ledc_new(pin, display->invertBacklight);
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t value) {
+    display->backlightLedcChannel = tsgl_ledc_new(pin, display->invertBacklight, value);
     display->backlightValue = 0;
 
     if (display->backlightLedcChannel < 0) {

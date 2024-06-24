@@ -98,6 +98,16 @@ static tsgl_driver_list _st77XX_enable(const tsgl_driver_storage* storage, bool 
     }
 }
 
+static tsgl_driver_list _st77XX_backlight(const tsgl_driver_storage* storage, uint8_t value) {
+    tsgl_driver_list list = {
+        .list = {
+            {0x53, {0b00101000}, 1, 0},
+            {0x51, {value}, 1, -1}
+        }
+    };
+    return list;
+}
+
 #define _ST77XX_SERVICE_CODE \
     /* Porch Setting */ \
     {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5}, \
@@ -130,6 +140,7 @@ static tsgl_driver_list _st77XX_enable(const tsgl_driver_storage* storage, bool 
 .select = _st77XX_select, \
 .rotate = _st77XX_rotate, \
 .invert = _st77XX_invert, \
+.backlight = _st77XX_backlight, \
 .selectAreaAfterCommand = true
 
 
