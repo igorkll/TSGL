@@ -12,11 +12,18 @@ typedef struct {
     gpio_num_t intr;
 } _tsgl_touchscreen_capacitive_i2c;
 
-static uint8_t readReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
+static uint8_t i2c_readReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
     _tsgl_touchscreen_capacitive_i2c* ts = (_tsgl_touchscreen_capacitive_i2c*)touchscreen->ts;
     uint8_t val = 0;
     ESP_ERROR_CHECK(i2c_master_write_read_device(ts->host, ts->address, &addr, 1, &val, 1, 100 / portTICK_PERIOD_MS));
     return val;
+}
+
+static uint8_t i2c_readDualReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
+    uint8_t read_buf[2];
+    read_buf[0] = readByte(addr);
+    read_buf[1] = readByte(addr + 1);
+    return ((read_buf[0] & 0x0f) << 8) | read_buf[1];
 }
 
 esp_err_t tsgl_touchscreen_i2c(tsgl_touchscreen* touchscreen, i2c_port_t host, uint8_t address, gpio_num_t intr, gpio_num_t rst) {
@@ -54,8 +61,17 @@ void tsgl_touchscreen_read(tsgl_touchscreen* touchscreen) {
 
     switch (touchscreen->type) {
         case tsgl_touchscreen_capacitive_i2c:
-            touchscreen->touchCount = readReg(touchscreen, 0x02) & 0x0F;
-            printf("%i\n", touchscreen->touchCount);
+            touchscreen->touchCount = i2c_readReg(touchscreen, 0x02) & 0x0F;
+            if (touchscreen->touchCount >= 1) {
+                touchscreen->touchs[0].x = i2c_readDualReg(touchscreen, 0x03);
+                touchscreen->touchs[0].y = i2c_readDualReg(touchscreen, 0x05);
+                touchscreen->touchs[0].z = 1;
+            }
+            if (touchscreen->touchCount >= 2) {
+                touchscreen->touchs[0].x = i2c_readDualReg(touchscreen, 0x09);
+                touchscreen->touchs[0].y = i2c_readDualReg(touchscreen, 0x0B);
+                touchscreen->touchs[0].z = 1;
+            }
             break;
     }
 }
