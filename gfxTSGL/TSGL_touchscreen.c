@@ -19,7 +19,7 @@ static uint8_t i2c_readReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
     return val;
 }
 
-static uint8_t i2c_readDualReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
+static int i2c_readDualReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
     uint8_t read_buf[2];
     read_buf[0] = i2c_readReg(touchscreen, addr);
     read_buf[1] = i2c_readReg(touchscreen, addr + 1);
