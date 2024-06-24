@@ -63,6 +63,12 @@ void delay(int time) {
     vTaskDelay(time / portTICK_PERIOD_MS);
 }
 
+extern void example_lvgl_demo_ui(lv_disp_t *disp);
+
+static void example_increase_lvgl_tick(void *arg) {
+    lv_tick_inc(2);
+}
+
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
     ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
@@ -81,6 +87,24 @@ void app_main() {
     tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
+
+    lv_disp_drv_t disp_drv;
+    disp_drv.hor_res = 320;
+    disp_drv.ver_res = 480;
+    disp_drv.physical_hor_res = -1;
+    disp_drv.physical_ver_res = -1;
+    lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
+    ESP_LOGI(TAG, "Install LVGL tick timer");
+    const esp_timer_create_args_t lvgl_tick_timer_args = {
+        .callback = &example_increase_lvgl_tick,
+        .name = "lvgl_tick"
+    };
+    esp_timer_handle_t lvgl_tick_timer = NULL;
+    ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, 2 * 1000));
+
+    ESP_LOGI(TAG, "Display LVGL Scatter Chart");
+    example_lvgl_demo_ui(disp);
 
     while (true) {
         tsgl_touchscreen_read(&touchscreen);
