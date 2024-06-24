@@ -88,7 +88,7 @@ void app_main() {
         tsgl_framebuffer_clear(&framebuffer, display.black);
         for (uint8_t i = 0; i < count; i++) {
             tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
-            tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
+            tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(i > 0 ? TSGL_GREEN : TSGL_RED, framebuffer.colormode));
         }
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
     }
