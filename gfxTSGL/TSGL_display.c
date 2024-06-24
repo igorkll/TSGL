@@ -15,8 +15,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-static const char* TAG = "TSGL_display";
-
 static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
     tsgl_display_sendCommand(display, command.cmd);
     if (command.datalen > 0) {
@@ -71,7 +69,7 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
     initType = 2;
 }
 
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, int8_t dc, int8_t cs, int8_t rst) {
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
@@ -94,12 +92,10 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         .clock_speed_hz = freq,
         .mode = 0,
         .spics_io_num = cs,
-        .queue_size = 7
+        .queue_size = 7,
+        .pre_cb = tsgl_spi_pre_transfer_callback
     };
-    if (dc >= 0) {
-        devcfg.pre_cb = tsgl_spi_pre_transfer_callback;
-    }
-    
+
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
 
@@ -107,15 +103,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     if (result == ESP_OK) {
         // configuration of non-SPI pins
         gpio_config_t io_conf = {};
-        if (dc >= 0) {
-            io_conf.pin_bit_mask |= 1ULL << dc;
-        } else {
-            if (display->driver->memwrite >= 0) {
-                ESP_LOGW(TAG, "working with the display without using the 'DC' pin, this may reduce the update speed.");
-            } else {
-                ESP_LOGE(TAG, "the display driver does not support operation without 'DC', the picture will not be updated");
-            }
-        }
+        if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;
         if (rst >= 0) io_conf.pin_bit_mask |= 1ULL << rst;
         io_conf.mode = GPIO_MODE_OUTPUT;
         io_conf.pull_up_en = true;
@@ -208,13 +196,7 @@ void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
 void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            if (display->dc >= 0) {
-                tsgl_spi_sendData(display, data, size);
-            } else if (display->driver->memwrite >= 0) {
-                tsgl_display_sendCommand(display, display->driver->memwrite);
-                tsgl_spi_sendData(display, data, size);
-                tsgl_display_selectIfNeed(display);
-            }
+            tsgl_spi_sendData(display, data, size);
             break;
     }
 }

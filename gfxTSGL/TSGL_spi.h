@@ -35,7 +35,7 @@
 #endif
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host); //spi_common_dma_t dma
-esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, int8_t miso, int8_t mosi, int8_t clk);
+esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, gpio_num_t miso, gpio_num_t mosi, gpio_num_t clk);
 void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd);
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);

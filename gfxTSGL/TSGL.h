@@ -44,7 +44,6 @@ typedef struct {
 
 typedef struct {
     bool selectAreaAfterCommand;
-    int16_t memwrite;
     tsgl_colormode colormode;
     tsgl_driver_command init[64];
     tsgl_driver_storage storage;

@@ -121,8 +121,7 @@ static tsgl_driver_list _st77XX_enable(const tsgl_driver_storage* storage, bool 
 .select = _st77XX_select, \
 .rotate = _st77XX_rotate, \
 .invert = _st77XX_invert, \
-.selectAreaAfterCommand = true, \
-.memwrite = 0x2C
+.selectAreaAfterCommand = true
 
 
 

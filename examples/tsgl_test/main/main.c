@@ -4,7 +4,7 @@
 #define SPI  TSGL_HOST1
 #define FREQ 60000000
 #define BUFFER TSGL_SPIRAM
-#define DC -1
+#define DC 21
 #define CS 22
 #define RST 18
 #define COLORMODE tsgl_bgr565_be
@@ -48,6 +48,7 @@ void delay(int time) {
 }
 
 void app_main() {
+    gpio_set_level(2, 2);
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[COLORMODE], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, COLORMODE));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
