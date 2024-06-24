@@ -17,10 +17,6 @@ typedef struct {
     tsgl_pos defaultWidth;
     tsgl_pos defaultHeight;
     uint8_t rotation;
-    tsgl_display_interfaceType interfaceType;
-    void* interface;
-    int8_t dc;
-    const tsgl_driver* driver;
     tsgl_colormode colormode;
     float colorsize;
     tsgl_rawcolor black;
@@ -29,6 +25,11 @@ typedef struct {
     bool baseInvert;
     tsgl_pos offsetX;
     tsgl_pos offsetY;
+
+    const tsgl_driver* driver;
+    tsgl_display_interfaceType interfaceType;
+    void* interface;
+    int8_t dc;
 } tsgl_display;
 
 // ---------------- pre-initialization

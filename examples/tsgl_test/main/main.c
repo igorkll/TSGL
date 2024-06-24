@@ -7,15 +7,17 @@
 #define DC 21
 #define CS 22
 #define RST 18
-#define COLORMODE tsgl_bgr565_be
 
 const tsgl_settings settings = {
     .driver = &st77XX_rgb565,
+    .swapRGB = true,
     .invert = true,
     .flipX = true,
     .width = 320,
     .height = 480
 };
+
+#define COLORMODE settings.driver->colormode
 
 // --------------------------------
 #include <freertos/FreeRTOS.h>
@@ -73,6 +75,7 @@ void app_main() {
                 tsgl_framebuffer_set(&framebuffer, pos, y, color);
             }
             tsgl_display_send(&display, &framebuffer);
+            tsgl_display_setEnable(&display, i % 20 >= 10);
         }
     }
 }

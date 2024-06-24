@@ -37,6 +37,7 @@ typedef struct {
 
 typedef struct {
     size_t list[16];
+    bool swapRGB;
     bool flipX;
     bool flipY;
     bool flipXY;
@@ -58,6 +59,7 @@ typedef struct {
 typedef struct {
     const tsgl_driver* driver;
     bool invert;
+    bool swapRGB;
     bool flipX;
     bool flipY;
     bool flipXY;

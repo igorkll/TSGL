@@ -71,6 +71,7 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
+    display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
     display->storage.flipXY = settings.flipXY;

@@ -37,9 +37,18 @@ static tsgl_driver_list _st77XX_rotate(const tsgl_driver_storage* storage, uint8
             break;
     }
 
-    if (storage->flipX) regvalue ^= (1 << 6);
-    if (storage->flipY) regvalue ^= (1 << 7);
-    if (storage->flipXY) regvalue ^= (1 << 5);
+    if (storage->swapRGB) regvalue ^= (1 << 3);
+    if (storage->flipX) {
+        regvalue ^= (1 << 6);
+        regvalue ^= (1 << 2);
+    }
+    if (storage->flipY) {
+        regvalue ^= (1 << 7);
+        regvalue ^= (1 << 4);
+    }
+    if (storage->flipXY) {
+        regvalue ^= (1 << 5);
+    }
 
     tsgl_driver_list list = {
         .list = {
