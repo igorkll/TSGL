@@ -17,8 +17,6 @@ const tsgl_settings settings = {
     .height = 480
 };
 
-#define COLORMODE settings.driver->colormode
-
 // --------------------------------
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -50,26 +48,25 @@ void delay(int time) {
 }
 
 void app_main() {
-    gpio_set_level(2, 2);
-    ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[COLORMODE], SPI));
-    tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, COLORMODE));
+    ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
+    tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, COLORMODE, settings.width, settings.height, BUFFER));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
 
     tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
     tsgl_display_rotate(&display, 1);
 
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, 0, tsgl_color_raw(TSGL_RED, COLORMODE), 5);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, COLORMODE), 5);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, 0, display.height, tsgl_color_raw(TSGL_BLUE, COLORMODE), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
+        tsgl_framebuffer_line(&framebuffer, 0, 0, 0, display.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
         tsgl_display_send(&display, &framebuffer);
         delay(3000);
 
         for (tsgl_pos i = 0; i < display.width; i++) {
             tsgl_framebuffer_clear(&framebuffer, display.black);
-            tsgl_rawcolor color = tsgl_color_raw(TSGL_YELLOW, COLORMODE);
+            tsgl_rawcolor color = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
             for (tsgl_pos pos = 0; pos < display.width; pos++) {
                 uint16_t y = (display.height / 2) + (sin(fmap((pos - i) % 256, 0, 255, 0, M_PI * 2)) * display.height * 0.4);
                 tsgl_framebuffer_set(&framebuffer, pos, y, color);
