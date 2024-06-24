@@ -1,26 +1,44 @@
-#pragma once
 #include "TSGL.h"
+#include "TSGL_touchscreen.h"
 #include <esp_err.h>
+#include <driver/gpio.h>
+#include <driver/i2c_master.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
-typedef enum {
-    tsgl_touchscreen_capacitive
-} tsgl_touchscreen_type;
+esp_err_t tsgl_touchscreen_i2c(tsgl_touchscreen* touchscreen, gpio_num_t sda, gpio_num_t scl, gpio_num_t intr, gpio_num_t rst) {
+    _tsgl_touchscreen_capacitive_i2c* ts = malloc(sizeof(_tsgl_touchscreen_capacitive_i2c));
+    touchscreen->type = tsgl_touchscreen_capacitive_i2c;
+    touchscreen->ts = (void*)ts;
 
-typedef struct {
+    ts->sda = sda;
+    ts->scl = scl;
+    ts->intr = intr;
+    ts->rst = rst;
 
-} tsgl_touchscreen_capacitive;
+    if (intr >= 0) {
+        gpio_config_t io_conf = {};
+        io_conf.pin_bit_mask |= 1ULL << intr;
+        io_conf.mode = GPIO_MODE_INPUT;
+        gpio_config(&io_conf);
+    }
 
-typedef struct {
-    tsgl_touchscreen_type type;
-    void* touchscreen;
-} tsgl_touchscreen;
+    // reset touchscreen
+    if (rst >= 0) {
+        gpio_config_t io_conf = {};
+        io_conf.pin_bit_mask |= 1ULL << rst;
+        io_conf.mode = GPIO_MODE_OUTPUT;
+        gpio_config(&io_conf);
 
-typedef struct {
-    tsgl_pos x;
-    tsgl_pos y;
-    float z;
-} tsgl_touchscreen_point;
+        gpio_set_level(rst, false);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        gpio_set_level(rst, true);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
 
-esp_err_t tsgl_touchscreen_initCapacitive(tsgl_touchscreen_point* touchscreen);
-uint8_t tsgl_touchscreen_getTouchCount(tsgl_touchscreen_point* touchscreen);
-tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen_point* touchscreen, uint8_t i);
+    return ESP_OK;
+}
+
+void tsgl_touchscreen_free(tsgl_touchscreen* touchscreen) {
+    free(touchscreen->ts);
+}

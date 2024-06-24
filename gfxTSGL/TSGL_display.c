@@ -113,7 +113,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;
         if (rst >= 0) io_conf.pin_bit_mask |= 1ULL << rst;
         io_conf.mode = GPIO_MODE_OUTPUT;
-        io_conf.pull_up_en = true;
         gpio_config(&io_conf);
 
         // reset display
