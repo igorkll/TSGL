@@ -30,7 +30,7 @@ void tsgl_benchmark_endSend(tsgl_benchmark* benchmark) {
 }
 
 void tsgl_benchmark_print(tsgl_benchmark* benchmark) {
-    ESP_LOGI(TAG, "rendering time: %i", benchmark->renderingTime);
-    ESP_LOGI(TAG, "send      time: %i", benchmark->sendTime);
-    ESP_LOGI(TAG, "total     fps:  %.1f", benchmark->totalFPS);
+    ESP_LOGI(TAG, "rendering time: %.3f", benchmark->renderingTime / 1000.0 / 1000.0);
+    ESP_LOGI(TAG, "send      time: %.3f", benchmark->sendTime / 1000.0 / 1000.0);
+    ESP_LOGI(TAG, "total     fps:  %.3f", benchmark->totalFPS);
 }
