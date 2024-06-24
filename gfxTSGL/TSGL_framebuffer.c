@@ -98,7 +98,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         }
     }
     if (framebuffer->buffer == NULL) {
-        ESP_LOGE(TAG, "failed to allocate framebuffer: %ix%ix%f", width, height, framebuffer->colorsize);
+        ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.1f", width, height, framebuffer->colorsize);
         return ESP_FAIL;
     } else {
         ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.1f", width, height, framebuffer->colorsize);

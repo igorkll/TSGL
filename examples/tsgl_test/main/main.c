@@ -72,7 +72,6 @@ void app_main() {
                 tsgl_framebuffer_set(&framebuffer, pos, y, color);
             }
             tsgl_display_send(&display, &framebuffer);
-            tsgl_display_setEnable(&display, i % 20 >= 10);
         }
     }
 }
