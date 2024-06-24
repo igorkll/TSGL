@@ -14,6 +14,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+static const char* TAG = "TSGL_display";
 
 static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
     tsgl_display_sendCommand(display, command.cmd);
@@ -103,7 +104,15 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     if (result == ESP_OK) {
         // configuration of non-SPI pins
         gpio_config_t io_conf = {};
-        if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;
+        if (dc >= 0) {
+            io_conf.pin_bit_mask |= 1ULL << dc;
+        } else {
+            if (display->driver->memwrite >= 0) {
+                ESP_LOGW(TAG, "working with the display without using the 'DC' pin, this may reduce the update speed.");
+            } else {
+                ESP_LOGE(TAG, "the display driver does not support operation without 'DC', the picture will not be updated");
+            }
+        }
         if (rst >= 0) io_conf.pin_bit_mask |= 1ULL << rst;
         io_conf.mode = GPIO_MODE_OUTPUT;
         io_conf.pull_up_en = true;
@@ -170,6 +179,12 @@ void tsgl_display_selectAll(tsgl_display* display) {
     tsgl_display_select(display, 0, 0, display->width, display->height);
 }
 
+void tsgl_display_selectIfNeed(tsgl_display* display) {
+    if (display->driver->selectAreaAfterCommand) {
+        tsgl_display_selectAll(display);
+    }
+}
+
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     _doCommandList(display,
         display->driver->select(&display->storage,
@@ -190,7 +205,13 @@ void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
 void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_spi_sendData(display, data, size);
+            if (display->dc >= 0) {
+                tsgl_spi_sendData(display, data, size);
+            } else if (display->driver->memwrite >= 0) {
+                tsgl_display_sendCommand(display, display->driver->memwrite);
+                tsgl_spi_sendData(display, data, size);
+                tsgl_display_selectIfNeed(display);
+            }
             break;
     }
 }
@@ -216,14 +237,14 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
     display->enable = state;
     _doCommandList(display, display->driver->enable(&display->storage, state));
     if (state) {
-        tsgl_display_selectAll(display);
+        tsgl_display_selectIfNeed(display);
     }
 }
 
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
         _doCommandList(display, display->driver->invert(&display->storage, state ^ display->baseInvert));
-        tsgl_display_selectAll(display);
+        tsgl_display_selectIfNeed(display);
     }
     display->invert = state;
 }

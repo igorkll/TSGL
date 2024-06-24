@@ -4,7 +4,7 @@
 #define SPI  TSGL_HOST1
 #define FREQ 60000000
 #define BUFFER TSGL_SPIRAM
-#define DC 21
+#define DC -1
 #define CS 22
 #define RST 18
 #define COLORMODE tsgl_bgr565_be

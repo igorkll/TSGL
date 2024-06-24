@@ -52,10 +52,10 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* asyncFramebuffer); //put to asyncFramebuffer with the same settings. the content will be copied there for asynchronous sending. sometimes FPS can decrease significantly due to this function, so check in specific cases
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
 
-void tsgl_display_selectAll(tsgl_display* display);
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
+void tsgl_display_selectAll(tsgl_display* display);
+void tsgl_display_selectIfNeed(tsgl_display* display); //calls selectAll if is a driver said that the display resets the area after each command. it should be called after tsgl_display_sendCommand for compatibility with such displays
 
-// on some screens, after these methods, you may need to call tsgl_display_selectAll
 void tsgl_display_setEnable(tsgl_display* display, bool state); //the display is on by default. however, if you have backlight control enabled, then to activate it, you need to call this method during initialization
 void tsgl_display_setInvert(tsgl_display* display, bool state);
 
