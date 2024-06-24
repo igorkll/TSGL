@@ -2,7 +2,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_color.h"
 #include "TSGL_spi.h"
-#include "_TSGL_internal_gfx.h"
+#include "TSGL_gfx.h"
 
 #include <esp_heap_caps.h>
 #include <esp_err.h>
@@ -208,7 +208,7 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    TSGL_GFX_LINE(framebuffer, tsgl_framebuffer_set, tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke);
+    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke);
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
@@ -252,7 +252,7 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
-    TSGL_GFX_RECT(framebuffer, tsgl_framebuffer_fill, x, y, width, height, color, stroke);
+    tsgl_gfx_rect(framebuffer, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x, y, width, height, color, stroke);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {

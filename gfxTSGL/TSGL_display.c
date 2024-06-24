@@ -3,7 +3,7 @@
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_spi.h"
-#include "_TSGL_internal_gfx.h"
+#include "TSGL_gfx.h"
 
 #include <esp_system.h>
 #include <esp_err.h>
@@ -288,7 +288,7 @@ void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t ro
 }
 
 void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    TSGL_GFX_LINE(display, tsgl_display_set, tsgl_display_fill, x1, y1, x2, y2, color, stroke);
+    tsgl_gfx_line(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_set, (TSGL_GFX_FILL_REFERENCE())tsgl_display_fill, x1, y1, x2, y2, color, stroke);
 }
 
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
@@ -321,7 +321,7 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
-    TSGL_GFX_RECT(display, tsgl_display_fill, x, y, width, height, color, stroke);
+    tsgl_gfx_rect(display, (TSGL_GFX_FILL_REFERENCE())tsgl_display_fill, x, y, width, height, color, stroke);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
