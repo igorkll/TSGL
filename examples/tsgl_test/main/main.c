@@ -53,11 +53,17 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
-    //ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL, 0));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL, 255));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
 
     tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
     tsgl_display_rotate(&display, 1);
+
+    tsgl_rawcolor blue = tsgl_color_raw(TSGL_BLUE, framebuffer.colormode);
+    tsgl_rawcolor yellow = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
+    tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
+    tsgl_pos center = framebuffer.width / 2;
+    tsgl_pos sinSize = framebuffer.width / 4;
 
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
@@ -67,19 +73,31 @@ void app_main() {
         tsgl_display_send(&display, &framebuffer);
         delay(3000);
 
-        for (tsgl_pos i = 0; i < display.width; i++) {
+        for (tsgl_pos i = 0; i < display.width; i += tsgl_benchmark_processMulInt(&benchmark, 30)) {
             tsgl_benchmark_startRendering(&benchmark);
             tsgl_framebuffer_clear(&framebuffer, display.black);
-            tsgl_rawcolor color = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
+            float sinValue = 0;
+            tsgl_pos oldY = -1;
             for (tsgl_pos pos = 0; pos < display.width; pos++) {
-                uint16_t y = (display.height / 2) + (sin(fmap((pos - i) % 256, 0, 255, 0, M_PI * 2)) * display.height * 0.4);
-                tsgl_framebuffer_set(&framebuffer, pos, y, color);
+                float lsin = sin(fmap((pos - i) % sinSize, 0, sinSize, 0, M_PI * 2));
+                uint16_t y = (display.height / 2) - (lsin * display.height * 0.4);
+                if (pos == center) sinValue = lsin;
+                if (oldY >= 0) {
+                    tsgl_framebuffer_line(&framebuffer, pos, y, pos, oldY, yellow, 1);
+                }
+                tsgl_framebuffer_set(&framebuffer, pos, y, yellow);
+                oldY = y;
             }
-            tsgl_benchmark_endRendering_startSend(&benchmark);
+            tsgl_framebuffer_line(&framebuffer, i, 0, i, framebuffer.height - 1, blue, 1);
+            tsgl_framebuffer_line(&framebuffer, center, 0, center, framebuffer.height - 1, red, 1);
+            tsgl_benchmark_endRendering(&benchmark);
+
+            tsgl_benchmark_startSend(&benchmark);
+            tsgl_display_setBacklight(&display, fmap(sinValue, -1, 1, 64, 255));
             tsgl_display_send(&display, &framebuffer);
             tsgl_benchmark_endSend(&benchmark);
             tsgl_benchmark_print(&benchmark);
-            tsgl_display_setBacklight(&display, i);
         }
+        tsgl_display_setBacklight(&display, 255);
     }
 }

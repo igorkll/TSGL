@@ -264,7 +264,9 @@ esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, ui
 void tsgl_display_setBacklight(tsgl_display* display, uint8_t value) {
     display->backlightValue = value;
 
-    if (display->driver->backlight != NULL) {
+    if (display->backlightLedcChannel >= 0) {
+        tsgl_ledc_set(display->backlightLedcChannel, display->invertBacklight, value);
+    } else if (display->driver->backlight != NULL) {
         if (display->invertBacklight) {
             _doCommandList(display, display->driver->backlight(&display->storage, 255 - value));
         } else {
@@ -272,9 +274,6 @@ void tsgl_display_setBacklight(tsgl_display* display, uint8_t value) {
         }
         tsgl_display_selectIfNeed(display);
     }
-
-    if (display->backlightLedcChannel >= 0)
-        tsgl_ledc_set(display->backlightLedcChannel, display->invertBacklight, value);
 }
 
 // async send

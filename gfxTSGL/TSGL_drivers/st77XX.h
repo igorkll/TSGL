@@ -1,5 +1,6 @@
 #pragma once
 #include "../TSGL.h"
+#include "../TSGL_ledc.h"
 
 #define _ST77XX_ROTATION_0 0
 #define _ST77XX_ROTATION_1 (1<<5) | (1<<6) | (1<<2)
@@ -102,7 +103,7 @@ static tsgl_driver_list _st77XX_backlight(const tsgl_driver_storage* storage, ui
     tsgl_driver_list list = {
         .list = {
             {0x53, {0b00101000}, 1, 0},
-            {0x51, {value}, 1, -1}
+            {0x51, {tsgl_ledc_CRTValue(value)}, 1, -1}
         }
     };
     return list;
