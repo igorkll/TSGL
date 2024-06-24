@@ -22,8 +22,8 @@ const tsgl_settings settings = {
 
 #include <TSGL_i2c.h>
 
-#define TS_SDA 8
-#define TS_SCL 7
+#define TS_SDA 0
+#define TS_SCL 1
 #define TS_HOST I2C_NUM_0
 #define TS_ADDR 0x58
 #define TS_INTR 9
@@ -65,7 +65,7 @@ void delay(int time) {
 
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
-    ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
+    //ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
