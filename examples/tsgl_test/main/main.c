@@ -18,6 +18,17 @@ const tsgl_settings settings = {
     .height = 480
 };
 
+// -------------------------------- touchscreen settings
+
+#include <TSGL_i2c.h>
+
+#define TS_SDA 8
+#define TS_SCL 7
+#define TS_HOST I2C_NUM_0
+#define TS_ADDR 0x58
+#define TS_INTR 9
+#define TS_RST 10
+
 // --------------------------------
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -27,6 +38,7 @@ const tsgl_settings settings = {
 #include <TSGL.h>
 #include <TSGL_benchmark.h>
 #include <TSGL_framebuffer.h>
+#include <TSGL_touchscreen.h>
 #include <TSGL_display.h>
 #include <TSGL_color.h>
 #include <TSGL_spi.h>
@@ -35,6 +47,7 @@ tsgl_display display;
 tsgl_framebuffer framebuffer;
 tsgl_framebuffer framebuffer2;
 tsgl_benchmark benchmark;
+tsgl_touchscreen touchscreen;
 
 float fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);
@@ -51,6 +64,8 @@ void delay(int time) {
 }
 
 void app_main() {
+    ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
+    ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));

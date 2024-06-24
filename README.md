@@ -2,6 +2,7 @@
 * graphics library for ESP32 family controllers.
 * this library is written entirely in "C".
 * designed exclusively for use with ESP-IDF.
+* the esp-idf version I use is 5.1.2.
 
 # features
 * the ability to install custom drivers without having to change the library code
