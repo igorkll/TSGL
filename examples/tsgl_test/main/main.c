@@ -22,12 +22,12 @@ const tsgl_settings settings = {
 
 #include <TSGL_i2c.h>
 
-#define TS_SDA 0
-#define TS_SCL 1
+#define TS_SDA 26
+#define TS_SCL 27
 #define TS_HOST I2C_NUM_0
-#define TS_ADDR 0x58
-#define TS_INTR 9
-#define TS_RST 10
+#define TS_ADDR 0x38
+#define TS_INTR 32
+#define TS_RST 25
 
 // --------------------------------
 #include <freertos/FreeRTOS.h>
@@ -65,7 +65,7 @@ void delay(int time) {
 
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
-    //ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
+    ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
@@ -114,6 +114,13 @@ void app_main() {
             tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
             tsgl_benchmark_endSend(&benchmark);
             tsgl_benchmark_print(&benchmark);
+
+            tsgl_touchscreen_read(&touchscreen);
+            uint8_t count = tsgl_touchscreen_getTouchCount(&touchscreen);
+            for (uint8_t i = 0; i < count; i++) {
+                tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
+                printf("point %i: %i %i %f\n", i, point.x, point.y, point.z);
+            }
         }
         tsgl_display_setBacklight(&display, 255);
     }
