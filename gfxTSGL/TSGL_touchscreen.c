@@ -33,17 +33,7 @@ esp_err_t tsgl_touchscreen_i2c(tsgl_touchscreen* touchscreen, i2c_port_t host, u
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
-    i2c_device_config_t dev_cfg = {
-        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address = address,
-        .scl_speed_hz = 100000,
-    };
-
-    esp_err_t result = i2c_master_bus_add_device(bus_handle, &dev_cfg, &ts.dev_handle);
-    if (result == ESP_OK) {
-        
-    }
-    return result;
+    return ESP_OK;
 }
 
 void tsgl_touchscreen_free(tsgl_touchscreen* touchscreen) {
