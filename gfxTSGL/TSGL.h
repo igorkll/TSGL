@@ -52,12 +52,14 @@ typedef struct {
     tsgl_driver_list (*select) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
     tsgl_driver_list (*rotate) (const tsgl_driver_storage* storage, uint8_t rotation);
     tsgl_driver_list (*invert) (const tsgl_driver_storage* storage, bool invert);
+    tsgl_driver_list (*backlight) (const tsgl_driver_storage* storage, uint8_t value);
 } tsgl_driver;
 
 // ---------------- settings
 
 typedef struct {
     const tsgl_driver* driver;
+    bool invertBacklight; //inverts only the backlight, which is controlled by the screen driver through its registers. if the backlight on your screen is controlled by a separate pin, then you must invert it during initialization
     bool invert;
     bool swapRGB;
     bool flipX;

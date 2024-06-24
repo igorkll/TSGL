@@ -7,12 +7,11 @@
 #define DC 21
 #define CS 22
 #define RST 18
-
 #define BL 5
-#define BL_INVERT false
 
 const tsgl_settings settings = {
     .driver = &st77XX_rgb565,
+    .invertBacklight = true,
     .swapRGB = true,
     .invert = true,
     .flipX = true,
@@ -55,7 +54,7 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
-    ESP_ERROR_CHECK(tsgl_display_attachBacklight(&display, BL, BL_INVERT));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
 
     tsgl_framebuffer_hardwareRotate(&framebuffer, 1);

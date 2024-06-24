@@ -16,6 +16,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+static const char* TAG = "TSGL_display";
+
 static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
     tsgl_display_sendCommand(display, command.cmd);
     if (command.datalen > 0) {
@@ -72,6 +74,8 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
+
+    display->invertBacklight = settings.invertBacklight;
     display->backlightLedcChannel = -1;
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
@@ -246,18 +250,31 @@ void tsgl_display_free(tsgl_display* display) {
     free(display->interface);
 }
 
-esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, bool invert) {
-    display->backlightLedcChannel = tsgl_ledc_new(pin, invert);
-    display->backlightInvert = invert;
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin) {
+    display->backlightLedcChannel = tsgl_ledc_new(pin, display->invertBacklight);
     display->backlightValue = 0;
 
-    if (display->backlightLedcChannel < 0) ESP_LOGE(TAG, "failed to allocate ledc on GPIO: %i", pin);
+    if (display->backlightLedcChannel < 0) {
+        ESP_LOGE(TAG, "failed to allocate ledc on GPIO: %i", pin);
+        return ESP_FAIL;
+    }
+    return ESP_OK;
 }
 
 void tsgl_display_setBacklight(tsgl_display* display, uint8_t value) {
-    if (display->backlightLedcChannel < 0) return;
     display->backlightValue = value;
-    tsgl_ledc_set(display->backlightLedcChannel, display->backlightInvert, display->backlightValue);
+
+    if (display->driver->backlight != NULL) {
+        if (display->invertBacklight) {
+            _doCommandList(display, display->driver->backlight(&display->storage, 255 - value));
+        } else {
+            _doCommandList(display, display->driver->backlight(&display->storage, value));
+        }
+        tsgl_display_selectIfNeed(display);
+    }
+
+    if (display->backlightLedcChannel >= 0)
+        tsgl_ledc_set(display->backlightLedcChannel, display->invertBacklight, value);
 }
 
 // async send

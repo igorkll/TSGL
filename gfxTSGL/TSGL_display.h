@@ -25,9 +25,9 @@ typedef struct {
     bool baseInvert;
     tsgl_pos offsetX;
     tsgl_pos offsetY;
+    bool invertBacklight;
 
     int8_t backlightLedcChannel;
-    bool backlightInvert;
     uint8_t backlightValue;
 
     const tsgl_driver* driver;
@@ -47,7 +47,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
 void tsgl_display_free(tsgl_display* display);
 
 // ---------------- backlight
-esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, bool invert);
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin);
 void tsgl_display_setBacklight(tsgl_display* display, uint8_t value);
 
 // ---------------- low level methods (it is not recommended to use)
