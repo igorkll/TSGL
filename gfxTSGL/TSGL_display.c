@@ -4,6 +4,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_spi.h"
 #include "TSGL_gfx.h"
+#include "TSGL_ledc.h"
 
 #include <esp_system.h>
 #include <esp_err.h>
@@ -71,6 +72,7 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
+    display->backlightLedcChannel = -1;
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
@@ -242,6 +244,20 @@ void tsgl_display_free(tsgl_display* display) {
             break;
     }
     free(display->interface);
+}
+
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, bool invert) {
+    display->backlightLedcChannel = tsgl_ledc_new(pin, invert);
+    display->backlightInvert = invert;
+    display->backlightValue = 0;
+
+    if (display->backlightLedcChannel < 0) ESP_LOGE(TAG, "failed to allocate ledc on GPIO: %i", pin);
+}
+
+void tsgl_display_setBacklight(tsgl_display* display, uint8_t value) {
+    if (display->backlightLedcChannel < 0) return;
+    display->backlightValue = value;
+    tsgl_ledc_set(display->backlightLedcChannel, display->backlightInvert, display->backlightValue);
 }
 
 // async send

@@ -26,6 +26,10 @@ typedef struct {
     tsgl_pos offsetX;
     tsgl_pos offsetY;
 
+    int8_t backlightLedcChannel;
+    bool backlightInvert;
+    uint8_t backlightValue;
+
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
     void* interface;
@@ -41,6 +45,10 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
 // ---------------- initializing the display
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst);
 void tsgl_display_free(tsgl_display* display);
+
+// ---------------- backlight
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, bool invert);
+void tsgl_display_setBacklight(tsgl_display* display, uint8_t value);
 
 // ---------------- low level methods (it is not recommended to use)
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command);
