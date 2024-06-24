@@ -7,6 +7,7 @@
 
 #include <esp_system.h>
 #include <esp_err.h>
+#include <esp_log.h>
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <string.h>
@@ -93,9 +94,11 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         .clock_speed_hz = freq,
         .mode = 0,
         .spics_io_num = cs,
-        .queue_size = 7,
-        .pre_cb = tsgl_spi_pre_transfer_callback
+        .queue_size = 7
     };
+    if (dc >= 0) {
+        devcfg.pre_cb = tsgl_spi_pre_transfer_callback;
+    }
     
     display->interfaceType = tsgl_display_interface_spi;
     display->interface = malloc(sizeof(spi_device_handle_t));
