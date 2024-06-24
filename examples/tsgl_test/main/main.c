@@ -24,6 +24,7 @@ const tsgl_settings settings = {
 #include <math.h>
 
 #include <TSGL.h>
+#include <TSGL_benchmark.h>
 #include <TSGL_framebuffer.h>
 #include <TSGL_display.h>
 #include <TSGL_color.h>
@@ -31,6 +32,7 @@ const tsgl_settings settings = {
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
+tsgl_benchmark benchmark;
 
 float fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);
@@ -64,13 +66,17 @@ void app_main() {
         delay(3000);
 
         for (tsgl_pos i = 0; i < display.width; i++) {
+            tsgl_benchmark_startRendering(&benchmark);
             tsgl_framebuffer_clear(&framebuffer, display.black);
             tsgl_rawcolor color = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
             for (tsgl_pos pos = 0; pos < display.width; pos++) {
                 uint16_t y = (display.height / 2) + (sin(fmap((pos - i) % 256, 0, 255, 0, M_PI * 2)) * display.height * 0.4);
                 tsgl_framebuffer_set(&framebuffer, pos, y, color);
             }
+            tsgl_benchmark_endRendering_startSend(&benchmark);
             tsgl_display_send(&display, &framebuffer);
+            tsgl_benchmark_endSend(&benchmark);
+            tsgl_benchmark_print(&benchmark);
         }
     }
 }
