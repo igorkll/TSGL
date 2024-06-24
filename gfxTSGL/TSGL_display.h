@@ -58,7 +58,7 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
 
 // ---------------- control
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
-void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* asyncFramebuffer); //put to asyncFramebuffer with the same settings. the content will be copied there for asynchronous sending. sometimes FPS can decrease significantly due to this function, so check in specific cases
+void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);

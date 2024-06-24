@@ -33,6 +33,7 @@ const tsgl_settings settings = {
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
+tsgl_framebuffer framebuffer2;
 tsgl_benchmark benchmark;
 
 float fmap(float value, float low, float high, float low_2, float high_2) {
@@ -55,6 +56,7 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
     ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL, 255));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
 
     tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
     tsgl_display_rotate(&display, 1);
@@ -94,7 +96,7 @@ void app_main() {
 
             tsgl_benchmark_startSend(&benchmark);
             tsgl_display_setBacklight(&display, fmap(sinValue, -1, 1, 64, 255));
-            tsgl_display_send(&display, &framebuffer);
+            tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
             tsgl_benchmark_endSend(&benchmark);
             tsgl_benchmark_print(&benchmark);
         }

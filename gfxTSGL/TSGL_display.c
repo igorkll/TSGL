@@ -282,24 +282,27 @@ static bool asyncSendActive = false;
 
 typedef struct {
     tsgl_display* display;
-    tsgl_framebuffer* framebuffer;
+    uint8_t* buffer;
+    size_t buffersize;
 } _asyncData;
 
 static void _asyncSend(void* buffer) {
     _asyncData* data = (_asyncData*)buffer;
-    tsgl_display_sendData(data->display, data->framebuffer->buffer, data->framebuffer->buffersize);
+    tsgl_display_sendData(data->display, data->buffer, data->buffersize);
     free(data);
     asyncSendActive = false;
     vTaskDelete(NULL);
 } 
 
-void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* asyncFramebuffer) {
-    if (framebuffer != asyncFramebuffer)
-        memcpy(asyncFramebuffer->buffer, framebuffer->buffer, asyncFramebuffer->buffersize);
-
+void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
     _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
     data->display = display;
-    data->framebuffer = asyncFramebuffer;
+    data->buffer = framebuffer->buffer;
+    data->buffersize = framebuffer->buffersize;
+
+    uint8_t* t = framebuffer2->buffer;
+    framebuffer2->buffer = framebuffer->buffer;
+    framebuffer->buffer = t;
 
     while (asyncSendActive) vTaskDelay(1);
     asyncSendActive = true;
