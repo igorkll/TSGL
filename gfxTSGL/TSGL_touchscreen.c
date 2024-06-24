@@ -68,9 +68,9 @@ void tsgl_touchscreen_read(tsgl_touchscreen* touchscreen) {
                 touchscreen->touchs[0].z = 1;
             }
             if (touchscreen->touchCount >= 2) {
-                touchscreen->touchs[0].x = i2c_readDualReg(touchscreen, 0x09);
-                touchscreen->touchs[0].y = i2c_readDualReg(touchscreen, 0x0B);
-                touchscreen->touchs[0].z = 1;
+                touchscreen->touchs[1].x = i2c_readDualReg(touchscreen, 0x09);
+                touchscreen->touchs[1].y = i2c_readDualReg(touchscreen, 0x0B);
+                touchscreen->touchs[1].z = 1;
             }
             break;
     }
