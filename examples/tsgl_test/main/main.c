@@ -49,7 +49,10 @@ tsgl_display display;
 tsgl_framebuffer framebuffer;
 tsgl_framebuffer framebuffer2;
 tsgl_benchmark benchmark;
-tsgl_touchscreen touchscreen;
+tsgl_touchscreen touchscreen = {
+    .width = settings.width,
+    .height = settings.height
+};
 
 float fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);
@@ -86,11 +89,10 @@ void app_main() {
     tsgl_pos sinSize = framebuffer.width / 4;
 
     while (true) {
-        tsgl_touchscreen_read(&touchscreen);
         tsgl_framebuffer_clear(&framebuffer, display.black);
         uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
         for (uint8_t i = 0; i < touchCount; i++) {
-            tsgl_touchscreen_point point = tsgl_touchscreen_getTouch(&touchscreen, i);
+            tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
             tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(i > 0 ? TSGL_GREEN : TSGL_RED, framebuffer.colormode));
         }
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);

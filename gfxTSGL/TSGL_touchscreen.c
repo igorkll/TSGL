@@ -69,6 +69,7 @@ tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, 
         .y = -1,
         .z = 0
     };
+
     switch (touchscreen->type) {
         case tsgl_touchscreen_capacitive_ft6336u:
             switch (index) {
@@ -85,6 +86,36 @@ tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, 
             }
             break;
     }
+
+    if (touchscreen->flipXY) {
+        tsgl_pos t = point.x;
+        point.x = point.y;
+        point.y = t;
+    }
+    
+    point.x += touchscreen->offsetX;
+    point.y += touchscreen->offsetY;
+
+    if (touchscreen->mulX != 0) point.x *= touchscreen->mulX;
+    if (touchscreen->mulY != 0) point.y *= touchscreen->mulY;
+
+    if (point.x < 0) {
+        point.x = 0;
+    } else if (point.x >= touchscreen->width) {
+        point.x = touchscreen->width - 1;
+    }
+
+    if (point.y < 0) {
+        point.y = 0;
+    } else if (point.y >= touchscreen->height) {
+        point.y = touchscreen->height - 1;
+    }
+
+    if (touchscreen->flipX) point.x = touchscreen->width - 1 - point.x;
+    if (touchscreen->flipY) point.y = touchscreen->height - 1 - point.y;
+
+    uint8_t rotation;
+
     return point;
 }
 

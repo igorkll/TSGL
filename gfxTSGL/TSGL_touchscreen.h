@@ -15,9 +15,22 @@ typedef struct {
 } tsgl_touchscreen_point;
 
 typedef struct {
-    uint8_t rotation;
     tsgl_touchscreen_type type;
     void* ts;
+
+    //universal calibration, suitable also for capacitive screens, but often in cases with capacitive screens, the controller can be calibrated
+    //if you have a resistive screen, then use a special structure to calibrate it, and in these parameters specify only two mandatory ones (width, height in rotation 0)
+    //the fields are listed here in the order of applying
+    bool flipXY; //swaps X and Y
+    int16_t offsetX;
+    int16_t offsetY;
+    float mulX; // if 0, it is counted as 1
+    float mulY;
+    tsgl_pos width; //required parameters
+    tsgl_pos height;
+    bool flipX;
+    bool flipY;
+    uint8_t rotation;
 } tsgl_touchscreen;
 
 esp_err_t tsgl_touchscreen_ft6336u(tsgl_touchscreen* touchscreen, i2c_port_t host, uint8_t address, gpio_num_t intr, gpio_num_t rst);
