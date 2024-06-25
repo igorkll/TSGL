@@ -1,0 +1,8 @@
+[package]
+name = "tsgl_tool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fontdue = "0.9.2"
+image = "0.25.1"
