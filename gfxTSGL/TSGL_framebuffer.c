@@ -8,6 +8,7 @@
 #include <esp_err.h>
 #include <esp_log.h>
 #include <string.h>
+#include <math.h>
 
 static const char* TAG = "TSGL_framebuffer";
 
@@ -88,6 +89,8 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->colormode = colormode;
     framebuffer->hardwareRotate = false;
     framebuffer->buffersize = width * height * framebuffer->colorsize;
+    float notUsed;
+    framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
     if (caps == 0) {
         framebuffer->buffer = malloc(framebuffer->buffersize);
     } else {
@@ -144,7 +147,7 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->width, framebuffer->height);
+    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->width, framebuffer->height);
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {

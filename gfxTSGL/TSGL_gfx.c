@@ -110,7 +110,6 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
             break;
     }
 
-    bool forcePixel = !transparentColor.valid;
     tsgl_pos startX = 0;
     tsgl_pos startY = 0;
     if (x < 0) startX = -x;
@@ -122,7 +121,7 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
             tsgl_pos setPosY = posY + y;
             if (setPosY >= screenHeight) break;
             tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite, rotation, posX, posY);
-            if (forcePixel || memcpy(color.arr, transparentColor.arr, 3) != 0) {
+            if (transparentColor.invalid || memcmp(color.arr, transparentColor.arr, sprite->colorsize) != 0) {
                 set(arg, setPosX, setPosY, color);
             }
         } 

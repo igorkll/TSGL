@@ -3,10 +3,10 @@
 #include <stdint.h>
 
 //used to make a push without using transparentColor
-#define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.valid = false})
+#define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.invalid = true})
 
 typedef struct {
-    bool valid;
+    bool invalid;
     uint8_t arr[3];
 } tsgl_rawcolor;
 
