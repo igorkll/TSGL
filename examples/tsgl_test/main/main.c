@@ -26,7 +26,6 @@ const tsgl_settings settings = {
 #define TS_SCL 27
 #define TS_HOST I2C_NUM_0
 #define TS_ADDR 0x38
-#define TS_INTR 32
 #define TS_RST 25
 
 // --------------------------------
@@ -70,7 +69,7 @@ void delay(int time) {
 
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
-    ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
+    ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
@@ -89,22 +88,14 @@ void app_main() {
     tsgl_pos sinSize = framebuffer.width / 4;
 
     while (true) {
-        tsgl_framebuffer_clear(&framebuffer, display.black);
-        uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
-        for (uint8_t i = 0; i < touchCount; i++) {
-            tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
-            tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(i > 0 ? TSGL_GREEN : TSGL_RED, framebuffer.colormode));
-        }
-        tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
-    }
-
-    while (true) {
+        /*
         tsgl_framebuffer_clear(&framebuffer, display.black);
         tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, display.width, display.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, display.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
+        */
 
         for (tsgl_pos i = 0; i < display.width; i += tsgl_benchmark_processMulInt(&benchmark, 30)) {
             tsgl_benchmark_startRendering(&benchmark);
@@ -123,6 +114,11 @@ void app_main() {
             }
             tsgl_framebuffer_line(&framebuffer, i, 0, i, framebuffer.height - 1, blue, 1);
             tsgl_framebuffer_line(&framebuffer, center, 0, center, framebuffer.height - 1, red, 1);
+            uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
+            for (uint8_t i = 0; i < touchCount; i++) {
+                tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
+                tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
+            }
             tsgl_benchmark_endRendering(&benchmark);
 
             tsgl_benchmark_startSend(&benchmark);
