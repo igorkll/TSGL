@@ -139,24 +139,20 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
-static tsgl_rawcolor _rotationGet(tsgl_framebuffer* framebuffer, uint8_t rotation, tsgl_pos x, tsgl_pos y) {
-    switch (framebuffer->colormode) {
-        case tsgl_rgb444:
-        case tsgl_bgr444:
-            return tsgl_color_444read(_rawRotateGetBufferIndex(framebuffer, rotation, x, y), framebuffer->buffer);
-        
-        default: {
-            size_t index = _rotateGetBufferIndex(framebuffer, rotation, x, y);
-            tsgl_rawcolor rawcolor;
-            for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-                rawcolor.arr[i] = framebuffer->buffer[index + i];
-            }
-            return rawcolor;
-        }
-    }
+void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
+    tsgl_gfx_push(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, rotation, sprite, transparentColor, framebuffer->width, framebuffer->height);
 }
 
-static void _setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
+    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->width, framebuffer->height);
+}
+
+void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    if (!_pointInFrame(framebuffer, x, y)) return;
+    tsgl_framebuffer_setWithoutCheck(framebuffer, x, y, color);
+}
+
+void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -171,49 +167,6 @@ static void _setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos
             break;
         }
     }
-}
-
-
-void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
-    rotation = ((uint8_t)(-rotation)) % (uint8_t)4;
-
-    if (sprite->hardwareRotate) {
-        ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
-        return;
-    }
-
-    tsgl_pos spriteWidth = sprite->defaultWidth;
-    tsgl_pos spriteHeight = sprite->defaultHeight;
-    switch (rotation) {
-        case 1:
-        case 3:
-            spriteWidth = sprite->defaultHeight;
-            spriteHeight = sprite->defaultWidth;
-            break;
-    }
-
-    tsgl_pos startX = 0;
-    tsgl_pos startY = 0;
-    if (x < 0) startX = -x;
-    if (y < 0) startY = -y;
-    for (tsgl_pos posX = startX; posX < spriteWidth; posX++) {
-        tsgl_pos setPosX = posX + x;
-        if (setPosX >= framebuffer->width) break;
-        for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
-            tsgl_pos setPosY = posY + y;
-            if (setPosY >= framebuffer->height) break;
-            _setWithoutCheck(framebuffer, setPosX, setPosY, _rotationGet(sprite, rotation, posX, posY));
-        } 
-    }
-}
-
-void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke);
-}
-
-void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
-    if (!_pointInFrame(framebuffer, x, y)) return;
-    _setWithoutCheck(framebuffer, x, y, color);
 }
 
 void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
@@ -273,8 +226,7 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) 
     }
 }
 
-tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    if (!_pointInFrame(framebuffer, x, y)) return framebuffer->black;
+tsgl_rawcolor tsgl_framebuffer_getWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -282,6 +234,28 @@ tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, ts
         
         default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
+            tsgl_rawcolor rawcolor;
+            for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
+                rawcolor.arr[i] = framebuffer->buffer[index + i];
+            }
+            return rawcolor;
+        }
+    }
+}
+
+tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    if (!_pointInFrame(framebuffer, x, y)) return framebuffer->black;
+    return tsgl_framebuffer_getWithoutCheck(framebuffer, x, y);
+}
+
+tsgl_rawcolor tsgl_framebuffer_rotationGet(tsgl_framebuffer* framebuffer, uint8_t rotation, tsgl_pos x, tsgl_pos y) {
+    switch (framebuffer->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            return tsgl_color_444read(_rawRotateGetBufferIndex(framebuffer, rotation, x, y), framebuffer->buffer);
+        
+        default: {
+            size_t index = _rotateGetBufferIndex(framebuffer, rotation, x, y);
             tsgl_rawcolor rawcolor;
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 rawcolor.arr[i] = framebuffer->buffer[index + i];

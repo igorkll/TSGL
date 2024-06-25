@@ -42,7 +42,6 @@ const tsgl_settings settings = {
 #include <TSGL_display.h>
 #include <TSGL_color.h>
 #include <TSGL_spi.h>
-#include <lvgl.h>
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;

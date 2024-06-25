@@ -310,22 +310,11 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
 
 // graphic
 
-void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite) {
-    if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate(&display->storage, ((uint8_t)(display->rotation - rotation)) % (uint8_t)4));
-
-    tsgl_display_select(display, x, y, sprite->defaultWidth, sprite->defaultHeight);
-    tsgl_display_sendData(display, sprite->buffer, sprite->buffersize);
-
-    if (display->driver->rotate != NULL)
-        _doCommandList(display, display->driver->rotate(&display->storage, display->rotation));
+void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
+    tsgl_gfx_push(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, rotation, sprite, transparentColor, display->width, display->height);
 }
 
-void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_set, (TSGL_GFX_FILL_REFERENCE())tsgl_display_fill, x1, y1, x2, y2, color, stroke);
-}
-
-void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     tsgl_display_select(display, x, y, 1, 1);
     switch (display->colormode) {
         case tsgl_rgb444:
@@ -337,6 +326,14 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
             tsgl_display_sendData(display, (const uint8_t*)color.arr, display->colorsize);
             break;
     }
+}
+
+void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    tsgl_display_setWithoutCheck(display, x, y, color);
+}
+
+void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
+    tsgl_gfx_line(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_GFX_FILL_REFERENCE())tsgl_display_fill, x1, y1, x2, y2, color, stroke, display->width, display->height);
 }
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {

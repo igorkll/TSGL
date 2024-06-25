@@ -2,7 +2,11 @@
 #include <TSGL.h>
 #include <stdint.h>
 
+//used to make a push without using transparentColor
+#define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.valid = false})
+
 typedef struct {
+    bool valid;
     uint8_t arr[3];
 } tsgl_rawcolor;
 
