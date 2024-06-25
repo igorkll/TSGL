@@ -74,6 +74,16 @@ static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y)
     return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
 }
 
+static bool _isDenseColor(tsgl_rawcolor color, uint8_t colorsize) {
+    uint8_t firstPart = color.arr[0];
+    for (size_t i = 1; i < colorsize; i++) {
+        if (color.arr[i] != firstPart) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
@@ -89,7 +99,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->colormode = colormode;
     framebuffer->hardwareRotate = false;
     framebuffer->buffersize = width * height * framebuffer->colorsize;
-    float notUsed;
+    double notUsed;
     framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
     if (caps == 0) {
         framebuffer->buffer = malloc(framebuffer->buffersize);
@@ -215,15 +225,24 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) 
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
-            size_t rawBuffersize = framebuffer->width * framebuffer->height;
-            for (size_t i = 0; i <= rawBuffersize; i++) {
-                tsgl_color_444write(i, framebuffer->buffer, color);
+            tsgl_color nonRawColor = tsgl_color_uraw(color, framebuffer->colormode);
+            if (nonRawColor.r == nonRawColor.g && nonRawColor.g == nonRawColor.b) {
+                memset(framebuffer->buffer, color.arr[0], framebuffer->buffersize);
+            } else {
+                size_t rawBuffersize = framebuffer->width * framebuffer->height;
+                for (size_t i = 0; i <= rawBuffersize; i++) {
+                    tsgl_color_444write(i, framebuffer->buffer, color);
+                }
             }
             break;
         
         default:
-            for (size_t i = 0; i < framebuffer->buffersize; i += framebuffer->colorsize) {
-                memcpy(framebuffer->buffer + i, color.arr, framebuffer->colorsize);
+            if (_isDenseColor(color, framebuffer->colorsize)) {
+                memset(framebuffer->buffer, color.arr[0], framebuffer->buffersize);
+            } else {
+                for (size_t i = 0; i < framebuffer->buffersize; i += framebuffer->colorsize) {
+                    memcpy(framebuffer->buffer + i, color.arr, framebuffer->colorsize);
+                }
             }
             break;
     }
