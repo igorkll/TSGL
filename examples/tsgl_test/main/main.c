@@ -33,6 +33,7 @@ const tsgl_settings settings = {
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 #include <math.h>
 
 #include <TSGL.h>
@@ -42,6 +43,7 @@ const tsgl_settings settings = {
 #include <TSGL_display.h>
 #include <TSGL_color.h>
 #include <TSGL_spi.h>
+#include <lvgl.h>
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
@@ -63,15 +65,9 @@ void delay(int time) {
     vTaskDelay(time / portTICK_PERIOD_MS);
 }
 
-extern void example_lvgl_demo_ui(lv_disp_t *disp);
-
-static void example_increase_lvgl_tick(void *arg) {
-    lv_tick_inc(2);
-}
-
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
-    ESP_ERROR_CHECK(tsgl_touchscreen_i2c(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
+    ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_INTR, TS_RST));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
@@ -79,8 +75,9 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
 
-    //tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
-    //tsgl_display_rotate(&display, 1);
+    tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
+    tsgl_display_rotate(&display, 1);
+    touchscreen.rotation = 1;
 
     tsgl_rawcolor blue = tsgl_color_raw(TSGL_BLUE, framebuffer.colormode);
     tsgl_rawcolor yellow = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
@@ -88,30 +85,11 @@ void app_main() {
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
 
-    lv_disp_drv_t disp_drv;
-    disp_drv.hor_res = 320;
-    disp_drv.ver_res = 480;
-    disp_drv.physical_hor_res = -1;
-    disp_drv.physical_ver_res = -1;
-    lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
-    ESP_LOGI(TAG, "Install LVGL tick timer");
-    const esp_timer_create_args_t lvgl_tick_timer_args = {
-        .callback = &example_increase_lvgl_tick,
-        .name = "lvgl_tick"
-    };
-    esp_timer_handle_t lvgl_tick_timer = NULL;
-    ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, 2 * 1000));
-
-    ESP_LOGI(TAG, "Display LVGL Scatter Chart");
-    example_lvgl_demo_ui(disp);
-
     while (true) {
         tsgl_touchscreen_read(&touchscreen);
-        uint8_t count = tsgl_touchscreen_getTouchCount(&touchscreen);
         tsgl_framebuffer_clear(&framebuffer, display.black);
-        for (uint8_t i = 0; i < count; i++) {
-            tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
+        for (uint8_t i = 0; i < touchscreen.count; i++) {
+            tsgl_touchscreen_point point = touchscreen.touch[i];
             tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(i > 0 ? TSGL_GREEN : TSGL_RED, framebuffer.colormode));
         }
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
