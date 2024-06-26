@@ -1,5 +1,4 @@
 use fontdue;
-use fnt;
 extern crate native_windows_gui as nwg;
 use nwg::NativeUi;
 use std::rc::Rc;
