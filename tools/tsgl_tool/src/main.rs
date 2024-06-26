@@ -5,7 +5,10 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::ops::Deref;
 use nwg::Event as Event;
-
+extern crate nfd;
+use nfd::Response;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 #[derive(Default)]
 pub struct TSGLTool {
@@ -103,9 +106,9 @@ impl Deref for TSGLToolUi {
     }
 }
 
-
-fn main() {
-    let font = include_bytes!("font.ttf") as &[u8];
+fn parse(path: &Path) {
+    let data: Vec<u8> = fs::read(path);
+    let font = include_bytes!(path) as &[u8];
     let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
     let (metrics, bitmap) = font.rasterize('K', 25.0);
 
@@ -118,6 +121,16 @@ fn main() {
             }
         }
         println!("");
+    }
+}
+
+fn main() {
+    let result = nfd::open_file_dialog(None, None).unwrap();
+
+    match result {
+        Response::Okay(path) => parse(&Path::new(&path)),
+        Response::Cancel => println!("User canceled"),
+        _ => ()
     }
 
     nwg::init().expect("Failed to init Native Windows GUI");
