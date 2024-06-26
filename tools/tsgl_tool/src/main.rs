@@ -1,9 +1,11 @@
 use fontdue;
+use fnt;
 extern crate native_windows_gui as nwg;
 use nwg::NativeUi;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::ops::Deref;
+use nwg::Event as Event;
 
 
 #[derive(Default)]
@@ -32,13 +34,10 @@ pub struct TSGLToolUi {
 
 impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
     fn build_ui(mut data: TSGLTool) -> Result<TSGLToolUi, nwg::NwgError> {
-        use nwg::Event as E;
-        
         // Controls
         nwg::Window::builder()
             .flags(nwg::WindowFlags::WINDOW | nwg::WindowFlags::VISIBLE)
-            .size((300, 135))
-            .position((0, 0))
+            .size((500, 135))
             .title("TSGL Tool")
             .build(&mut data.window)?;
 
@@ -68,11 +67,11 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
         let handle_events = move |evt, _evt_data, handle| {
             if let Some(ui) = evt_ui.upgrade() {
                 match evt {
-                    E::OnButtonClick => 
+                    Event::OnButtonClick => 
                         if &handle == &ui.hello_button {
                             TSGLTool::say_hello(&ui);
                         },
-                    E::OnWindowClose => 
+                    Event::OnWindowClose => 
                         if &handle == &ui.window {
                             TSGLTool::say_goodbye(&ui);
                         },
