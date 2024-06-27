@@ -1,3 +1,5 @@
+# THE LIBRARY IS NOT READY AT THE MOMENT!!! WAIT FOR THE RELEASE
+
 # gfxTSGL
 * graphics library for ESP32 family controllers.
 * this library is written entirely in "C".
