@@ -3,13 +3,14 @@ use nfd::Response;
 
 use std::fs;
 use std::path::*;
+use std::collections::HashMap;
 
 mod ui;
 
 struct LoadedFont {
     width: usize,
     height: usize,
-    bitmap: Vec<u8>,
+    HashMap: HashMap<char, Vec<u8>>,
 }
 
 fn gen_ascii(start: char, end: char) -> String {
@@ -20,25 +21,17 @@ fn gen_ascii(start: char, end: char) -> String {
     return result;
 }
 
-fn parse(path: &Path, charmaps: &Vec<String>) -> LoadedFont {
+fn parse(path: &Path, px: f32, charmaps: &Vec<String>) -> LoadedFont {
     let font = fs::read(path).unwrap();
     let font = font.as_slice();
     let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
-    let (metrics, bitmap) = font.rasterize('K', 25.0);
-
-    for py in 0..metrics.height {
-        for px in 0..metrics.width {
-            if bitmap[px + (py * metrics.width)] > 25 {
-                print!("██");
-            } else {
-                print!("  ");
-            }
-        }
-        println!("");
-    }
+    
 
     for charmap in charmaps {
-        println!("{}", charmap);
+        for (i, c) in charmap.chars().enumerate() {
+            let (metrics, bitmap) = font.rasterize(c, px);
+
+        }
     }
 
     return LoadedFont {
