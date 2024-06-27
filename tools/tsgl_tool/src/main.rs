@@ -54,8 +54,8 @@ fn parse(path: &Path, px: f32, contrast:u8, charmaps: &Vec<String>) -> Vec<u8> {
                         byte_index += 1;
                         if byte_index > 7 {
                             byte_index = 0;
-                            write_byte = 0;
                             out.push(write_byte);
+                            write_byte = 0;
                         }
                     }
                 }
@@ -116,8 +116,8 @@ fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
 
 fn process_font(path: &String) {
     let path = Path::new(path);
-    let contrast = 100;
-    let px = 25.0;
+    let contrast = 50;
+    let px = 80.0;
     let name = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
     let info = generate_info(&name, px, contrast);
 

@@ -144,7 +144,7 @@ void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
                 uint16_t charHeight = tsgl_font_height(sets.font, chr);
                 for (tsgl_pos iy = 0; iy < charHeight; iy++) {
                     for (tsgl_pos ix = 0; ix < charWidth; ix++) {
-                        uint8_t value = tsgl_font_parse(sets.font, charPosition, ix + (iy * charWidth));
+                        uint8_t value = tsgl_font_parse(sets.font, charPosition, ix + (((charHeight - 1) - iy) * charWidth));
                         tsgl_pos px = x + ix + offset;
                         tsgl_pos py = y - iy;
                         if (value == 255) {

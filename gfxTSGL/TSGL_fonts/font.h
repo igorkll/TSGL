@@ -1,7 +1,7 @@
 // TSGL font
 // name - font
-// size - 25
-// contrast - 100
+// size - 80
+// contrast - 50
 
 #pragma once
 #include <stdint.h>
