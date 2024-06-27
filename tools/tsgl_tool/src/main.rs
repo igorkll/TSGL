@@ -27,11 +27,28 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
         for (i, c) in charmap.chars().enumerate() {
             let (metrics, bitmap) = font.rasterize(c, px);
             out.push(c as u8);
-            let fwidth: u8 = (metrics.width - 1) as u8;
-            let fheight: u8 = (metrics.height - 1) as u8;
-            out.push(fwidth);
-            out.push(fheight);
-            if (doorstep )
+            out.push((metrics.width >> 8) as u8);
+            out.push((metrics.width & 0xff) as u8);
+            out.push((metrics.height >> 8) as u8);
+            out.push((metrics.height & 0xff) as u8);
+            
+            if (doorstep == 255) {
+                for py in 0..metrics.height {
+                    for px in 0..metrics.width {
+                        out.push(bitmap[px + (py * metrics.width)])
+                    }
+                }
+            } else {
+                for py in 0..metrics.height {
+                    for px in 0..metrics.width {
+                        if bitmap[px + (py * metrics.width)] > doorstep {
+                            print!("██");
+                        } else {
+                            print!("  ");
+                        }
+                    }
+                }    
+            }
         }
     }
 
