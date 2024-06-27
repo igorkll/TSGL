@@ -2,6 +2,7 @@
 #include "TSGL_gfx.h"
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
+#include "TSGL_font.h"
 #include <ESP_LOG.h>
 #include <string.h>
 
@@ -126,4 +127,8 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
             }
         } 
     }
+}
+
+void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_rawcolor bg, tsgl_rawcolor fg, void* font, float scale, const char* text) {
+
 }
