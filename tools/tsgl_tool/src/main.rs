@@ -22,6 +22,11 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
 
     let mut out = Vec::new();
 
+    if doorstep == 255 {
+        out.push(1 as u8);
+    } else {
+        out.push(0 as u8);
+    }
     for charmap in charmaps {
         for (_i, c) in charmap.chars().enumerate() {
             let (metrics, bitmap) = font.rasterize(c, px);
