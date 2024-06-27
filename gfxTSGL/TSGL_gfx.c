@@ -129,14 +129,13 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
     }
 }
 
-void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_rawcolor bg, tsgl_rawcolor fg, const void* font, float scale, const char* text) {
+void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings print_settings, const char* text) {
     size_t strsize = strlen(text);
     tsgl_pos spacing = 1;
     tsgl_pos offset = 0;
     for (size_t i = 0; i < strsize; i++) {
         char chr = text[i];
         size_t charPosition = tsgl_font_find(font, chr);
-        printf("%c %i\n", chr, charPosition);
         if (charPosition > 0) {
             uint16_t charWidth = tsgl_font_width(font, chr);
             uint16_t charHeight = tsgl_font_height(font, chr);
@@ -151,6 +150,8 @@ void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
                         if (!bg.invalid) set(arg, px, py, bg);
                     }
                 }
+            } else {
+                print_settings
             }
             offset += charWidth + spacing;
         }
