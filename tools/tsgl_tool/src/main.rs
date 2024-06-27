@@ -76,10 +76,10 @@ fn generate_info(name: &String, px: f32, contrast:u8) -> String {
     info.push_str("\n// size - ");
     info.push_str(&px.to_string());
     if contrast == 255 {
+        info.push_str("\n// anti-aliasing is enabled");
+    } else {
         info.push_str("\n// contrast - ");
         info.push_str(&contrast.to_string());
-    } else {
-        info.push_str("\n// anti-aliasing is enabled");
     }
     return info;
 }
@@ -114,9 +114,10 @@ fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
 }
 
 fn process_font(path: &String) {
+    let path = Path::new(path);
     let contrast = 100;
-    let px = 2.0;
-    let name = Path::new(path).with_extension("").file_name().unwrap().to_str().unwrap().to_string();
+    let px =25.0;
+    let name = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
     let info = generate_info(&name, px, contrast);
 
     let mut charmaps: Vec<String> = Vec::new();
@@ -124,10 +125,10 @@ fn process_font(path: &String) {
     charmaps.push(String::from(gen_ascii('a', 'z')));
     charmaps.push(String::from(gen_ascii('0', '9')));
 
-    let parsed_font = parse(&Path::new(&path), px, contrast, &charmaps);
-    fs::write(path.clone() + ".tgf", &parsed_font).expect("failed to write");
-    fs::write(path.clone() + ".h", generate_header(&name, &info)).expect("failed to write");
-    fs::write(path.clone() + ".c", generate_executable(&parsed_font, &String::from("font"), &info)).expect("failed to write");
+    let parsed_font = parse(&path, px, contrast, &charmaps);
+    fs::write(path.with_extension("tgf"), &parsed_font).expect("failed to write");
+    fs::write(path.with_extension("h"), generate_header(&name, &info)).expect("failed to write");
+    fs::write(path.with_extension("c"), generate_executable(&parsed_font, &String::from("font"), &info)).expect("failed to write");
 }
 
 fn main() {
