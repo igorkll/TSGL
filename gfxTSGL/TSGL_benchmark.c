@@ -4,8 +4,13 @@
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <string.h>
 
 static const char* TAG = "TSGL_benchmark";
+
+void tsgl_benchmark_reset(tsgl_benchmark* benchmark) {
+    memset(benchmark, 0, sizeof(tsgl_benchmark));
+}
 
 void tsgl_benchmark_startRendering(tsgl_benchmark* benchmark) {
     benchmark->startRenderingTime = esp_timer_get_time();
@@ -66,7 +71,9 @@ int tsgl_benchmark_getWait(tsgl_benchmark* benchmark, float targetFPS) {
 
 float tsgl_benchmark_processMul(tsgl_benchmark* benchmark, float targetFPS) {
     if (!benchmark->endSendCalled) return 1;
-    return targetFPS / benchmark->realFPS;
+    if (benchmark->realFPS != 0) return targetFPS / benchmark->realFPS;
+    if (benchmark->totalFPS != 0) return targetFPS / benchmark->totalFPS;
+    return 1;
 }
 
 int tsgl_benchmark_processMulInt(tsgl_benchmark* benchmark, float targetFPS) {

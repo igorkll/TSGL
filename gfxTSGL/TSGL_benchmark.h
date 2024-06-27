@@ -21,6 +21,7 @@ typedef struct {
     uint32_t realFPS; //calculates based on the number of tsgl_benchmark_endSend calls per second
 } tsgl_benchmark;
 
+void tsgl_benchmark_reset(tsgl_benchmark* benchmark); //call reset before using benchmark if the benchmark object has stopped being used for a while
 void tsgl_benchmark_startRendering(tsgl_benchmark* benchmark);
 void tsgl_benchmark_endRendering(tsgl_benchmark* benchmark);
 void tsgl_benchmark_startSend(tsgl_benchmark* benchmark);

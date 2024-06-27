@@ -93,10 +93,11 @@ void app_main() {
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        tsgl_framebuffer_text(&framebuffer, 1, 1, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode), font, 1, "TEST FONT");
+        tsgl_framebuffer_text(&framebuffer, 50, 100, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode), font, 1, "TEST FONT");
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 
+        tsgl_benchmark_reset(&benchmark);
         for (tsgl_pos i = 0; i < display.width; i += tsgl_benchmark_processMulInt(&benchmark, 30)) {
             tsgl_benchmark_startRendering(&benchmark);
             tsgl_framebuffer_clear(&framebuffer, display.black);

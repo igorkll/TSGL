@@ -31,13 +31,15 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
         for (_i, c) in charmap.chars().enumerate() {
             let (metrics, bitmap) = font.rasterize(c, px);
             out.push(c as u8);
-
-            let mut adding_bytes = Vec::new();
+            out.push((metrics.width >> 8) as u8);
+            out.push((metrics.width & 0xff) as u8);
+            out.push((metrics.height >> 8) as u8);
+            out.push((metrics.height & 0xff) as u8);
             
             if doorstep == 255 {
                 for py in 0..metrics.height {
                     for px in 0..metrics.width {
-                        adding_bytes.push(bitmap[px + (py * metrics.width)]);
+                        out.push(bitmap[px + (py * metrics.width)]);
                     }
                 }
             } else {
@@ -51,24 +53,13 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
                         byte_index += 1;
                         if byte_index > 7 {
                             byte_index = 0;
-                            adding_bytes.push(write_byte);
+                            out.push(write_byte);
                         }
                     }
                 }
                 if byte_index > 0 {
-                    adding_bytes.push(write_byte);
+                    out.push(write_byte);
                 }
-            }
-
-            out.push((metrics.width >> 8) as u8);
-            out.push((metrics.width & 0xff) as u8);
-            out.push((metrics.height >> 8) as u8);
-            out.push((metrics.height & 0xff) as u8);
-            let len: usize = adding_bytes.len();
-            out.push((len >> 8) as u8);
-            out.push((len & 0xff) as u8);
-            for num in adding_bytes {
-                out.push(num);
             }
         }
     }
