@@ -355,6 +355,10 @@ void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
     tsgl_gfx_rect(display, (TSGL_GFX_FILL_REFERENCE())tsgl_display_fill, x, y, width, height, color, stroke);
 }
 
+void tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    tsgl_gfx_text(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_set, x, y, sets, text);
+}
+
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
     tsgl_display_fill(display, 0, 0, display->width, display->height, color);
 }
