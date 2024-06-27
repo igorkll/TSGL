@@ -2,21 +2,11 @@ use fontdue;
 use nfd::Response;
 
 use std::fs;
+use std::ops::Add;
 use std::path::*;
-use std::collections::HashMap;
+use std::u8;
 
 mod ui;
-
-struct TSGLChar {
-    width: usize,
-    height: usize,
-    bitmap: Vec<u8>,
-}
-
-struct LoadedFont {
-    positionInfo: Vec<usize>,
-    HashMap: HashMap<char, Vec<TSGLChar>>,
-}
 
 fn gen_ascii(start: char, end: char) -> String {
     let mut result = String::new();
@@ -26,24 +16,26 @@ fn gen_ascii(start: char, end: char) -> String {
     return result;
 }
 
-fn parse(path: &Path, px: f32, charmaps: &Vec<String>) -> LoadedFont {
+fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     let font = fs::read(path).unwrap();
     let font = font.as_slice();
     let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
 
+    let mut out = Vec::new();
 
     for charmap in charmaps {
         for (i, c) in charmap.chars().enumerate() {
             let (metrics, bitmap) = font.rasterize(c, px);
-
+            out.push(c as u8);
+            let fwidth: u8 = (metrics.width - 1) as u8;
+            let fheight: u8 = (metrics.height - 1) as u8;
+            out.push(fwidth);
+            out.push(fheight);
+            if (doorstep )
         }
     }
 
-    return LoadedFont {
-        width: metrics.width,
-        height: metrics.height,
-        bitmap: bitmap
-    };
+    return out;
 }
 
 fn main() {
