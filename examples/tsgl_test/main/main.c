@@ -99,7 +99,7 @@ void app_main() {
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        tsgl_framebuffer_text(&framebuffer, 0, framebuffer.height - 1, printSettings, "TEST FONT");
+        tsgl_framebuffer_text(&framebuffer, 20, framebuffer.height - 21, printSettings, "TEST FONT");
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 
@@ -126,6 +126,7 @@ void app_main() {
                 tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
                 tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
             }
+            tsgl_framebuffer_text(&framebuffer, 20, framebuffer.height - 21, printSettings, "SIN TEST");
             tsgl_benchmark_endRendering(&benchmark);
 
             tsgl_benchmark_startSend(&benchmark);
