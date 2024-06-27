@@ -11,4 +11,4 @@ void tsgl_gfx_rect(void* arg, TSGL_GFX_FILL_REFERENCE(fill), tsgl_pos x, tsgl_po
 void tsgl_gfx_line(void* arg, TSGL_GFX_SET_REFERENCE(set), TSGL_GFX_FILL_REFERENCE(fill), tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke, tsgl_pos screenWidth, tsgl_pos screenHeight);
 void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor, tsgl_pos screenWidth, tsgl_pos screenHeight);
 //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
-void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings print_settings, const char* text);
+void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text);

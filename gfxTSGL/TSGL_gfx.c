@@ -129,31 +129,37 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
     }
 }
 
-void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings print_settings, const char* text) {
+void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
     size_t strsize = strlen(text);
-    tsgl_pos spacing = 1;
     tsgl_pos offset = 0;
+    tsgl_pos standartWidth = tsgl_font_width(sets.font, 'A');
+    tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
+    if (spacing <= 0) spacing = 1;
     for (size_t i = 0; i < strsize; i++) {
         char chr = text[i];
-        size_t charPosition = tsgl_font_find(font, chr);
-        if (charPosition > 0) {
-            uint16_t charWidth = tsgl_font_width(font, chr);
-            uint16_t charHeight = tsgl_font_height(font, chr);
-            for (tsgl_pos iy = charHeight - 1; iy > 0; iy--) {
-                for (tsgl_pos ix = 0; ix < charWidth; ix++) {
-                    uint8_t value = tsgl_font_parse(font, charPosition, ix + (iy * charWidth));
-                    tsgl_pos px = x + ix + offset;
-                    tsgl_pos py = y - iy;
-                    if (value == 255) {
-                        if (!fg.invalid) set(arg, px, py, fg);
-                    } else if (value == 0) {
-                        if (!bg.invalid) set(arg, px, py, bg);
+        if (chr != " ") {
+            size_t charPosition = tsgl_font_find(sets.font, chr);
+            if (charPosition > 0) {
+                uint16_t charWidth = tsgl_font_width(sets.font, chr);
+                uint16_t charHeight = tsgl_font_height(sets.font, chr);
+                for (tsgl_pos iy = charHeight - 1; iy > 0; iy--) {
+                    for (tsgl_pos ix = 0; ix < charWidth; ix++) {
+                        uint8_t value = tsgl_font_parse(sets.font, charPosition, ix + (iy * charWidth));
+                        tsgl_pos px = x + ix + offset;
+                        tsgl_pos py = y - iy;
+                        if (value == 255) {
+                            if (!sets.fg.invalid) set(arg, px, py, sets.fg);
+                        } else if (value == 0) {
+                            if (!sets.bg.invalid) set(arg, px, py, sets.bg);
+                        }
                     }
                 }
-            } else {
-                print_settings
+                offset += charWidth + sets.spacing;
             }
-            offset += charWidth + spacing;
+        } else if (sets.spaceSize == 0) {
+            offset += standartWidth + sets.spacing;
+        } else {
+            offset += sets.spaceSize + sets.spacing;
         }
     }
 }

@@ -87,13 +87,19 @@ void app_main() {
     tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
+
+    tsgl_print_settings printSettings = {
+        .font = font,
+        .bg = tsgl_color_raw(TSGL_BLUE, framebuffer.colormode),
+        .fg = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode)
+    };
     
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        tsgl_framebuffer_text(&framebuffer, 50, 100, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode), font, 1, "TEST FONT");
+        tsgl_framebuffer_text(&framebuffer, 50, 100, printSettings, "TEST FONT");
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 

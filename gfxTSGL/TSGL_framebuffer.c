@@ -3,6 +3,7 @@
 #include "TSGL_color.h"
 #include "TSGL_spi.h"
 #include "TSGL_gfx.h"
+#include "TSGL_font.h"
 
 #include <esp_heap_caps.h>
 #include <esp_err.h>
@@ -221,8 +222,8 @@ void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     tsgl_gfx_rect(framebuffer, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x, y, width, height, color, stroke);
 }
 
-void tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor bg, tsgl_rawcolor fg, const void* font, float scale, const char* text) {
-    tsgl_gfx_text(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, x, y, bg, fg, font, scale, text);
+void tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    tsgl_gfx_text(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
