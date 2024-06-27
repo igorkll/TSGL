@@ -68,9 +68,26 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     return out;
 }
 
-fn generate_header(data: Vec<u8>, name: String) -> String {
+fn generate_info(name: &String) -> String {
+    let info = String::new();
+
+    
+
+    return info;
+}
+
+fn generate_header(name: String) -> String {
     let mut header = String::new();
-    header.push_str("#pragma once\n#include <stdint.h>\n\nstatic const uint8_t ");
+    header.push_str(&generate_info(&name));
+    header.push_str("#pragma once\n#include <stdint.h>\n\nextern const uint8_t ");
+    header.push_str(&name);
+    header.push_str("[];");
+    return header;
+}
+
+fn generate_executer(data: &Vec<u8>, name: String) -> String {
+    let mut header = String::new();
+    header.push_str("#include <stdint.h>\n\nconst uint8_t ");
     header.push_str(&name);
     header.push_str("[] = {");
     let mut terminator_add = false;
@@ -96,7 +113,8 @@ fn main() {
             charmaps.push(String::from(gen_ascii('0', '9')));
             let parsed_font = parse(&Path::new(&path), 25.0, 100, &charmaps);
             fs::write(path.clone() + ".out", &parsed_font).expect("failed to write");
-            fs::write(path.clone() + ".h", generate_header(parsed_font, String::from("font"))).expect("failed to write");
+            fs::write(path.clone() + ".h", generate_header(String::from("font"))).expect("failed to write");
+            fs::write(path.clone() + ".c", generate_executer(&parsed_font, String::from("font"))).expect("failed to write");
         },
         Response::Cancel => println!("User canceled"),
         _ => ()

@@ -41,7 +41,7 @@ uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
     const uint8_t* ptr = font;
     if (!tsgl_font_isSmoothing(font)) {
         uint8_t byte = ptr[lptr + (index / 8)];
-        return (byte & (1 << index)) > 0 ? 255 : 0;
+        return byte & (1 << (index % 8)) ? 255 : 0;
     }
     return ptr[lptr + index];
 }
