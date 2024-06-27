@@ -16,14 +16,14 @@ fn gen_ascii(start: char, end: char) -> String {
     return result;
 }
 
-fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
+fn parse(path: &Path, px: f32, contrast:u8, charmaps: &Vec<String>) -> Vec<u8> {
     let font = fs::read(path).unwrap();
     let font = font.as_slice();
     let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
 
     let mut out = Vec::new();
 
-    if doorstep == 255 {
+    if contrast == 255 {
         out.push(1 as u8);
     } else {
         out.push(0 as u8);
@@ -37,7 +37,7 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
             out.push((metrics.height >> 8) as u8);
             out.push((metrics.height & 0xff) as u8);
             
-            if doorstep == 255 {
+            if contrast == 255 {
                 for py in 0..metrics.height {
                     for px in 0..metrics.width {
                         out.push(bitmap[px + (py * metrics.width)]);
@@ -48,7 +48,7 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
                 let mut byte_index: u8 = 0;
                 for py in 0..metrics.height {
                     for px in 0..metrics.width {
-                        if bitmap[px + (py * metrics.width)] > doorstep {
+                        if bitmap[px + (py * metrics.width)] > contrast {
                             write_byte |= 1 << byte_index;
                         }
                         byte_index += 1;
@@ -69,17 +69,25 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     return out;
 }
 
-fn generate_info(name: &String, px: f32, doorstep:u8) -> String {
+fn generate_info(name: &String, px: f32, contrast:u8) -> String {
     let mut info = String::new();
     info.push_str("// TSGL font\n// name - ");
     info.push_str(name);
+    info.push_str("\n// size - ");
+    info.push_str(&px.to_string());
+    if contrast == 255 {
+        info.push_str("\n// contrast - ");
+        info.push_str(&contrast.to_string());
+    } else {
+        info.push_str("\n// anti-aliasing is enabled");
+    }
     return info;
 }
 
 fn generate_header(name: &String, info: &String) -> String {
     let mut header = String::new();
     header.push_str(info);
-    header.push('\n');
+    header.push_str("\n\n");
     header.push_str("#pragma once\n#include <stdint.h>\n\nextern const uint8_t ");
     header.push_str(&name);
     header.push_str("[];");
@@ -89,7 +97,7 @@ fn generate_header(name: &String, info: &String) -> String {
 fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
     let mut executable = String::new();
     executable.push_str(info);
-    executable.push('\n');
+    executable.push_str("\n\n");
     executable.push_str("#include <stdint.h>\n\nconst uint8_t ");
     executable.push_str(&name);
     executable.push_str("[] = {");
@@ -106,17 +114,17 @@ fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
 }
 
 fn process_font(path: &String) {
-    let doorstep = 100;
+    let contrast = 100;
     let px = 2.0;
     let name = Path::new(path).with_extension("").file_name().unwrap().to_str().unwrap().to_string();
-    let info = generate_info(&name, px, doorstep);
+    let info = generate_info(&name, px, contrast);
 
     let mut charmaps: Vec<String> = Vec::new();
     charmaps.push(String::from(gen_ascii('A', 'Z')));
     charmaps.push(String::from(gen_ascii('a', 'z')));
     charmaps.push(String::from(gen_ascii('0', '9')));
 
-    let parsed_font = parse(&Path::new(&path), px, doorstep, &charmaps);
+    let parsed_font = parse(&Path::new(&path), px, contrast, &charmaps);
     fs::write(path.clone() + ".tgf", &parsed_font).expect("failed to write");
     fs::write(path.clone() + ".h", generate_header(&name, &info)).expect("failed to write");
     fs::write(path.clone() + ".c", generate_executable(&parsed_font, &String::from("font"), &info)).expect("failed to write");
