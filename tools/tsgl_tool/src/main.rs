@@ -1,14 +1,16 @@
-use fontdue;
 extern crate native_windows_gui as nwg;
+
+use fontdue;
+
 use nwg::NativeUi;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::ops::Deref;
 use nwg::Event as Event;
-extern crate nfd;
 use nfd::Response;
+
+use std::rc::*;
+use std::cell::*;
+use std::ops::*;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::*;
 
 #[derive(Default)]
 pub struct TSGLTool {
@@ -107,8 +109,8 @@ impl Deref for TSGLToolUi {
 }
 
 fn parse(path: &Path) {
-    let data: Vec<u8> = fs::read(path);
-    let font = include_bytes!(path) as &[u8];
+    let font = fs::read(path).unwrap();
+    let font = font.as_slice();
     let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
     let (metrics, bitmap) = font.rasterize('K', 25.0);
 
