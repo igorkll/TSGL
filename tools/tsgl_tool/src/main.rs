@@ -2,7 +2,6 @@ use fontdue;
 use nfd::Response;
 
 use std::fs;
-use std::ops::Add;
 use std::path::*;
 use std::u8;
 
@@ -24,7 +23,7 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     let mut out = Vec::new();
 
     for charmap in charmaps {
-        for (i, c) in charmap.chars().enumerate() {
+        for (_i, c) in charmap.chars().enumerate() {
             let (metrics, bitmap) = font.rasterize(c, px);
             out.push(c as u8);
             out.push((metrics.width >> 8) as u8);
@@ -32,22 +31,30 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
             out.push((metrics.height >> 8) as u8);
             out.push((metrics.height & 0xff) as u8);
             
-            if (doorstep == 255) {
+            if doorstep == 255 {
                 for py in 0..metrics.height {
                     for px in 0..metrics.width {
-                        out.push(bitmap[px + (py * metrics.width)])
+                        out.push(bitmap[px + (py * metrics.width)]);
                     }
                 }
             } else {
+                let mut write_byte: u8 = 0;
+                let mut byte_index: u8 = 0;
                 for py in 0..metrics.height {
                     for px in 0..metrics.width {
                         if bitmap[px + (py * metrics.width)] > doorstep {
-                            print!("██");
-                        } else {
-                            print!("  ");
+                            write_byte |= 1 << byte_index;
+                        }
+                        byte_index += 1;
+                        if byte_index > 7 {
+                            byte_index = 0;
+                            out.push(write_byte);
                         }
                     }
-                }    
+                }
+                if byte_index > 0 {
+                    out.push(write_byte);
+                }
             }
         }
     }
@@ -64,7 +71,7 @@ fn main() {
             charmaps.push(String::from(gen_ascii('A', 'Z')));
             charmaps.push(String::from(gen_ascii('a', 'z')));
             charmaps.push(String::from(gen_ascii('0', '9')));
-            parse(&Path::new(&path), &charmaps);
+            fs::write(path.clone() + ".out", parse(&Path::new(&path), 25.0, 10, &charmaps)).expect("failed to write");
         },
         Response::Cancel => println!("User canceled"),
         _ => ()
