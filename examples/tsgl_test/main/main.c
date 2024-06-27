@@ -43,6 +43,8 @@ const tsgl_settings settings = {
 #include <TSGL_color.h>
 #include <TSGL_spi.h>
 
+#include_bytes <TSGL_drivers/st77XX.h>
+
 tsgl_display display;
 tsgl_framebuffer framebuffer;
 tsgl_framebuffer framebuffer2;
@@ -91,6 +93,7 @@ void app_main() {
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
+        tsgl_framebuffer_text(&framebuffer, 1, 1, TSGL_BLUE, TSGL_YELLOW, );
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 

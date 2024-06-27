@@ -130,5 +130,21 @@ void tsgl_gfx_push(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
 }
 
 void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_rawcolor bg, tsgl_rawcolor fg, void* font, float scale, const char* text) {
-
+    size_t strlen = strlen(text);
+    for (size_t i = 0; i < strlen; i++) {
+        char chr = text[i];
+        size_t charPosition = tsgl_font_find(font, chr);
+        uint16_t charWidth = tsgl_font_width(font, chr);
+        uint16_t charHeight = tsgl_font_height(font, chr);
+        for (tsgl_pos ix = 0; ix < charWidth; ix++) {
+            for (tsgl_pos iy = 0; iy < charHeight; iy++) {
+                uint8_t value = tsgl_font_parse(font, charPosition, ix * (iy * charWidth));
+                if (value == 255) {
+                    if (!fg.invalid) set(arg, ix, iy, fg);
+                } else if (value == 0) {
+                    if (!bg.invalid) set(arg, ix, iy, bg);
+                }
+            }
+        }
+    }
 }

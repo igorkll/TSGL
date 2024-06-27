@@ -67,6 +67,12 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     return out;
 }
 
+fn generateHeader(data: Vec<u8>) -> String {
+    let mut header = String::new();
+    header.push();
+    return header;
+}
+
 fn main() {
     let result = nfd::open_file_dialog(None, None).unwrap();
 
