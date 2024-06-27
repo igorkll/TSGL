@@ -4,6 +4,7 @@ use nfd::Response;
 use std::fs;
 use std::path::*;
 use std::u8;
+use std::string::String;
 
 mod ui;
 
@@ -68,38 +69,57 @@ fn parse(path: &Path, px: f32, doorstep:u8, charmaps: &Vec<String>) -> Vec<u8> {
     return out;
 }
 
-fn generate_info(name: &String) -> String {
-    let info = String::new();
-
-    
-
+fn generate_info(name: &String, px: f32, doorstep:u8) -> String {
+    let mut info = String::new();
+    info.push_str("// TSGL font\n// name - ");
+    info.push_str(name);
     return info;
 }
 
-fn generate_header(name: String) -> String {
+fn generate_header(name: &String, info: &String) -> String {
     let mut header = String::new();
-    header.push_str(&generate_info(&name));
+    header.push_str(info);
+    header.push('\n');
     header.push_str("#pragma once\n#include <stdint.h>\n\nextern const uint8_t ");
     header.push_str(&name);
     header.push_str("[];");
     return header;
 }
 
-fn generate_executer(data: &Vec<u8>, name: String) -> String {
-    let mut header = String::new();
-    header.push_str("#include <stdint.h>\n\nconst uint8_t ");
-    header.push_str(&name);
-    header.push_str("[] = {");
+fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
+    let mut executable = String::new();
+    executable.push_str(info);
+    executable.push('\n');
+    executable.push_str("#include <stdint.h>\n\nconst uint8_t ");
+    executable.push_str(&name);
+    executable.push_str("[] = {");
     let mut terminator_add = false;
     for num in data {
         if terminator_add {
-            header.push_str(", ");
+            executable.push_str(", ");
         }
-        header.push_str(&num.to_string());
+        executable.push_str(&num.to_string());
         terminator_add = true;
     }
-    header.push_str("};\n");
-    return header;
+    executable.push_str("};\n");
+    return executable;
+}
+
+fn process_font(path: &String) {
+    let doorstep = 100;
+    let px = 2.0;
+    let name = Path::new(path).with_extension("").file_name().unwrap().to_str().unwrap().to_string();
+    let info = generate_info(&name, px, doorstep);
+
+    let mut charmaps: Vec<String> = Vec::new();
+    charmaps.push(String::from(gen_ascii('A', 'Z')));
+    charmaps.push(String::from(gen_ascii('a', 'z')));
+    charmaps.push(String::from(gen_ascii('0', '9')));
+
+    let parsed_font = parse(&Path::new(&path), px, doorstep, &charmaps);
+    fs::write(path.clone() + ".tgf", &parsed_font).expect("failed to write");
+    fs::write(path.clone() + ".h", generate_header(&name, &info)).expect("failed to write");
+    fs::write(path.clone() + ".c", generate_executable(&parsed_font, &String::from("font"), &info)).expect("failed to write");
 }
 
 fn main() {
@@ -107,14 +127,7 @@ fn main() {
 
     match result {
         Response::Okay(path) => {
-            let mut charmaps: Vec<String> = Vec::new();
-            charmaps.push(String::from(gen_ascii('A', 'Z')));
-            charmaps.push(String::from(gen_ascii('a', 'z')));
-            charmaps.push(String::from(gen_ascii('0', '9')));
-            let parsed_font = parse(&Path::new(&path), 25.0, 100, &charmaps);
-            fs::write(path.clone() + ".out", &parsed_font).expect("failed to write");
-            fs::write(path.clone() + ".h", generate_header(String::from("font"))).expect("failed to write");
-            fs::write(path.clone() + ".c", generate_executer(&parsed_font, String::from("font"))).expect("failed to write");
+            process_font(&path);
         },
         Response::Cancel => println!("User canceled"),
         _ => ()
