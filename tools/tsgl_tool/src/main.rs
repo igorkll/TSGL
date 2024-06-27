@@ -12,6 +12,14 @@ struct LoadedFont {
     bitmap: Vec<u8>,
 }
 
+fn gen_ascii(start: char, end: char) -> String {
+    let mut result = String::new();
+    for c in start..=end {
+        result.push(c);
+    }
+    return result;
+}
+
 fn parse(path: &Path, charmaps: &Vec<String>) -> LoadedFont {
     let font = fs::read(path).unwrap();
     let font = font.as_slice();
@@ -46,7 +54,9 @@ fn main() {
     match result {
         Response::Okay(path) => {
             let mut charmaps: Vec<String> = Vec::new();
-            charmaps.push(String::from("Привет"));
+            charmaps.push(String::from(gen_ascii('A', 'Z')));
+            charmaps.push(String::from(gen_ascii('a', 'z')));
+            charmaps.push(String::from(gen_ascii('0', '9')));
             parse(&Path::new(&path), &charmaps);
         },
         Response::Cancel => println!("User canceled"),
