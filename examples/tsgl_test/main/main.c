@@ -92,8 +92,7 @@ void app_main() {
     tsgl_print_settings printSettings = {
         .font = font,
         .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode),
-        .locationMode = tsgl_print_start_top
+        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
     };
     
     while (true) {
