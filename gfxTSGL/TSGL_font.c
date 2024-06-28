@@ -1,4 +1,5 @@
 #include "TSGL.h"
+#include "TSGL_font.h"
 #include "math.h"
 #include <stdio.h>
 
@@ -44,4 +45,18 @@ uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
         return byte & (1 << (index % 8)) ? 255 : 0;
     }
     return ptr[lptr + index];
+}
+
+tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    tsgl_print_textArea textArea;
+    switch (sets.locationMode) {
+        case tsgl_print_start_bottom:
+            break;
+
+        case tsgl_print_start_top:
+            textArea.left = x;
+            textArea.top = y;
+            break;
+    }
+    return textArea;
 }

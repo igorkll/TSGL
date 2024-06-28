@@ -20,6 +20,16 @@ typedef struct {
 
 bool tsgl_font_isSmoothing(const void* font);
 size_t tsgl_font_find(const void* font, char chr);
-size_t tsgl_font_width(const void* font, char chr);
-size_t tsgl_font_height(const void* font, char chr);
+uint16_t tsgl_font_width(const void* font, char chr);
+uint16_t tsgl_font_height(const void* font, char chr);
 uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index);
+
+// this function allows you to calculate in advance in which area the text will be drawn
+typedef struct {
+    tsgl_pos left;
+    tsgl_pos top;
+    tsgl_pos width;
+    tsgl_pos height;
+} tsgl_print_textArea;
+
+tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text);
