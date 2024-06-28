@@ -144,9 +144,20 @@ void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
                 uint16_t charHeight = tsgl_font_height(sets.font, chr);
                 for (tsgl_pos iy = 0; iy < charHeight; iy++) {
                     for (tsgl_pos ix = 0; ix < charWidth; ix++) {
-                        uint8_t value = tsgl_font_parse(sets.font, charPosition, ix + (((charHeight - 1) - iy) * charWidth));
                         tsgl_pos px = x + ix + offset;
-                        tsgl_pos py = y - iy;
+                        tsgl_pos py = 0;
+                        size_t index = 0;
+                        switch (sets.locationMode) {
+                            case tsgl_print_start_bottom:
+                                index = ix + (((charHeight - 1) - iy) * charWidth);
+                                py = y - iy;
+                                break;
+                            case tsgl_print_start_top:
+                                index = ix + (iy * charWidth);
+                                py = y + iy;
+                                break;
+                        }
+                        uint8_t value = tsgl_font_parse(sets.font, charPosition, index);
                         if (value == 255) {
                             if (!sets.fg.invalid) set(arg, px, py, sets.fg);
                         } else if (value == 0) {
@@ -157,9 +168,9 @@ void tsgl_gfx_text(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos 
                 offset += charWidth + spacing;
             }
         } else if (sets.spaceSize == 0) {
-            offset += standartWidth + sets.spacing;
+            offset += standartWidth + spacing;
         } else {
-            offset += sets.spaceSize + sets.spacing;
+            offset += sets.spaceSize + spacing;
         }
     }
 }

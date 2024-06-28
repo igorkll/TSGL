@@ -41,6 +41,7 @@ const tsgl_settings settings = {
 #include <TSGL_touchscreen.h>
 #include <TSGL_display.h>
 #include <TSGL_color.h>
+#include <TSGL_font.h>
 #include <TSGL_spi.h>
 
 #include <TSGL_fonts/font.h>
@@ -91,7 +92,8 @@ void app_main() {
     tsgl_print_settings printSettings = {
         .font = font,
         .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
+        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode),
+        .locationMode = tsgl_print_start_top
     };
     
     while (true) {

@@ -2,13 +2,20 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 
+typedef enum {
+    tsgl_print_start_bottom = 0, //the text is drawn starting from the bottom left point
+    tsgl_print_start_top //starting from the top left point
+} tsgl_print_locationMode;
+
 typedef struct {
     const void* font;
-    float scale; //if 0, scaling is disabled
     tsgl_rawcolor bg;
     tsgl_rawcolor fg;
+
+    float scale; //if 0, scaling is disabled
     tsgl_pos spacing; //the distance between characters. if 0, is calculated automatically
     tsgl_pos spaceSize; //the size of the space character. if 0, is calculated automatically
+    tsgl_print_locationMode locationMode;
 } tsgl_print_settings;
 
 bool tsgl_font_isSmoothing(const void* font);
