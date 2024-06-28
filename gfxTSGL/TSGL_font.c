@@ -110,8 +110,8 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), tsgl
             offset += sets.spaceSize + spacing;
         }
     }
-    textArea.width = textArea.right - textArea.left;
-    textArea.height = textArea.bottom - textArea.top;
+    textArea.width = (textArea.right - textArea.left) + 1;
+    textArea.height = (textArea.bottom - textArea.top) + 1;
     return textArea;
 }
 
