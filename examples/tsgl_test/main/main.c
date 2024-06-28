@@ -43,6 +43,7 @@ const tsgl_settings settings = {
 #include <TSGL_color.h>
 #include <TSGL_font.h>
 #include <TSGL_spi.h>
+#include <TSGL_gui.h>
 
 #include <TSGL_fonts/font.h>
 
