@@ -1,6 +1,7 @@
 #pragma once
 #include "TSGL.h"
 #include "TSGL_color.h"
+#include "TSGL_gfx.h"
 
 typedef enum {
     tsgl_print_start_bottom = 0, //the text is drawn starting from the bottom left point
@@ -9,7 +10,7 @@ typedef enum {
 
 typedef struct {
     const void* font;
-    tsgl_rawcolor bg;
+    tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
     tsgl_rawcolor fg;
 
     float scale; //if 0, scaling is disabled
@@ -18,13 +19,6 @@ typedef struct {
     tsgl_print_locationMode locationMode;
 } tsgl_print_settings;
 
-bool tsgl_font_isSmoothing(const void* font);
-size_t tsgl_font_find(const void* font, char chr);
-uint16_t tsgl_font_width(const void* font, char chr);
-uint16_t tsgl_font_height(const void* font, char chr);
-uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index);
-
-// this function allows you to calculate in advance in which area the text will be drawn
 typedef struct {
     tsgl_pos left;
     tsgl_pos top;
@@ -32,4 +26,11 @@ typedef struct {
     tsgl_pos height;
 } tsgl_print_textArea;
 
-tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text);
+bool tsgl_font_isSmoothing(const void* font);
+size_t tsgl_font_find(const void* font, char chr);
+uint16_t tsgl_font_width(const void* font, char chr);
+uint16_t tsgl_font_height(const void* font, char chr);
+uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index);
+
+tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text);
+tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text); // this function allows you to calculate in advance in which area the text will be drawn

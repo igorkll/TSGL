@@ -1,5 +1,6 @@
 #include "TSGL.h"
 #include "TSGL_font.h"
+#include "TSGL_gfx.h"
 #include "math.h"
 #include <stdio.h>
 
@@ -47,16 +48,68 @@ uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
     return ptr[lptr + index];
 }
 
-tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_print_textArea textArea;
+tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    tsgl_print_textArea textArea = {
+        .left = x,
+        .width = 0,
+        .height = 0
+    };
     switch (sets.locationMode) {
         case tsgl_print_start_bottom:
+            textArea.top = y;
             break;
-
         case tsgl_print_start_top:
-            textArea.left = x;
             textArea.top = y;
             break;
     }
+    size_t strsize = strlen(text);
+    tsgl_pos offset = 0;
+    tsgl_pos standartWidth = tsgl_font_width(sets.font, 'A');
+    tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
+    if (spacing <= 0) spacing = 1;
+    for (size_t i = 0; i < strsize; i++) {
+        char chr = text[i];
+        if (chr != ' ') {
+            size_t charPosition = tsgl_font_find(sets.font, chr);
+            if (charPosition > 0) {
+                uint16_t charWidth = tsgl_font_width(sets.font, chr);
+                uint16_t charHeight = tsgl_font_height(sets.font, chr);
+                for (tsgl_pos iy = 0; iy < charHeight; iy++) {
+                    for (tsgl_pos ix = 0; ix < charWidth; ix++) {
+                        tsgl_pos px = x + ix + offset;
+                        tsgl_pos py = 0;
+                        size_t index = 0;
+                        switch (sets.locationMode) {
+                            case tsgl_print_start_bottom:
+                                index = ix + (((charHeight - 1) - iy) * charWidth);
+                                py = y - iy;
+                                break;
+                            case tsgl_print_start_top:
+                                index = ix + (iy * charWidth);
+                                py = y + iy;
+                                break;
+                        }
+                        if (set != NULL) {
+                            uint8_t value = tsgl_font_parse(sets.font, charPosition, index);
+                            if (value == 255) {
+                                if (!sets.fg.invalid) set(arg, px, py, sets.fg);
+                            } else if (value == 0) {
+                                if (!sets.bg.invalid) set(arg, px, py, sets.bg);
+                            }
+                        }
+                    }
+                }
+                offset += charWidth + spacing;
+            }
+        } else if (sets.spaceSize == 0) {
+            offset += standartWidth + spacing;
+        } else {
+            offset += sets.spaceSize + spacing;
+        }
+    }
     return textArea;
+}
+
+tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    return tsgl_font_rasterize(NULL, NULL, x, y, sets, text);
 }

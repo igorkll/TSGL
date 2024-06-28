@@ -69,6 +69,18 @@ void delay(int time) {
     vTaskDelay(time / portTICK_PERIOD_MS);
 }
 
+void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
+    tsgl_print_settings printSettings = {
+        .font = font,
+        .bg = TSGL_INVALID_RAWCOLOR,
+        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
+    };
+    
+    tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, printSettings, text);
+    tsgl_framebuffer_rect(&framebuffer, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 1);
+    tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
+}
+
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
     ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
@@ -88,19 +100,13 @@ void app_main() {
     tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
-
-    tsgl_print_settings printSettings = {
-        .font = font,
-        .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
-    };
     
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        tsgl_framebuffer_text(&framebuffer, 20, framebuffer.height - 21, printSettings, "TEST FONT");
+        drawTextWithRect(20, framebuffer.height - 21, "TEST FONT");
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 
@@ -127,7 +133,6 @@ void app_main() {
                 tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
                 tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
             }
-            tsgl_framebuffer_text(&framebuffer, 20, framebuffer.height - 21, printSettings, "SIN TEST");
             tsgl_benchmark_endRendering(&benchmark);
 
             tsgl_benchmark_startSend(&benchmark);

@@ -5,6 +5,7 @@
 #include "TSGL_spi.h"
 #include "TSGL_gfx.h"
 #include "TSGL_ledc.h"
+#include "TSGL_font.h"
 
 #include <esp_system.h>
 #include <esp_err.h>
@@ -356,7 +357,7 @@ void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 void tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_gfx_text(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_set, x, y, sets, text);
+    tsgl_font_text(display, (TSGL_GFX_SET_REFERENCE())tsgl_display_set, x, y, sets, text);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {

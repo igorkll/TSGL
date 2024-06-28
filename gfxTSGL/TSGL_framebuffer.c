@@ -223,7 +223,7 @@ void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_gfx_text(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
+    tsgl_font_text(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
