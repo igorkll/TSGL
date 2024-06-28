@@ -21,6 +21,8 @@ typedef struct {
 typedef struct {
     tsgl_pos left;
     tsgl_pos top;
+    tsgl_pos right;
+    tsgl_pos bottom;
     tsgl_pos width;
     tsgl_pos height;
 } tsgl_print_textArea;

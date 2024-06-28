@@ -5,6 +5,8 @@
 #include <stddef.h>
 
 typedef int16_t tsgl_pos;
+#define TSGL_POS_MIN -32768
+#define TSGL_POS_MAX 32767
 
 extern const float tsgl_colormodeSizes[];
 
