@@ -104,10 +104,16 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), tsgl
                 }
                 offset += charWidth + spacing;
             }
-        } else if (sets.spaceSize == 0) {
-            offset += standartWidth + spacing;
         } else {
-            offset += sets.spaceSize + spacing;
+            tsgl_pos spaceSize;
+            if (sets.spaceSize == 0) {
+                spaceSize = standartWidth;
+            } else {
+                spaceSize = sets.spaceSize;
+            }
+            tsgl_pos staceEndPos = x + spaceSize + offset;
+            if (staceEndPos > textArea.right) textArea.right = staceEndPos;
+            offset += spaceSize + spacing;
         }
     }
     textArea.width = (textArea.right - textArea.left) + 1;

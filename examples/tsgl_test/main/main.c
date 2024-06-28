@@ -106,7 +106,7 @@ void app_main() {
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        drawTextWithRect(20, framebuffer.height - 21, "TEST FONT");
+        drawTextWithRect(20, framebuffer.height - 21, " FONT ");
         tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
         delay(3000);
 
