@@ -154,11 +154,11 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 // graphic
 
 void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
-    tsgl_gfx_push(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, rotation, sprite, transparentColor, framebuffer->width, framebuffer->height);
+    tsgl_gfx_push(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, rotation, sprite, transparentColor, framebuffer->width, framebuffer->height);
 }
 
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->width, framebuffer->height);
+    tsgl_gfx_line(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->width, framebuffer->height);
 }
 
 void tsgl_framebuffer_set(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
@@ -219,11 +219,11 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_rect(framebuffer, (TSGL_GFX_FILL_REFERENCE())tsgl_framebuffer_fill, x, y, width, height, color, stroke);
+    tsgl_gfx_rect(framebuffer, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fill, x, y, width, height, color, stroke);
 }
 
 void tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_font_text(framebuffer, (TSGL_GFX_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
+    tsgl_font_rasterize(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {

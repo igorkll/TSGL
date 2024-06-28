@@ -1,8 +1,8 @@
 #include "TSGL.h"
 #include "TSGL_font.h"
 #include "TSGL_gfx.h"
-#include "math.h"
-#include <stdio.h>
+#include <math.h>
+#include <string.h>
 
 static uint16_t _read_uint16(const uint8_t* ptr, size_t index) {
     return (ptr[index] << 8) | (ptr[index + 1] & 0xff);
@@ -48,7 +48,7 @@ uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
     return ptr[lptr + index];
 }
 
-tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_GFX_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
     tsgl_print_textArea textArea = {
         .left = x,
         .width = 0,
