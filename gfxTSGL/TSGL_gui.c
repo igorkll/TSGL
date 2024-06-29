@@ -87,7 +87,7 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
 static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
     if (!object->interactive) {
         object->pressed = false;
-        return;
+        return false;
     }
 
     if (object->parents != NULL) {
@@ -108,9 +108,16 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
             case tsgl_gui_drag:
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
+                        if (object->draggable) {
+                            tsgl_pos dx = x - object->tx;
+                            tsgl_pos dy = y - object->ty;
+                            object->x += dx;
+                            object->y += dy;
+                        } else {
+                            object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                        }
                         object->tx = x;
                         object->ty = y;
-                        object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     }
                 }
                 break;

@@ -25,6 +25,7 @@ struct tsgl_gui {
 
     bool interactive;
     bool displayable;
+    bool draggable; //allows elements to move in the space of the parent element
 
     // callbacks
     void (*create_callback)(tsgl_gui* self);
