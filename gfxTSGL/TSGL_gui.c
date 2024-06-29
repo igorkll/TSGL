@@ -5,7 +5,7 @@
 #include "TSGL_gui.h"
 #include <esp_random.h>
 
-static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
+static tsgl_gui* _createRoot(void* target, bool buffered) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
     
     gui->target = target;
@@ -19,7 +19,6 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
 
 static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
     switch (format) {
-        case tsgl_gui_default:
         case tsgl_gui_absolute:
             return val + 0.5;
 
@@ -56,6 +55,7 @@ tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colo
     gui->width = display->width;
     gui->height = display->height;
     gui->colormode = colormode;
+    gui->parent = gui;
     return gui;
 }
 
@@ -64,6 +64,7 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
     gui->width = framebuffer->width;
     gui->height = framebuffer->height;
     gui->colormode = framebuffer->colormode;
+    gui->parent = gui;
     return gui;
 }
 
@@ -116,22 +117,22 @@ void tsgl_gui_free(tsgl_gui* object) {
 
 
 void tsgl_gui_math(tsgl_gui* root) {
-    _math(object, 0, 0);
+    _math(root, 0, 0);
 }
 
 void tsgl_gui_draw(tsgl_gui* root) {
     tsgl_framebuffer_fill(
-        object->target,
-        object->math_x,
-        object->math_y,
-        object->math_width,
-        object->math_height,
+        root->target,
+        root->math_x,
+        root->math_y,
+        root->math_width,
+        root->math_height,
         (tsgl_rawcolor) {.arr = {esp_random(), esp_random(), esp_random()}}
     );
 
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            tsgl_gui_draw(object->parents[i]);
+    if (root->parents != NULL) {
+        for (size_t i = 0; i < root->parentsCount; i++) {
+            tsgl_gui_draw(root->parents[i]);
         }
     }
 }

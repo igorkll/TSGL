@@ -5,7 +5,6 @@
 #include "TSGL_display.h"
 
 typedef enum {
-    tsgl_gui_default = 0, //
     tsgl_gui_absolute,
     tsgl_gui_percent
 } tsgl_gui_paramFormat;

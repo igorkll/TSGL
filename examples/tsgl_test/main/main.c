@@ -95,6 +95,10 @@ void gui_test() {
     obj2->width = 100;
     obj2->height = 100;
     tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
+    obj3->format_x = tsgl_gui_percent;
+    obj3->format_y = tsgl_gui_percent;
+    obj3->format_width = tsgl_gui_percent;
+    obj3->format_height = tsgl_gui_percent;
     obj3->x = 0.1;
     obj3->y = 0.1;
     obj3->width = 0.8;
