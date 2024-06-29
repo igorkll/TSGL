@@ -93,7 +93,7 @@ void gui_test_onDraw(tsgl_gui* root, void* _) {
 
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui_attachClearCallback(gui, NULL, gui_test_onClear);
+    tsgl_gui_attachClearCallback(gui, false, NULL, gui_test_onClear);
 
     tsgl_gui* button = tsgl_gui_addButton(gui);
     button->x = 50;

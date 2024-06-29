@@ -70,9 +70,19 @@ static void _initCallback(tsgl_gui* object) {
     if (object->create_callback != NULL) object->create_callback(object);
 }
 
+static void _clear(tsgl_gui* root, void* _color) {
+    tsgl_rawcolor* color = _color;
+    if (root->buffered) {
+        tsgl_framebuffer_clear(root->target, color);
+    } else {
+        tsgl_display_clear(root->target, color);
+    }
+}
+
 typedef struct {
     void* arg;
     void (*callback) (tsgl_gui* root, void* arg);
+    bool free_arg;
 } _callback_data;
 
 
@@ -118,16 +128,37 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     return newObject;
 }
 
-void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
+void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color) {
+    tsgl_rawcolor* color = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
+    tsgl_gui_attachClearCallback(root, true, &color, _clear);
+}
+
+void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
+    if (root->data != NULL) {
+        if (root->data_as_callback) {
+            _callback_data* callback_data = (_callback_data*)root->data;
+            if (callback_data->free_arg) free(callback_data->arg);
+        }
+        free(root->data);
+    }
+
     _callback_data* callback_data = malloc(sizeof(_callback_data));
     callback_data->arg = arg;
     callback_data->callback = onClear;
+    callback_data->free_arg = free_arg;
     root->data = callback_data;
+    root->data_as_callback = true;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
     if (object->free_callback) object->free_callback(object);
-    if (object->data != NULL) free(object->data);
+    if (object->data != NULL) {
+        if (object->data_as_callback) {
+            _callback_data* callback_data = (_callback_data*)object->data;
+            if (callback_data->free_arg) free(callback_data->arg);
+        }
+        free(object->data);
+    }
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
             tsgl_gui_free(object->parents[i]);

@@ -9,6 +9,12 @@ typedef enum {
     tsgl_gui_percent
 } tsgl_gui_paramFormat;
 
+typedef enum {
+    tsgl_gui_click,
+    tsgl_gui_drag,
+    tsgl_gui_drop
+} tsgl_gui_event;
+
 typedef struct tsgl_gui tsgl_gui;
 struct tsgl_gui {
     // settings
@@ -22,13 +28,9 @@ struct tsgl_gui {
 
     // callbacks
     void (*create_callback)(tsgl_gui* self);
+    void (*event_callback)(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event);
     void (*draw_callback)(tsgl_gui* self);
     void (*free_callback)(tsgl_gui* self);
-
-    // control ()
-    void (*set)(tsgl_gui* self, int param, void* ptr);
-    void (*setNum)(tsgl_gui* self, int param, int64_t num);
-    void (*setColor)(tsgl_gui* self, int param, tsgl_rawcolor color);
 
     // internal
     void* target;
@@ -49,6 +51,7 @@ struct tsgl_gui {
     tsgl_gui* root;
 
     void* data;
+    bool data_as_callback;
 };
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode); //you specify the colormode yourself because on some screens it must be different from the colormode specified in the driver
@@ -56,7 +59,9 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer);
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
-void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (*onClear)(tsgl_gui* root, void* arg));
+// a method for controlling the background, be sure to call one of them after creating the root gui object
+void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color);
+void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachClearCallback again
 
 // these methods are mostly for internal use
 void tsgl_gui_math(tsgl_gui* root);
