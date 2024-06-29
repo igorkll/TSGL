@@ -143,3 +143,17 @@ void tsgl_gui_draw(tsgl_gui* object) {
         }
     }
 }
+
+
+
+void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen) {
+
+}
+
+void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(void* arg)) {
+    if (root->needMath) tsgl_gui_math(root);
+    if (root->needDraw) {
+        tsgl_gui_draw(root);
+        onDraw(arg);
+    }
+}
