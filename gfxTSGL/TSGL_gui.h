@@ -32,6 +32,9 @@ struct tsgl_gui {
     void (*draw_callback)(tsgl_gui* self);
     void (*free_callback)(tsgl_gui* self);
 
+    // touchscreen state
+    bool pressed;
+
     // internal
     void* target;
     bool buffered;

@@ -4,6 +4,7 @@
 #include "TSGL_display.h"
 #include "TSGL_gui.h"
 #include <esp_random.h>
+#include <string.h>
 
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
@@ -73,9 +74,31 @@ static void _initCallback(tsgl_gui* object) {
 static void _clear(tsgl_gui* root, void* _color) {
     tsgl_rawcolor* color = _color;
     if (root->buffered) {
-        tsgl_framebuffer_clear(root->target, color);
+        tsgl_framebuffer_clear(root->target, *color);
     } else {
-        tsgl_display_clear(root->target, color);
+        tsgl_display_clear(root->target, *color);
+    }
+}
+
+static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
+    return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->width) && y < (object->math_y + object->height);
+}
+
+static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
+    if (object->root != object && object->event_callback != NULL) {
+        switch (event) {
+            case tsgl_gui_click:
+                if (!object->pressed) {
+                    object->pressed = true;
+                }
+                break;
+        }
+    }
+
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            _event(object->parents[i]);
+        }
     }
 }
 
@@ -129,8 +152,9 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
 }
 
 void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color) {
-    tsgl_rawcolor* color = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
-    tsgl_gui_attachClearCallback(root, true, &color, _clear);
+    tsgl_rawcolor* mColor = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
+    memcpy(mColor, &color, sizeof(tsgl_rawcolor));
+    tsgl_gui_attachClearCallback(root, true, &mColor, _clear);
 }
 
 void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
@@ -205,7 +229,11 @@ void tsgl_gui_draw(tsgl_gui* object) {
 
 
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
+    uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
+    if (touchCount > 0) {
+        tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, 1);
 
+    }
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
