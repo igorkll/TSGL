@@ -38,17 +38,17 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 
 static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
     if (object->parent != NULL) {
-        object->math_x = offsetX + _localMath(object->format_x, object->x, object->parent->width);
-        object->math_y = offsetY + _localMath(object->format_y, object->y, object->parent->height);
+        tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
+        tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
+        object->math_x = offsetX + localMathX;
+        object->math_y = offsetY + localMathY;
         object->math_width = _localMath(object->format_width, object->width, object->parent->width);
         object->math_height = _localMath(object->format_height, object->height, object->parent->height);
 
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;
-        tsgl_pos maxWidth = object->parent->width - object->math_x;
-        tsgl_pos maxHeight = object->parent->height - object->math_y;
-        printf("w %i %f %i\n", maxWidth, object->parent->width, object->math_x);
-        printf("w %i %f %i\n", maxHeight, object->parent->height, object->math_y);
+        tsgl_pos maxWidth = object->parent->width - localMathX;
+        tsgl_pos maxHeight = object->parent->height - localMathY;
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
     }
