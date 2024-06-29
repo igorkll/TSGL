@@ -81,15 +81,33 @@ static void _clear(tsgl_gui* root, void* _color) {
 }
 
 static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
-    return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->width) && y < (object->math_y + object->height);
+    return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->math_width) && y < (object->math_y + object->math_height);
 }
 
 static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
     if (object->root != object && object->event_callback != NULL) {
         switch (event) {
             case tsgl_gui_click:
-                if (!object->pressed) {
+                if (!object->pressed && _inObjectCheck(object, x, y)) {
+                    object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->pressed = true;
+                }
+                break;
+
+            case tsgl_gui_drag:
+                if (object->pressed) {
+                    if (x != object->tx || y != object->ty) {
+                        object->tx = x;
+                        object->ty = y;
+                        object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    }
+                }
+                break;
+
+            case tsgl_gui_drop:
+                if (object->pressed) {
+                    object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    object->pressed = false;
                 }
                 break;
         }
@@ -232,7 +250,21 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
     uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
     if (touchCount > 0) {
         tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, 1);
-
+        if (root->pressed) {
+            if (point.x != root->tx || point.y != root->ty) {
+                root->tx = point.x;
+                root->ty = point.y;
+                _event(root, point.x, point.y, tsgl_gui_drag);
+            }
+        } else {
+            root->tx = point.x;
+            root->ty = point.y;
+            _event(root, point.x, point.y, tsgl_gui_click);
+        }
+        root->pressed = true;
+    } else if (root->pressed) {
+        _event(root, point.x, point.y, tsgl_gui_drop);
+        root->pressed = false;
     }
 }
 

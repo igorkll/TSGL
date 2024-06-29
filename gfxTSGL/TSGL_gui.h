@@ -34,6 +34,8 @@ struct tsgl_gui {
 
     // touchscreen state
     bool pressed;
+    tsgl_pos tx;
+    tsgl_pos ty;
 
     // internal
     void* target;
