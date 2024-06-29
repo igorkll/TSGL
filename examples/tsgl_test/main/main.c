@@ -91,12 +91,18 @@ void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
     tsgl_gui_setClearColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), framebuffer.colormode));
 
-    tsgl_gui* button = tsgl_gui_addButton(gui);
-    button->x = 50;
-    button->y = 50;
-    button->width = 150;
-    button->height = 150;
-    button->draggable = true;
+    tsgl_gui* window = tsgl_gui_addObject(gui);
+    window->x = 50;
+    window->y = 50;
+    window->width = 300;
+    window->height = 150;
+    window->draggable = true;
+
+    tsgl_gui* button = tsgl_gui_addButton(window);
+    button->x = 10;
+    button->y = 10;
+    button->width = 50;
+    button->height = 50;
 
     while (true) {
         tsgl_gui_processTouchscreen(gui, &touchscreen);
