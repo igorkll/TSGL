@@ -89,9 +89,10 @@ void gui_test_onDraw(tsgl_gui* root, void* _) {
 
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui_setClearColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), framebuffer.colormode));
+    tsgl_gui_setColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), framebuffer.colormode));
 
     tsgl_gui* window = tsgl_gui_addObject(gui);
+    tsgl_gui_setColor(window, tsgl_color_raw(TSGL_GRAY, framebuffer.colormode));
     window->x = 50;
     window->y = 50;
     window->width = 300;

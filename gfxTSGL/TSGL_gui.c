@@ -71,12 +71,12 @@ static void _initCallback(tsgl_gui* object) {
     if (object->create_callback != NULL) object->create_callback(object);
 }
 
-static void _clear(tsgl_gui* root, void* _color) {
+static void _fillObject(tsgl_gui* root, void* _color) {
     tsgl_rawcolor* color = _color;
     if (root->buffered) {
-        tsgl_framebuffer_clear(root->target, *color);
+        tsgl_framebuffer_fill(root->target, root->math_x, root->math_y, root->math_width, root->math_height, *color);
     } else {
-        tsgl_display_clear(root->target, *color);
+        tsgl_display_fill(root->target, root->math_x, root->math_y, root->math_width, root->math_height, *color);
     }
 }
 
@@ -96,15 +96,16 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
         }
     }
 
-    if (object->root != object && object->event_callback != NULL) {
+    if (object->root != object) {
         switch (event) {
             case tsgl_gui_click:
                 if (!object->pressed && _inObjectCheck(object, x, y)) {
-                    object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    if (object->event_callback != NULL)
+                        object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->tpx = x;
                     object->tpy = y;
-                    object->tdx = object->math_x;
-                    object->tdy = object->math_y;
+                    object->tdx = object->x;
+                    object->tdy = object->y;
                     object->pressed = true;
                 }
                 break;
@@ -113,11 +114,12 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
-                            object->math_x = object->tdx + (x - object->tpx);
-                            object->math_y = object->tdy + (y - object->tpy);
+                            object->x = object->tdx + (x - object->tpx);
+                            object->y = object->tdy + (y - object->tpy);
+                            object->needMath = true;
                             object->needDraw = true;
                             object->root->needDraw = true;
-                        } else {
+                        } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
                         object->tx = x;
@@ -128,7 +130,8 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
             case tsgl_gui_drop:
                 if (object->pressed) {
-                    object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    if (object->event_callback != NULL)
+                        object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->pressed = false;
                 }
                 break;
@@ -187,27 +190,27 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     return newObject;
 }
 
-void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color) {
+void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color) {
     tsgl_rawcolor* mColor = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
     memcpy(mColor, &color, sizeof(tsgl_rawcolor));
-    tsgl_gui_attachClearCallback(root, true, mColor, _clear);
+    tsgl_gui_attachPredrawCallback(object, true, mColor, _fillObject);
 }
 
-void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
-    if (root->data != NULL) {
-        if (root->data_as_callback) {
-            _callback_data* callback_data = (_callback_data*)root->data;
+void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)) {
+    if (object->data != NULL) {
+        if (object->data_as_callback) {
+            _callback_data* callback_data = (_callback_data*)object->data;
             if (callback_data->free_arg) free(callback_data->arg);
         }
-        free(root->data);
+        free(object->data);
     }
 
     _callback_data* callback_data = malloc(sizeof(_callback_data));
     callback_data->arg = arg;
-    callback_data->callback = onClear;
+    callback_data->callback = predraw;
     callback_data->free_arg = free_arg;
-    root->data = callback_data;
-    root->data_as_callback = true;
+    object->data = callback_data;
+    object->data_as_callback = true;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
@@ -247,19 +250,37 @@ void tsgl_gui_math(tsgl_gui* root) {
     _math(root, 0, 0);
 }
 
-void tsgl_gui_draw(tsgl_gui* object) {
-    if (!object->displayable || !object->needDraw) return;
-    if (object == object->root && object->data) {
+bool tsgl_gui_draw(tsgl_gui* object) {
+    if (!object->displayable) {
+        object->needDraw = false;
+        return false;
+    }
+
+    if (object->data && object->data_as_callback) {
         _callback_data* callback_data = (_callback_data*)object->data;
         callback_data->callback(object, callback_data->arg);
     }
-    if (object->draw_callback != NULL) object->draw_callback(object);
+    
+    if (object->needDraw) {
+        if (object->draw_callback != NULL)
+            object->draw_callback(object);
+
+        if (object->parents != NULL) {
+            for (size_t i = 0; i < object->parentsCount; i++) {
+                object->parents[i]->needDraw = true;
+            }
+        }
+
+        object->needDraw = false;
+    }
+    
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
             tsgl_gui_draw(object->parents[i]);
         }
     }
-    object->needDraw = false;
+
+    return false;
 }
 
 
@@ -289,8 +310,7 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
     tsgl_gui_math(root);
 
-    if (root->needDraw) {
-        tsgl_gui_draw(root);
+    if (tsgl_gui_draw(root)) {
         onDraw(root, arg);
     }
 }

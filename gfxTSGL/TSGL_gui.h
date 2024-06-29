@@ -25,7 +25,7 @@ struct tsgl_gui {
 
     bool interactive;
     bool displayable;
-    bool draggable; //allows elements to move in the space of the parent element
+    bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
 
     // callbacks
     void (*create_callback)(tsgl_gui* self);
@@ -71,12 +71,12 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
 // a method for controlling the background, be sure to call one of them after creating the root gui object
-void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color);
-void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachClearCallback again
+void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color);
+void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachClearCallback again
 
 // these methods are mostly for internal use
 void tsgl_gui_math(tsgl_gui* root);
-void tsgl_gui_draw(tsgl_gui* object);
+bool tsgl_gui_draw(tsgl_gui* object);
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
