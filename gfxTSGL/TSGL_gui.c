@@ -84,7 +84,18 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
     return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->math_width) && y < (object->math_y + object->math_height);
 }
 
-static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
+static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
+    if (!object->interactive) {
+        object->pressed = false;
+        return;
+    }
+
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            if (_event(object->parents[i], x, y, event)) return true;
+        }
+    }
+
     if (object->root != object && object->event_callback != NULL) {
         switch (event) {
             case tsgl_gui_click:
@@ -112,12 +123,8 @@ static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 break;
         }
     }
-
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            _event(object->parents[i], x, y, event);
-        }
-    }
+    
+    return object->pressed;
 }
 
 typedef struct {
