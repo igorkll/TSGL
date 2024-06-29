@@ -46,6 +46,7 @@ struct tsgl_gui {
     size_t parentsCount;
     tsgl_gui** parents;
     tsgl_gui* parent;
+    tsgl_gui* root;
 
     void* data;
 };
@@ -55,10 +56,12 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer);
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
+void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (onClear*)(tsgl_gui* root, void* arg));
+
 // these methods are mostly for internal use
 void tsgl_gui_math(tsgl_gui* root);
 void tsgl_gui_draw(tsgl_gui* object);
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen);
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred
+void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (tsgl_gui* root, onDraw*)(void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred

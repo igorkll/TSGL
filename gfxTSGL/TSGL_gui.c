@@ -8,6 +8,7 @@
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
     
+    gui->root = gui;
     gui->target = target;
     gui->buffered = buffered;
 
@@ -64,6 +65,11 @@ static void _initCallback(tsgl_gui* object) {
     if (object->create_callback != NULL) object->create_callback(object);
 }
 
+typedef struct {
+    void* arg;
+    void (callback*) (tsgl_gui* root, void* arg);
+} _callback_data;
+
 
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
@@ -89,6 +95,8 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     }
 
     tsgl_gui* newObject = calloc(1, sizeof(tsgl_gui));
+    newObject->colormode = object->colormode;
+    newObject->root = object->root;
     newObject->target = object->target;
     newObject->buffered = object->buffered;
     newObject->parent = object;
@@ -101,6 +109,13 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     object->parents[object->parentsCount - 1] = newObject;
     _initCallback(newObject);
     return newObject;
+}
+
+void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (onClear*)(tsgl_gui* root, void* arg)) {
+    _callback_data* callback_data = malloc(sizeof(_callback_data));
+    callback_data->arg = arg;
+    callback_data->callback = onClear;
+    root.data = callback_data;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
@@ -136,6 +151,10 @@ void tsgl_gui_math(tsgl_gui* root) {
 
 void tsgl_gui_draw(tsgl_gui* object) {
     if (!object->displayable) return;
+    if (object == object.root & object.data) {
+        _callback_data* callback_data = (_callback_data*)object.data;
+        callback_data->callback(object, callback_data->arg);
+    }
     if (object->draw_callback != NULL) object->draw_callback(object);
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
@@ -150,7 +169,7 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen) {
 
 }
 
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(void* arg)) {
+void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(tsgl_gui* root, void* arg)) {
     if (root->needMath) {
         tsgl_gui_math(root);
         root->needMath = false;
@@ -158,7 +177,7 @@ void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(void* arg)) {
     
     if (root->needDraw) {
         tsgl_gui_draw(root);
-        onDraw(arg);
+        onDraw(root, arg);
         root->needDraw = false;
     }
 }

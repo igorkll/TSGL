@@ -83,12 +83,17 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
     tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
 }
 
-void gui_test_onDraw(void* _) {
+void gui_test_onClear(tsgl_gui* root, void* _) {
+    tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(TSGL_BLUE, root.colormode));
+}
+
+void gui_test_onDraw(tsgl_gui* root, void* _) {
     tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
 }
 
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
+    tsgl_gui_attachClearCallback(gui, NULL, gui_test_onClear);
 
     tsgl_gui* button = tsgl_gui_addButton(gui);
     obj1->x = 50;
@@ -98,7 +103,7 @@ void gui_test() {
 
     while (true) {
         tsgl_gui_processTouchscreen(&gui, &touchscreen);
-        tsgl_gui_process(&gui, gui_test_onDraw);
+        tsgl_gui_process(&gui, NULL, gui_test_onDraw);
         delay(portTICK_PERIOD_MS);
     }
 
