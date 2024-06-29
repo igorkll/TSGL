@@ -95,10 +95,10 @@ void gui_test() {
     obj2->width = 100;
     obj2->height = 100;
     tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
-    obj3->x = 50;
-    obj3->y = 50;
-    obj3->width = 50;
-    obj3->height = 50;
+    obj3->x = 0.1;
+    obj3->y = 0.1;
+    obj3->width = 0.8;
+    obj3->height = 0.8;
     tsgl_gui_math(obj);
     tsgl_gui_draw(obj);
     tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
