@@ -57,6 +57,12 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
 
+        if (object->parents != NULL) {
+            for (size_t i = 0; i < object->parentsCount; i++) {
+                object->parents[i]->needMath = true;
+            }
+        }
+
         object->needMath = false;
     }
 
