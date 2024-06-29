@@ -20,11 +20,14 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     return gui;
 }
 
-static void _draw(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
-    tsgl_framebuffer_fill(object->target, offsetX + object->x, offsetY + object->y, object->width, object->height, (tsgl_rawcolor) {.arr = {esp_random(), esp_random(), esp_random()}});
+static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
+    object->math_x = offsetX + object->x;
+    object->math_y = offsetY + object->y;
+    object->math_width = object->width;
+    object->math_height = object->height;
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _draw(object->parents[i], offsetX + object->x, offsetY + object->y);
+            _math(object->parents[i], object->math_x, object->math_y);
         }
     }
 }
@@ -60,8 +63,25 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     return newObject;
 }
 
+void tsgl_gui_math(tsgl_gui* object) {
+    _math(object, 0, 0);
+}
+
 void tsgl_gui_draw(tsgl_gui* object) {
-    _draw(object, 0, 0);
+    tsgl_framebuffer_fill(
+        object->target,
+        object->math_x,
+        object->math_y,
+        object->math_width,
+        object->math_height,
+        (tsgl_rawcolor) {.arr = {esp_random(), esp_random(), esp_random()}}
+    );
+
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            tsgl_gui_draw(object->parents[i]);
+        }
+    }
 }
 
 void tsgl_gui_free(tsgl_gui* object) {

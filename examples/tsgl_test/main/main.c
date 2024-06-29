@@ -82,6 +82,30 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
     tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
 }
 
+void gui_test() {
+    tsgl_gui* obj = tsgl_gui_createRoot_buffer(&framebuffer);
+    tsgl_gui* obj1 = tsgl_gui_addObject(obj);
+    obj1->x = 50;
+    obj1->y = 50;
+    obj1->width = 150;
+    obj1->height = 150;
+    tsgl_gui* obj2 = tsgl_gui_addObject(obj1);
+    obj2->x = 50;
+    obj2->y = 50;
+    obj2->width = 100;
+    obj2->height = 100;
+    tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
+    obj3->x = 50;
+    obj3->y = 50;
+    obj3->width = 50;
+    obj3->height = 50;
+    tsgl_gui_math(obj);
+    tsgl_gui_draw(obj);
+    tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
+    delay(3000);
+    tsgl_gui_free(obj);
+}
+
 void app_main() {
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
     ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
@@ -102,26 +126,7 @@ void app_main() {
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
 
-    tsgl_gui* obj = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui* obj1 = tsgl_gui_addObject(obj);
-    obj1->x = 50;
-    obj1->y = 50;
-    obj1->width = 150;
-    obj1->height = 150;
-    tsgl_gui* obj2 = tsgl_gui_addObject(obj1);
-    obj2->x = 50;
-    obj2->y = 50;
-    obj2->width = 100;
-    obj2->height = 100;
-    tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
-    obj3->x = 50;
-    obj3->y = 50;
-    obj3->width = 50;
-    obj3->height = 50;
-    tsgl_gui_draw(obj);
-    tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
-    delay(3000);
-    tsgl_gui_free(obj);
+    gui_test();
     
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);
