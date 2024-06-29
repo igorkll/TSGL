@@ -102,8 +102,22 @@ void app_main() {
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
 
-    tsgl_gui_object* obj = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui_addObject(obj, 130, 130, 70, 70);
+    tsgl_gui* obj = tsgl_gui_createRoot_buffer(&framebuffer);
+    tsgl_gui* obj1 = tsgl_gui_addObject(obj);
+    obj1->x = 50;
+    obj1->y = 50;
+    obj1->width = 150;
+    obj1->height = 150;
+    tsgl_gui* obj2 = tsgl_gui_addObject(obj1);
+    obj2->x = 50;
+    obj2->y = 50;
+    obj2->width = 100;
+    obj2->height = 100;
+    tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
+    obj3->x = 50;
+    obj3->y = 50;
+    obj3->width = 50;
+    obj3->height = 50;
     tsgl_gui_draw(obj);
     tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
     delay(3000);
