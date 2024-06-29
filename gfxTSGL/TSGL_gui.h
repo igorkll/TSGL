@@ -20,6 +20,15 @@ struct tsgl_gui {
     bool interactive;
     bool displayable;
 
+    // callbacks
+    void (create_callback*)(tsgl_gui* self);
+    void (free_callback*)(tsgl_gui* self);
+
+    // control ()
+    void (set*)(tsgl_gui* self, int param, void* ptr);
+    void (setNum*)(tsgl_gui* self, int param, int64_t num);
+    void (setColor*)(tsgl_gui* self, int param, tsgl_rawcolor color);
+
     // internal
     void* target;
     bool buffered;

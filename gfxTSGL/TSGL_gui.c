@@ -60,17 +60,23 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
     }
 }
 
+static void _initCallback(tsgl_gui* object) {
+    if (object->create_callback != NULL) object->create_callback(object);
+}
+
 
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
     tsgl_gui* gui = _createRoot(display, false, display->width, display->height);
     gui->colormode = colormode;
+    _initCallback(gui);
     return gui;
 }
 
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
     tsgl_gui* gui = _createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
     gui->colormode = framebuffer->colormode;
+    _initCallback(gui);
     return gui;
 }
 
@@ -93,10 +99,12 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->interactive = true;
     newObject->displayable = true;
     object->parents[object->parentsCount - 1] = newObject;
+    _initCallback(newObject);
     return newObject;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
+    if (object->free_callback) object->free_callback(object);
     if (object->data != NULL) free(object->data);
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
@@ -127,6 +135,8 @@ void tsgl_gui_math(tsgl_gui* root) {
 }
 
 void tsgl_gui_draw(tsgl_gui* root) {
+    if (!root->displayable) return;
+    
     tsgl_framebuffer_fill(
         root->target,
         root->math_x,
