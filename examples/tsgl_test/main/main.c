@@ -101,6 +101,13 @@ void app_main() {
     tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
+
+    tsgl_gui_object* obj = tsgl_gui_createRoot_buffer(&framebuffer);
+    tsgl_gui_addObject(obj, 130, 130, 70, 70);
+    tsgl_gui_draw(obj);
+    tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
+    delay(3000);
+    tsgl_gui_free(obj);
     
     while (true) {
         tsgl_framebuffer_clear(&framebuffer, display.black);

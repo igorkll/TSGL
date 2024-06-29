@@ -3,6 +3,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_display.h"
 #include "TSGL_gui.h"
+#include <esp_random.h>
 
 static tsgl_gui_object* createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui_object* gui = calloc(1, sizeof(tsgl_gui_object));
@@ -20,7 +21,7 @@ static tsgl_gui_object* createRoot(void* target, bool buffered, tsgl_pos width, 
 }
 
 tsgl_gui_object* tsgl_gui_createRoot_display(tsgl_display* display) {
-    return createRoot(display, false, framebuffer->width, framebuffer->height);
+    return createRoot(display, false, display->width, display->height);
 }
 
 tsgl_gui_object* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
@@ -49,11 +50,20 @@ tsgl_gui_object* tsgl_gui_addObject(tsgl_gui_object* object, tsgl_pos x, tsgl_po
     return newObject;
 }
 
+void tsgl_gui_draw(tsgl_gui_object* object) {
+    tsgl_framebuffer_fill(object->target, object->x, object->y, object->width, object->height, (tsgl_rawcolor) {.arr = {esp_random(), esp_random(), esp_random()}});
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            tsgl_gui_draw(object->parents[i]);
+        }
+    }
+}
+
 void tsgl_gui_free(tsgl_gui_object* object) {
     if (object->data != NULL) free(object->data);
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            tsgl_gui_freeObject(object->parents[i]);
+            tsgl_gui_free(object->parents[i]);
         }
     }
     if (object->parent != NULL) {
