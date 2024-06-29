@@ -85,7 +85,6 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
 }
 
 static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
-    printf("%i %i %i\n", x, y, event);
     if (object->root != object && object->event_callback != NULL) {
         switch (event) {
             case tsgl_gui_click:

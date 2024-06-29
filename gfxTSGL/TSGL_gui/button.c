@@ -14,6 +14,8 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
         default:
             break;
     }
+    self->needDraw = true;
+    self->root->needDraw = true;
 }
 
 static void _draw_callback(tsgl_gui* self) {
