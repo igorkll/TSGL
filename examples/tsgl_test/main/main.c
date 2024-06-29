@@ -96,6 +96,7 @@ void gui_test() {
     button->y = 50;
     button->width = 150;
     button->height = 150;
+    button->draggable = true;
 
     while (true) {
         tsgl_gui_processTouchscreen(gui, &touchscreen);
