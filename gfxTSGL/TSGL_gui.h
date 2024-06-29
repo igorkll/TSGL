@@ -56,6 +56,7 @@ struct tsgl_gui {
     tsgl_gui* root;
 
     void* data;
+    int intData;
     bool data_as_callback;
 };
 
