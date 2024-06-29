@@ -4,20 +4,31 @@
 #include "TSGL_display.h"
 #include "TSGL_gui.h"
 
-tsgl_gui* tsgl_gui_createForDisplay(tsgl_display* display) {
-    tsgl_gui* gui = malloc(sizeof(tsgl_gui));
-    gui->parents = NULL;
-    gui->target = display;
-    gui->buffered = false;
+static tsgl_gui_object* createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
+    tsgl_gui_object* gui = calloc(1, sizeof(tsgl_gui));
+    
+    gui->target = target;
+    gui->buffered = buffered;
+
+    gui->width = width;
+    gui->height = height;
+
+    gui->interactive = true;
+    gui->displayable = true;
+
     return gui;
 }
 
-tsgl_gui* tsgl_gui_createForBuffer(tsgl_framebuffer* framebuffer) {
-    tsgl_gui* gui = malloc(sizeof(tsgl_gui));
-    gui->parents = NULL;
-    gui->target = framebuffer;
-    gui->buffered = true;
-    return gui;
+tsgl_gui_object* tsgl_gui_createRoot_display(tsgl_display* display) {
+    return createRoot(display, false, framebuffer->width, framebuffer->height);
+}
+
+tsgl_gui_object* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
+    return createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
+}
+
+tsgl_gui_object* tsgl_gui_addObject(tsgl_gui_object* object, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    
 }
 
 void tsgl_gui_free(tsgl_gui_object* object) {
