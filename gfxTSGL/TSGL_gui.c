@@ -101,6 +101,10 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
             case tsgl_gui_click:
                 if (!object->pressed && _inObjectCheck(object, x, y)) {
                     object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    object->tpx = x;
+                    object->tpy = y;
+                    object->tdx = object->math_x;
+                    object->tdy = object->math_y;
                     object->pressed = true;
                 }
                 break;
@@ -109,10 +113,10 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
-                            tsgl_pos dx = x - object->tx;
-                            tsgl_pos dy = y - object->ty;
-                            object->x += dx;
-                            object->y += dy;
+                            object->x = object->tdx + (x - object->tpx);
+                            object->y = object->tdy + (y - object->tpy);
+                            object->needDraw = true;
+                            object->root->needDraw = true;
                         } else {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }

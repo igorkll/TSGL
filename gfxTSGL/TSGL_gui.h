@@ -37,6 +37,10 @@ struct tsgl_gui {
     bool pressed;
     tsgl_pos tx;
     tsgl_pos ty;
+    tsgl_pos tpx;
+    tsgl_pos tpy;
+    tsgl_pos tdx;
+    tsgl_pos tdy;
 
     // internal
     void* target;
