@@ -85,6 +85,7 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
 }
 
 static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
+    printf("%i %i %i\n", x, y, event);
     if (object->root != object && object->event_callback != NULL) {
         switch (event) {
             case tsgl_gui_click:
@@ -115,7 +116,7 @@ static void _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _event(object->parents[i]);
+            _event(object->parents[i], x, y, event);
         }
     }
 }
@@ -172,7 +173,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
 void tsgl_gui_setClearColor(tsgl_gui* root, tsgl_rawcolor color) {
     tsgl_rawcolor* mColor = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
     memcpy(mColor, &color, sizeof(tsgl_rawcolor));
-    tsgl_gui_attachClearCallback(root, true, &mColor, _clear);
+    tsgl_gui_attachClearCallback(root, true, mColor, _clear);
 }
 
 void tsgl_gui_attachClearCallback(tsgl_gui* root, bool free_arg, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
@@ -247,9 +248,9 @@ void tsgl_gui_draw(tsgl_gui* object) {
 
 
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
-    uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
+    uint8_t touchCount = tsgl_touchscreen_touchCount(touchscreen);
     if (touchCount > 0) {
-        tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, 1);
+        tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(touchscreen, 0);
         if (root->pressed) {
             if (point.x != root->tx || point.y != root->ty) {
                 root->tx = point.x;
@@ -263,7 +264,7 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
         }
         root->pressed = true;
     } else if (root->pressed) {
-        _event(root, point.x, point.y, tsgl_gui_drop);
+        _event(root, root->tx, root->ty, tsgl_gui_drop);
         root->pressed = false;
     }
 }

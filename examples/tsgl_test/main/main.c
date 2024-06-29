@@ -89,7 +89,7 @@ void gui_test_onDraw(tsgl_gui* root, void* _) {
 
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui_setClearColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), gui->colormode));
+    tsgl_gui_setClearColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), framebuffer.colormode));
 
     tsgl_gui* button = tsgl_gui_addButton(gui);
     button->x = 50;
