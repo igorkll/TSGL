@@ -134,21 +134,12 @@ void tsgl_gui_math(tsgl_gui* root) {
     _math(root, 0, 0);
 }
 
-void tsgl_gui_draw(tsgl_gui* root) {
-    if (!root->displayable) return;
-    
-    tsgl_framebuffer_fill(
-        root->target,
-        root->math_x,
-        root->math_y,
-        root->math_width,
-        root->math_height,
-        (tsgl_rawcolor) {.arr = {esp_random(), esp_random(), esp_random()}}
-    );
-
-    if (root->parents != NULL) {
-        for (size_t i = 0; i < root->parentsCount; i++) {
-            tsgl_gui_draw(root->parents[i]);
+void tsgl_gui_draw(tsgl_gui* object) {
+    if (!object->displayable) return;
+    if (object->draw_callback != NULL) object->draw_callback(object);
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            tsgl_gui_draw(object->parents[i]);
         }
     }
 }

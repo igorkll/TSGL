@@ -22,6 +22,7 @@ struct tsgl_gui {
 
     // callbacks
     void (create_callback*)(tsgl_gui* self);
+    void (draw_callback*)(tsgl_gui* self);
     void (free_callback*)(tsgl_gui* self);
 
     // control ()
@@ -52,4 +53,4 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
 void tsgl_gui_math(tsgl_gui* root);
-void tsgl_gui_draw(tsgl_gui* root);
+void tsgl_gui_draw(tsgl_gui* object);
