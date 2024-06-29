@@ -46,6 +46,7 @@ const tsgl_settings settings = {
 #include <TSGL_gui.h>
 
 #include <TSGL_fonts/font.h>
+#include <TSGL_gui/button.h>
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
@@ -89,27 +90,11 @@ void gui_test_onDraw(void* _) {
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
 
-    tsgl_gui* obj1 = tsgl_gui_addObject(gui);
+    tsgl_gui* button = tsgl_gui_addButton(gui);
     obj1->x = 50;
     obj1->y = 50;
     obj1->width = 150;
     obj1->height = 150;
-
-    tsgl_gui* obj2 = tsgl_gui_addObject(obj1);
-    obj2->x = 50;
-    obj2->y = 50;
-    obj2->width = 100;
-    obj2->height = 100;
-
-    tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
-    obj3->format_x = tsgl_gui_percent;
-    obj3->format_y = tsgl_gui_percent;
-    obj3->format_width = tsgl_gui_percent;
-    obj3->format_height = tsgl_gui_percent;
-    obj3->x = 0.1;
-    obj3->y = 0.1;
-    obj3->width = 0.8;
-    obj3->height = 0.8;
 
     while (true) {
         tsgl_gui_processTouchscreen(&gui, &touchscreen);

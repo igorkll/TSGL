@@ -37,7 +37,7 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 }
 
 static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
-    if (object->parent != NULL) {
+    if (object->parent != NULL & object->needMath) {
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
         object->math_x = offsetX + localMathX;
@@ -151,9 +151,14 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen) {
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(void* arg)) {
-    if (root->needMath) tsgl_gui_math(root);
+    if (root->needMath) {
+        tsgl_gui_math(root);
+        root->needMath = false;
+    }
+    
     if (root->needDraw) {
         tsgl_gui_draw(root);
         onDraw(arg);
+        root->needDraw = false;
     }
 }
