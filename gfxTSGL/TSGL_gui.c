@@ -113,8 +113,8 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
-                            object->x = object->tdx + (x - object->tpx);
-                            object->y = object->tdy + (y - object->tpy);
+                            object->math_x = object->tdx + (x - object->tpx);
+                            object->math_y = object->tdy + (y - object->tpy);
                             object->needDraw = true;
                             object->root->needDraw = true;
                         } else {
