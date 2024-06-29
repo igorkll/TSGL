@@ -15,6 +15,9 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     gui->interactive = true;
     gui->displayable = true;
 
+    gui->needMath = true;
+    gui->needDraw = true;
+
     gui->math_x = 0;
     gui->math_y = 0;
     
@@ -52,6 +55,8 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
         tsgl_pos maxHeight = object->parent->height - localMathY;
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
+
+        object->needMath = false;
     }
 
     if (object->parents != NULL) {
@@ -106,6 +111,8 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->height = object->height;
     newObject->interactive = true;
     newObject->displayable = true;
+    newObject->needMath = true;
+    newObject->needDraw = true;
     object->parents[object->parentsCount - 1] = newObject;
     _initCallback(newObject);
     return newObject;
@@ -150,7 +157,7 @@ void tsgl_gui_math(tsgl_gui* root) {
 }
 
 void tsgl_gui_draw(tsgl_gui* object) {
-    if (!object->displayable) return;
+    if (!object->displayable || !object->needDraw) return;
     if (object == object->root && object->data) {
         _callback_data* callback_data = (_callback_data*)object->data;
         callback_data->callback(object, callback_data->arg);
@@ -161,6 +168,7 @@ void tsgl_gui_draw(tsgl_gui* object) {
             tsgl_gui_draw(object->parents[i]);
         }
     }
+    object->needDraw = false;
 }
 
 
@@ -170,14 +178,10 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
-    if (root->needMath) {
-        tsgl_gui_math(root);
-        root->needMath = false;
-    }
-    
+    tsgl_gui_math(root);
+
     if (root->needDraw) {
         tsgl_gui_draw(root);
         onDraw(root, arg);
-        root->needDraw = false;
     }
 }
