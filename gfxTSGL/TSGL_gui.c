@@ -5,7 +5,7 @@
 #include "TSGL_gui.h"
 #include <esp_random.h>
 
-static tsgl_gui* _createRoot(void* target, bool buffered) {
+static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
     
     gui->target = target;
@@ -13,6 +13,14 @@ static tsgl_gui* _createRoot(void* target, bool buffered) {
 
     gui->interactive = true;
     gui->displayable = true;
+
+    gui->math_x = 0;
+    gui->math_y = 0;
+    
+    gui->width = width;
+    gui->height = height;
+    gui->math_width = width;
+    gui->math_height = height;
 
     return gui;
 }
@@ -29,17 +37,21 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 }
 
 static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
-    object->math_x = offsetX + _localMath(object->format_x, object->x, object->parent->width);
-    object->math_y = offsetY + _localMath(object->format_y, object->y, object->parent->height);
-    object->math_width = _localMath(object->format_width, object->width, object->parent->width);
-    object->math_height = _localMath(object->format_height, object->height, object->parent->height);
+    if (object->parent != NULL) {
+        object->math_x = offsetX + _localMath(object->format_x, object->x, object->parent->width);
+        object->math_y = offsetY + _localMath(object->format_y, object->y, object->parent->height);
+        object->math_width = _localMath(object->format_width, object->width, object->parent->width);
+        object->math_height = _localMath(object->format_height, object->height, object->parent->height);
 
-    if (object->math_x < 0) object->math_x = 0;
-    if (object->math_y < 0) object->math_y = 0;
-    tsgl_pos maxWidth = object->parent->width - object->math_x;
-    tsgl_pos maxHeight = object->parent->height - object->math_y;
-    if (object->math_width > maxWidth) object->math_width = maxWidth;
-    if (object->math_height > maxHeight) object->math_height = maxHeight;
+        if (object->math_x < 0) object->math_x = 0;
+        if (object->math_y < 0) object->math_y = 0;
+        tsgl_pos maxWidth = object->parent->width - object->math_x;
+        tsgl_pos maxHeight = object->parent->height - object->math_y;
+        printf("w %i %f %i\n", maxWidth, object->parent->width, object->math_x);
+        printf("w %i %f %i\n", maxHeight, object->parent->height, object->math_y);
+        if (object->math_width > maxWidth) object->math_width = maxWidth;
+        if (object->math_height > maxHeight) object->math_height = maxHeight;
+    }
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
@@ -51,20 +63,14 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
 
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
-    tsgl_gui* gui = _createRoot(display, false);
-    gui->width = display->width;
-    gui->height = display->height;
+    tsgl_gui* gui = _createRoot(display, false, display->width, display->height);
     gui->colormode = colormode;
-    gui->parent = gui;
     return gui;
 }
 
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
-    tsgl_gui* gui = _createRoot(framebuffer, true);
-    gui->width = framebuffer->width;
-    gui->height = framebuffer->height;
+    tsgl_gui* gui = _createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
     gui->colormode = framebuffer->colormode;
-    gui->parent = gui;
     return gui;
 }
 

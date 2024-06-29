@@ -94,6 +94,7 @@ void gui_test() {
     obj2->y = 50;
     obj2->width = 100;
     obj2->height = 100;
+    /*
     tsgl_gui* obj3 = tsgl_gui_addObject(obj2);
     obj3->format_x = tsgl_gui_percent;
     obj3->format_y = tsgl_gui_percent;
@@ -103,6 +104,7 @@ void gui_test() {
     obj3->y = 0.1;
     obj3->width = 0.8;
     obj3->height = 0.8;
+    */
     tsgl_gui_math(obj);
     tsgl_gui_draw(obj);
     tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
@@ -129,10 +131,10 @@ void app_main() {
     tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     tsgl_pos center = framebuffer.width / 2;
     tsgl_pos sinSize = framebuffer.width / 4;
-
-    gui_test();
     
     while (true) {
+        gui_test();
+        
         tsgl_framebuffer_clear(&framebuffer, display.black);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
         tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
