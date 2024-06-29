@@ -84,7 +84,7 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 }
 
 void gui_test_onClear(tsgl_gui* root, void* _) {
-    tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(TSGL_BLUE, root->colormode));
+    tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), root->colormode));
 }
 
 void gui_test_onDraw(tsgl_gui* root, void* _) {
