@@ -38,7 +38,7 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 }
 
 static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
-    if (object->parent != NULL & object->needMath) {
+    if (object->parent != NULL && object->needMath) {
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
         object->math_x = offsetX + localMathX;
@@ -67,7 +67,7 @@ static void _initCallback(tsgl_gui* object) {
 
 typedef struct {
     void* arg;
-    void (callback*) (tsgl_gui* root, void* arg);
+    void (*callback) (tsgl_gui* root, void* arg);
 } _callback_data;
 
 
@@ -111,11 +111,11 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     return newObject;
 }
 
-void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (onClear*)(tsgl_gui* root, void* arg)) {
+void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (*onClear)(tsgl_gui* root, void* arg)) {
     _callback_data* callback_data = malloc(sizeof(_callback_data));
     callback_data->arg = arg;
     callback_data->callback = onClear;
-    root.data = callback_data;
+    root->data = callback_data;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
@@ -151,8 +151,8 @@ void tsgl_gui_math(tsgl_gui* root) {
 
 void tsgl_gui_draw(tsgl_gui* object) {
     if (!object->displayable) return;
-    if (object == object.root & object.data) {
-        _callback_data* callback_data = (_callback_data*)object.data;
+    if (object == object->root && object->data) {
+        _callback_data* callback_data = (_callback_data*)object->data;
         callback_data->callback(object, callback_data->arg);
     }
     if (object->draw_callback != NULL) object->draw_callback(object);
@@ -165,11 +165,11 @@ void tsgl_gui_draw(tsgl_gui* object) {
 
 
 
-void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen) {
+void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
 
 }
 
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (onDraw*)(tsgl_gui* root, void* arg)) {
+void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
     if (root->needMath) {
         tsgl_gui_math(root);
         root->needMath = false;

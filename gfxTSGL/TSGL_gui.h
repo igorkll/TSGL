@@ -21,14 +21,14 @@ struct tsgl_gui {
     bool displayable;
 
     // callbacks
-    void (create_callback*)(tsgl_gui* self);
-    void (draw_callback*)(tsgl_gui* self);
-    void (free_callback*)(tsgl_gui* self);
+    void (*create_callback)(tsgl_gui* self);
+    void (*draw_callback)(tsgl_gui* self);
+    void (*free_callback)(tsgl_gui* self);
 
     // control ()
-    void (set*)(tsgl_gui* self, int param, void* ptr);
-    void (setNum*)(tsgl_gui* self, int param, int64_t num);
-    void (setColor*)(tsgl_gui* self, int param, tsgl_rawcolor color);
+    void (*set)(tsgl_gui* self, int param, void* ptr);
+    void (*setNum)(tsgl_gui* self, int param, int64_t num);
+    void (*setColor)(tsgl_gui* self, int param, tsgl_rawcolor color);
 
     // internal
     void* target;
@@ -56,12 +56,12 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer);
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
-void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (onClear*)(tsgl_gui* root, void* arg));
+void tsgl_gui_attachClearCallback(tsgl_gui* root, void* arg, void (*onClear)(tsgl_gui* root, void* arg));
 
 // these methods are mostly for internal use
 void tsgl_gui_math(tsgl_gui* root);
 void tsgl_gui_draw(tsgl_gui* object);
 
 // call it in a perpetual loop for the gui to work
-void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen touchscreen);
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (tsgl_gui* root, onDraw*)(void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred
+void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
+void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred
