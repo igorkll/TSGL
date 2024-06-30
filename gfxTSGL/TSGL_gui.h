@@ -76,10 +76,6 @@ void tsgl_gui_free(tsgl_gui* object);
 void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color);
 void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachPredrawCallback again
 
-// these methods are mostly for internal use
-void tsgl_gui_math(tsgl_gui* root);
-bool tsgl_gui_draw(tsgl_gui* object);
-
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred

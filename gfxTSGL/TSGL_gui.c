@@ -6,6 +6,12 @@
 #include <esp_random.h>
 #include <string.h>
 
+typedef struct {
+    void* arg;
+    void (*callback) (tsgl_gui* root, void* arg);
+    bool free_arg;
+} _callback_data;
+
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
     
@@ -84,8 +90,8 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_y += object->offsetY + forceOffsetY;
 
         forceParentsMath = true;
-        object->needMath = false;
     }
+    object->needMath = false;
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
@@ -167,23 +173,48 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
-static bool _needDraw(tsgl_gui* object) {
-    bool anyDraw = object->needDraw;
+static bool _needMath(tsgl_gui* object) {
+    bool anyDraw = object->needMath;
 
     if (object->parents != NULL && !anyDraw) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_needDraw(object->parents[i])) anyDraw = true;
+            if (_needMath(object->parents[i])) anyDraw = true;
         }
     }
 
     return anyDraw;
 }
 
-typedef struct {
-    void* arg;
-    void (*callback) (tsgl_gui* root, void* arg);
-    bool free_arg;
-} _callback_data;
+static bool _draw(tsgl_gui* object, bool force) {
+    if (!object->displayable) {
+        object->needDraw = false;
+        return false;
+    }
+
+    bool anyDraw = false;
+    bool forceDraw = force || object->needDraw || _needMath(object);
+
+    if (forceDraw) {
+        if (object->predrawData != NULL) {
+            _callback_data* callback_data = (_callback_data*)object->predrawData;
+            callback_data->callback(object, callback_data->arg);
+        }
+
+        if (object->draw_callback != NULL)
+            object->draw_callback(object);
+
+        object->needDraw = false;
+        anyDraw = true;
+    }
+
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            if (_draw(object->parents[i], forceDraw)) anyDraw = true;
+        }
+    }
+
+    return anyDraw;
+}
 
 
 
@@ -280,50 +311,6 @@ void tsgl_gui_free(tsgl_gui* object) {
 
 
 
-void tsgl_gui_math(tsgl_gui* root) {
-    _math(root, 0, 0, false);
-}
-
-bool tsgl_gui_draw(tsgl_gui* object) {
-    if (!object->displayable) {
-        object->needDraw = false;
-        return false;
-    }
-
-    bool anyDraw = object->needDraw;
-    
-    if (object->parents != NULL && !anyDraw) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_needDraw(object->parents[i])) anyDraw = true;
-        }
-    }
-
-    if (anyDraw) {
-        if (object->predrawData != NULL) {
-            _callback_data* callback_data = (_callback_data*)object->predrawData;
-            callback_data->callback(object, callback_data->arg);
-        }
-
-        if (object->draw_callback != NULL)
-            object->draw_callback(object);
-
-        if (object->parents != NULL) {
-            for (size_t i = 0; i < object->parentsCount; i++) {
-                tsgl_gui* parent = object->parents[i];
-                parent->needDraw = true;
-                tsgl_gui_draw(parent);
-            }
-        }
-
-        object->needDraw = false;
-        anyDraw = true;
-    }
-
-    return anyDraw;
-}
-
-
-
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
     uint8_t touchCount = tsgl_touchscreen_touchCount(touchscreen);
     if (touchCount > 0) {
@@ -347,9 +334,9 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
-    tsgl_gui_math(root);
+    _math(root, 0, 0, false);
 
-    if (tsgl_gui_draw(root)) {
+    if (_draw(root, false)) {
         onDraw(root, arg);
     }
 }
