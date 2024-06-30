@@ -309,6 +309,19 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
     xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
 }
 
+void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
+    memcpy(framebuffer2->buffer, framebuffer->buffer, framebuffer->buffersize);
+
+    _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
+    data->display = display;
+    data->buffer = framebuffer2->buffer;
+    data->buffersize = framebuffer2->buffersize;
+
+    while (asyncSendActive) vTaskDelay(1);
+    asyncSendActive = true;
+    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
+}
+
 // graphic
 
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
