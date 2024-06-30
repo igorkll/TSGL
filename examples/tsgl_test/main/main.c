@@ -120,7 +120,7 @@ void gui_test() {
     button2->height = 50;
     button2->draggable = true;
 
-    tsgl_gui* button3 = tsgl_gui_addObject(button2);
+    tsgl_gui* button3 = tsgl_gui_addObject(button);
     tsgl_gui_setColor(button3, tsgl_color_raw(tsgl_color_fromHex(0xffffff), framebuffer.colormode));
     button3->x = 10;
     button3->y = 10;
