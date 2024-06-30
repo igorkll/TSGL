@@ -195,6 +195,10 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     if (width + x > framebuffer->width) width = framebuffer->width - x;
     if (height + y > framebuffer->height) height = framebuffer->height - y;
     if (width <= 0 || height <= 0) return;
+    if (x == 0 && y == 0 && width == framebuffer->width && height == framebuffer->height) {
+        tsgl_framebuffer_clear(framebuffer, color);
+        return;
+    }
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -206,11 +210,16 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
             break;
         
         default:
-            for (tsgl_pos ix = x; ix < x + width; ix++) {
+            if (_isDenseColor(color, framebuffer->colorsize)) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    size_t index = _getBufferIndex(framebuffer, ix, iy);
-                    for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
-                        framebuffer->buffer[index + i] = color.arr[i];
+                    size_t index = _getBufferIndex(framebuffer, x, iy);
+                    memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                }
+            } else {
+                for (tsgl_pos iy = y; iy < y + height; iy++) {
+                    for (tsgl_pos ix = x; ix < x + width; ix++) {
+                        size_t index = _getBufferIndex(framebuffer, ix, iy);
+                        memcpy(framebuffer->buffer + index, color.arr, framebuffer->colorsize);
                     }
                 }
             }
