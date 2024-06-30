@@ -94,9 +94,9 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
     }
     object->needMath = false;
 
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            _math(object->parents[i], object->math_x, object->math_y, forceParentsMath);
+    if (object->children != NULL) {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            _math(object->children[i], object->math_x, object->math_y, forceParentsMath);
         }
     }
 }
@@ -118,15 +118,30 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
     return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->math_width) && y < (object->math_y + object->math_height);
 }
 
+static void _toUpLevel(tsgl_gui* object) {
+    if (object->parent->children[object->childrenCount - 1] != object) {
+        for (size_t i = 0; i < object->parent->childrenCount; i++) {
+            if (object->parent->children[i] == object) {
+                i++;
+                for (; i < object->parent->childrenCount; i++) {
+                    object->parent->children[i - 1] = object->parent->children[i];
+                }
+                break;
+            }
+        }
+        object->parent->children[object->childrenCount - 1] = object;
+    }
+}
+
 static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
     if (!object->interactive) {
         object->pressed = false;
         return false;
     }
 
-    if (object->parents != NULL) {
-        for (int i = object->parentsCount - 1; i >= 0; i--) {
-            if (_event(object->parents[i], x, y, event)) return true;
+    if (object->children != NULL) {
+        for (int i = object->childrenCount - 1; i >= 0; i--) {
+            if (_event(object->children[i], x, y, event)) return true;
         }
     }
 
@@ -141,6 +156,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                     object->tdx = object->offsetX;
                     object->tdy = object->offsetY;
                     object->pressed = true;
+                    //_toUpLevel(object);
                 }
                 break;
 
@@ -178,9 +194,9 @@ static bool _needDrawTree(tsgl_gui* object, bool mathedReset) {
     bool anyDraw = object->mathed;
     if (mathedReset) object->mathed = false;
 
-    if (object->parents != NULL && !anyDraw) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_needDrawTree(object->parents[i], mathedReset)) anyDraw = true;
+    if (object->children != NULL && !anyDraw) {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            if (_needDrawTree(object->children[i], mathedReset)) anyDraw = true;
         }
     }
 
@@ -209,9 +225,9 @@ static bool _draw(tsgl_gui* object, bool force) {
         anyDraw = true;
     }
 
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_draw(object->parents[i], forceDraw)) anyDraw = true;
+    if (object->children != NULL) {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            if (_draw(object->children[i], forceDraw)) anyDraw = true;
         }
     }
 
@@ -237,11 +253,11 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* fr
 }
 
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
-    object->parentsCount++;
-    if (object->parents == NULL) {
-        object->parents = malloc(object->parentsCount * sizeof(size_t));
+    object->childrenCount++;
+    if (object->children == NULL) {
+        object->children = malloc(object->childrenCount * sizeof(size_t));
     } else {
-        object->parents = realloc(object->parents, object->parentsCount * sizeof(size_t));
+        object->children = realloc(object->children, object->childrenCount * sizeof(size_t));
     }
 
     tsgl_gui* newObject = calloc(1, sizeof(tsgl_gui));
@@ -258,7 +274,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->displayable = true;
     newObject->needMath = true;
     newObject->needDraw = true;
-    object->parents[object->parentsCount - 1] = newObject;
+    object->children[object->childrenCount - 1] = newObject;
     _initCallback(newObject);
     return newObject;
 }
@@ -290,26 +306,26 @@ void tsgl_gui_free(tsgl_gui* object) {
         if (callback_data->free_arg) free(callback_data->arg);
         free(object->predrawData);
     }
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            tsgl_gui_free(object->parents[i]);
+    if (object->children != NULL) {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            tsgl_gui_free(object->children[i]);
         }
     }
     if (object->parent != NULL) {
-        for (size_t i = 0; i < object->parent->parentsCount; i++) {
-            if (object->parent->parents[i] == object) {
+        for (size_t i = 0; i < object->parent->childrenCount; i++) {
+            if (object->parent->children[i] == object) {
                 i++;
-                for (; i < object->parent->parentsCount; i++) {
-                    object->parent->parents[i - 1] = object->parent->parents[i];
+                for (; i < object->parent->childrenCount; i++) {
+                    object->parent->children[i - 1] = object->parent->children[i];
                 }
-                object->parent->parentsCount--;
-                object->parent->parents = realloc(object->parent->parents, object->parent->parentsCount * sizeof(size_t));
+                object->parent->childrenCount--;
+                object->parent->children = realloc(object->parent->children, object->parent->childrenCount * sizeof(size_t));
                 break;
             }
         }
     }
     if (object->data != NULL) free(object->data);
-    free(object->parents);
+    free(object->children);
     free(object);
 }
 
