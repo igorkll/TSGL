@@ -119,7 +119,7 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
 }
 
 static void _toUpLevel(tsgl_gui* object) {
-    if (object->parent->children[object->childrenCount - 1] != object) {
+    if (object->parent != NULL && object->parent->children[object->parent->childrenCount - 1] != object) {
         for (size_t i = 0; i < object->parent->childrenCount; i++) {
             if (object->parent->children[i] == object) {
                 i++;
@@ -129,7 +129,7 @@ static void _toUpLevel(tsgl_gui* object) {
                 break;
             }
         }
-        object->parent->children[object->childrenCount - 1] = object;
+        object->parent->children[object->parent->childrenCount - 1] = object;
     }
 }
 
@@ -156,7 +156,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                     object->tdx = object->offsetX;
                     object->tdy = object->offsetY;
                     object->pressed = true;
-                    //_toUpLevel(object);
+                    if (object->draggable) _toUpLevel(object);
                 }
                 break;
 
