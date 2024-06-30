@@ -132,9 +132,9 @@ static void _toUpLevel(tsgl_gui* object) {
                 }
             }
             object->parent->children[object->parent->childrenCount - 1] = object;
+            object->needMath = true;
+            object->needDraw = true;
         }
-        object->needMath = true;
-        object->needDraw = true;
     }
     _toUpLevel(object->parent);
 }
@@ -196,13 +196,17 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
-static bool _needDrawTree(tsgl_gui* object, bool mathedReset) {
+static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
     bool anyDraw = object->mathed;
     if (mathedReset) object->mathed = false;
 
-    if (object->children != NULL && !anyDraw) {
+    if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
-            if (_needDrawTree(object->children[i], mathedReset)) anyDraw = true;
+            tsgl_gui* child = object->children[i];
+            if (child->mathed) {
+                anyDraw = true;
+                if (mathedReset) child->mathed = false;
+            }
         }
     }
 
@@ -216,7 +220,7 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     bool anyDraw = false;
-    bool forceDraw = force || object->needDraw || _needDrawTree(object, true);
+    bool forceDraw = force || object->needDraw || _childrenMathed(object, true);
 
     if (forceDraw) {
         if (object->predrawData != NULL) {
@@ -370,7 +374,7 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
         _math(root, 0, 0, false);
 
         if (asyncFramebuffer != NULL) {
-            if (root->needDraw || _needDrawTree(root, false)) {
+            if (root->needDraw || _childrenMathed(root, false)) {
                 tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
             } else {
                 tsgl_display_send(root->display, root->target);
