@@ -211,9 +211,27 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
         
         default:
             if (_isDenseColor(color, framebuffer->colorsize)) {
-                for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    size_t index = _getBufferIndex(framebuffer, x, iy);
-                    memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                switch (framebuffer->realRotation) {
+                    case 1:
+                        for (tsgl_pos ix = x; ix < x + width; ix++) {
+                            size_t index = _getBufferIndex(framebuffer, ix, y + (width - 1));
+                            memset(framebuffer->buffer + index, color.arr[0], height * framebuffer->colorsize);
+                        }
+                        break;
+
+                    case 2:
+                        for (tsgl_pos iy = y; iy < y + height; iy++) {
+                            size_t index = _getBufferIndex(framebuffer, x + (width - 1), iy);
+                            memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                        }
+                        break;
+                    
+                    default:
+                        for (tsgl_pos iy = y; iy < y + height; iy++) {
+                            size_t index = _getBufferIndex(framebuffer, x, iy);
+                            memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                        }
+                        break;
                 }
             } else {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
