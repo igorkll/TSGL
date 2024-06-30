@@ -89,7 +89,7 @@ void gui_test_onDraw(tsgl_gui* root, void* _) {
 
 void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
-    tsgl_gui_setColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x2a76d5), framebuffer.colormode));
+    tsgl_gui_setColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode));
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
     button4->x = 50;
@@ -104,6 +104,22 @@ void gui_test() {
     window->width = 300;
     window->height = 150;
     window->draggable = true;
+
+    tsgl_gui* window2 = tsgl_gui_addObject(gui);
+    tsgl_gui_setColor(window2, tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode));
+    window2->x = 200;
+    window2->y = 200;
+    window2->width = 100;
+    window2->height = 100;
+    window2->draggable = true;
+
+    tsgl_gui* window3 = tsgl_gui_addObject(gui);
+    tsgl_gui_setColor(window3, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
+    window3->x = 200;
+    window3->y = 200;
+    window3->width = 100;
+    window3->height = 100;
+    window3->draggable = true;
 
     tsgl_gui* testPlane = tsgl_gui_addObject(window);
     tsgl_gui_setColor(testPlane, tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), framebuffer.colormode));
