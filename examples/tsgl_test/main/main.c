@@ -84,8 +84,8 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 }
 
 void gui_test() {
-    //tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
-    tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
+    tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
+    //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui->color = tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode);
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
