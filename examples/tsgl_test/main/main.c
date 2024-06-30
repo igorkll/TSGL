@@ -84,7 +84,7 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 }
 
 void gui_test_onDraw(tsgl_gui* root, void* _) {
-    tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
+    tsgl_display_send(&display, &framebuffer);
 }
 
 void gui_test() {

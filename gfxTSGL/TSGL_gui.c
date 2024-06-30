@@ -90,6 +90,7 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_y += object->offsetY + forceOffsetY;
 
         forceParentsMath = true;
+        object->mathed = true;
     }
     object->needMath = false;
 
@@ -173,12 +174,13 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
-static bool _needMath(tsgl_gui* object) {
-    bool anyDraw = object->needMath;
+static bool _needDrawTree(tsgl_gui* object) {
+    bool anyDraw = object->mathed;
+    object->mathed = false;
 
     if (object->parents != NULL && !anyDraw) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_needMath(object->parents[i])) anyDraw = true;
+            if (_needDrawTree(object->parents[i])) anyDraw = true;
         }
     }
 
@@ -192,7 +194,7 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     bool anyDraw = false;
-    bool forceDraw = force || object->needDraw || _needMath(object);
+    bool forceDraw = force || object->needDraw || _needDrawTree(object);
 
     if (forceDraw) {
         if (object->predrawData != NULL) {

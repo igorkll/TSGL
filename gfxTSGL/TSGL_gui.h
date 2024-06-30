@@ -49,6 +49,7 @@ struct tsgl_gui {
 
     bool needMath;
     bool needDraw;
+    bool mathed;
 
     tsgl_pos math_x;
     tsgl_pos math_y;
