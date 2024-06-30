@@ -41,13 +41,13 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
     return 0;
 }
 
-static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
+static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
-        object->math_x = offsetX + localMathX;
-        object->math_y = offsetY + localMathY;
+        object->math_x = localMathX;
+        object->math_y = localMathY;
         object->math_width = _localMath(object->format_width, object->width, object->parent->width);
         object->math_height = _localMath(object->format_height, object->height, object->parent->height);
 
@@ -89,7 +89,7 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, object->offsetX, object->offsetY, forceParentsMath);
+            _math(object->parents[i], object->math_x, object->math_y, forceParentsMath);
         }
     }
 }
@@ -285,7 +285,7 @@ void tsgl_gui_free(tsgl_gui* object) {
 
 
 void tsgl_gui_math(tsgl_gui* root) {
-    _math(root, 0, 0, 0, 0, false);
+    _math(root, 0, 0, false);
 }
 
 bool tsgl_gui_draw(tsgl_gui* object) {
