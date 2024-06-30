@@ -108,7 +108,6 @@ void gui_test() {
     while (true) {
         tsgl_gui_processTouchscreen(gui, &touchscreen);
         tsgl_gui_processGui(gui, NULL, gui_test_onDraw);
-        delay(portTICK_PERIOD_MS);
     }
 
     tsgl_gui_free(gui);

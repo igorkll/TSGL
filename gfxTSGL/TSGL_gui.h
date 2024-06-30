@@ -54,6 +54,8 @@ struct tsgl_gui {
     tsgl_pos math_y;
     tsgl_pos math_width;
     tsgl_pos math_height;
+    tsgl_pos offsetX;
+    tsgl_pos offsetY;
 
     size_t parentsCount;
     tsgl_gui** parents;

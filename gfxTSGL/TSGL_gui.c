@@ -41,7 +41,7 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
     return 0;
 }
 
-static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
+static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY) {
     if (object->parent != NULL && object->needMath) {
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
@@ -56,6 +56,8 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
         tsgl_pos maxHeight = object->parent->height - localMathY;
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
+        object->math_x += object->offsetX + forceOffsetX;
+        object->math_y += object->offsetY + forceOffsetY;
 
         if (object->parents != NULL) {
             for (size_t i = 0; i < object->parentsCount; i++) {
@@ -68,7 +70,7 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY) {
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _math(object->parents[i], object->math_x, object->math_y);
+            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, forceOffsetX + object->offsetX, forceOffsetY + object->offsetY);
         }
     }
 }
@@ -110,8 +112,8 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                         object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->tpx = x;
                     object->tpy = y;
-                    object->tdx = object->x;
-                    object->tdy = object->y;
+                    object->tdx = object->offsetX;
+                    object->tdy = object->offsetY;
                     object->pressed = true;
                 }
                 break;
@@ -120,11 +122,10 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
-                            object->x = object->tdx + (x - object->tpx);
-                            object->y = object->tdy + (y - object->tpy);
+                            object->offsetX = object->tdx + (x - object->tpx);
+                            object->offsetY = object->tdy + (y - object->tpy);
                             object->needMath = true;
                             object->needDraw = true;
-                            object->root->needDraw = true;
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
@@ -253,7 +254,7 @@ void tsgl_gui_free(tsgl_gui* object) {
 
 
 void tsgl_gui_math(tsgl_gui* root) {
-    _math(root, 0, 0);
+    _math(root, 0, 0, 0, 0);
 }
 
 bool tsgl_gui_draw(tsgl_gui* object) {
