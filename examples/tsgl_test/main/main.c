@@ -159,10 +159,10 @@ void app_main() {
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
 
-    tsgl_framebuffer_rotate(&framebuffer, 1);
+    tsgl_framebuffer_rotate(&framebuffer, 0);
     //tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
     //tsgl_display_rotate(&display, 1);
-    touchscreen.rotation = 1;
+    touchscreen.rotation = 0;
 
     tsgl_rawcolor blue = tsgl_color_raw(TSGL_BLUE, framebuffer.colormode);
     tsgl_rawcolor yellow = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);

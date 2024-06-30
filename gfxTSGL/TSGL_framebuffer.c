@@ -214,7 +214,7 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
                 switch (framebuffer->realRotation) {
                     case 1:
                         for (tsgl_pos ix = x; ix < x + width; ix++) {
-                            size_t index = _getBufferIndex(framebuffer, ix, y + (width - 1));
+                            size_t index = _getBufferIndex(framebuffer, ix, y + (height - 1));
                             memset(framebuffer->buffer + index, color.arr[0], height * framebuffer->colorsize);
                         }
                         break;
