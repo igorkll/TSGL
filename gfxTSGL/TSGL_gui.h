@@ -63,8 +63,8 @@ struct tsgl_gui {
     tsgl_gui* root;
 
     void* data;
+    void* predrawData;
     int intData;
-    bool data_as_callback;
 };
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode); //you specify the colormode yourself because on some screens it must be different from the colormode specified in the driver

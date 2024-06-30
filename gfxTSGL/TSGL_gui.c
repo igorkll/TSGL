@@ -235,30 +235,25 @@ void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color) {
 }
 
 void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)) {
-    if (object->data != NULL) {
-        if (object->data_as_callback) {
-            _callback_data* callback_data = (_callback_data*)object->data;
-            if (callback_data->free_arg) free(callback_data->arg);
-        }
-        free(object->data);
+    if (object->predrawData != NULL) {
+        _callback_data* callback_data = (_callback_data*)object->predrawData;
+        if (callback_data->free_arg) free(callback_data->arg);
+        free(object->predrawData);
     }
 
     _callback_data* callback_data = malloc(sizeof(_callback_data));
     callback_data->arg = arg;
     callback_data->callback = predraw;
     callback_data->free_arg = free_arg;
-    object->data = callback_data;
-    object->data_as_callback = true;
+    object->predrawData = callback_data;
 }
 
 void tsgl_gui_free(tsgl_gui* object) {
     if (object->free_callback) object->free_callback(object);
-    if (object->data != NULL) {
-        if (object->data_as_callback) {
-            _callback_data* callback_data = (_callback_data*)object->data;
-            if (callback_data->free_arg) free(callback_data->arg);
-        }
-        free(object->data);
+    if (object->predrawData != NULL) {
+        _callback_data* callback_data = (_callback_data*)object->predrawData;
+        if (callback_data->free_arg) free(callback_data->arg);
+        free(object->predrawData);
     }
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
@@ -278,6 +273,7 @@ void tsgl_gui_free(tsgl_gui* object) {
             }
         }
     }
+    if (object->data != NULL) free(object->data);
     free(object->parents);
     free(object);
 }
@@ -303,8 +299,8 @@ bool tsgl_gui_draw(tsgl_gui* object) {
     }
 
     if (anyDraw) {
-        if (object->data && object->data_as_callback) {
-            _callback_data* callback_data = (_callback_data*)object->data;
+        if (object->predrawData != NULL) {
+            _callback_data* callback_data = (_callback_data*)object->predrawData;
             callback_data->callback(object, callback_data->arg);
         }
 
