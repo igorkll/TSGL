@@ -74,7 +74,7 @@ void tsgl_gui_free(tsgl_gui* object);
 
 // a method for controlling the background, be sure to call one of them after creating the root gui object
 void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color);
-void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachClearCallback again
+void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)); //set free_arg to true to automatically make free on the argument after calling free for the object or calling tsgl_gui_attachPredrawCallback again
 
 // these methods are mostly for internal use
 void tsgl_gui_math(tsgl_gui* root);

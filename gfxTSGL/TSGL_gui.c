@@ -144,6 +144,18 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
+static bool _needDraw(tsgl_gui* object) {
+    bool anyDraw = object->needDraw;
+
+    if (object->parents != NULL && !anyDraw) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            if (_needDraw(object->parents[i])) anyDraw = true;
+        }
+    }
+
+    return anyDraw;
+}
+
 typedef struct {
     void* arg;
     void (*callback) (tsgl_gui* root, void* arg);
@@ -261,12 +273,18 @@ bool tsgl_gui_draw(tsgl_gui* object) {
 
     bool anyDraw = false;
     
-    if (object->data && object->data_as_callback) {
-        _callback_data* callback_data = (_callback_data*)object->data;
-        callback_data->callback(object, callback_data->arg);
+    if (object->parents != NULL) {
+        for (size_t i = 0; i < object->parentsCount; i++) {
+            if (_needDraw(object->parents[i])) anyDraw = true;
+        }
     }
 
     if (object->needDraw) {
+        if (object->data && object->data_as_callback) {
+            _callback_data* callback_data = (_callback_data*)object->data;
+            callback_data->callback(object, callback_data->arg);
+        }
+
         if (object->draw_callback != NULL)
             object->draw_callback(object);
 
@@ -276,14 +294,14 @@ bool tsgl_gui_draw(tsgl_gui* object) {
             }
         }
 
+        if (object->parents != NULL) {
+            for (size_t i = 0; i < object->parentsCount; i++) {
+                tsgl_gui_draw(object->parents[i]);
+            }
+        }
+
         object->needDraw = false;
         anyDraw = true;
-    }
-    
-    if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
-            if (tsgl_gui_draw(object->parents[i])) anyDraw = true;
-        }
     }
 
     return anyDraw;
