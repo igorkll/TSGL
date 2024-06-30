@@ -118,7 +118,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     }
 
     if (object->parents != NULL) {
-        for (size_t i = 0; i < object->parentsCount; i++) {
+        for (int i = object->parentsCount - 1; i >= 0; i--) {
             if (_event(object->parents[i], x, y, event)) return true;
         }
     }
@@ -313,13 +313,9 @@ bool tsgl_gui_draw(tsgl_gui* object) {
 
         if (object->parents != NULL) {
             for (size_t i = 0; i < object->parentsCount; i++) {
-                object->parents[i]->needDraw = true;
-            }
-        }
-
-        if (object->parents != NULL) {
-            for (size_t i = 0; i < object->parentsCount; i++) {
-                tsgl_gui_draw(object->parents[i]);
+                tsgl_gui* parent = object->parents[i];
+                parent->needDraw = true;
+                tsgl_gui_draw(parent);
             }
         }
 
