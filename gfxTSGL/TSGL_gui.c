@@ -271,15 +271,15 @@ bool tsgl_gui_draw(tsgl_gui* object) {
         return false;
     }
 
-    bool anyDraw = false;
+    bool anyDraw = object->needDraw;
     
-    if (object->parents != NULL) {
+    if (object->parents != NULL && !anyDraw) {
         for (size_t i = 0; i < object->parentsCount; i++) {
             if (_needDraw(object->parents[i])) anyDraw = true;
         }
     }
 
-    if (object->needDraw) {
+    if (anyDraw) {
         if (object->data && object->data_as_callback) {
             _callback_data* callback_data = (_callback_data*)object->data;
             callback_data->callback(object, callback_data->arg);
