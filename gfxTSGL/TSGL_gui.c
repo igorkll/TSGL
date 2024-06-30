@@ -119,17 +119,22 @@ static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
 }
 
 static void _toUpLevel(tsgl_gui* object) {
-    if (object->parent != NULL && object->parent->children[object->parent->childrenCount - 1] != object) {
-        for (size_t i = 0; i < object->parent->childrenCount; i++) {
-            if (object->parent->children[i] == object) {
-                i++;
-                for (; i < object->parent->childrenCount; i++) {
-                    object->parent->children[i - 1] = object->parent->children[i];
+    if (object->parent == NULL) return;
+    if (object->draggable) {
+        if (object->parent->children[object->parent->childrenCount - 1] != object) {
+            for (size_t i = 0; i < object->parent->childrenCount; i++) {
+                if (object->parent->children[i] == object) {
+                    i++;
+                    for (; i < object->parent->childrenCount; i++) {
+                        object->parent->children[i - 1] = object->parent->children[i];
+                    }
+                    break;
                 }
-                break;
             }
+            object->parent->children[object->parent->childrenCount - 1] = object;
         }
-        object->parent->children[object->parent->childrenCount - 1] = object;
+    } else {
+        _toUpLevel(object->parent);
     }
 }
 
@@ -156,7 +161,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                     object->tdx = object->offsetX;
                     object->tdy = object->offsetY;
                     object->pressed = true;
-                    if (object->draggable) _toUpLevel(object);
+                    _toUpLevel(object);
                 }
                 break;
 
@@ -223,6 +228,11 @@ static bool _draw(tsgl_gui* object, bool force) {
 
         object->needDraw = false;
         anyDraw = true;
+    } else if (object->children != NULL) {
+        for (size_t i = 0; i < object->childrenCount - 1; i++) {
+            tsgl_gui* child = object->children[i];
+            if (child->needDraw) forceDraw = true;
+        }
     }
 
     if (object->children != NULL) {
@@ -264,6 +274,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->colormode = object->colormode;
     newObject->root = object->root;
     newObject->target = object->target;
+    newObject->display = object->display;
     newObject->buffered = object->buffered;
     newObject->parent = object;
     newObject->x = 0;
