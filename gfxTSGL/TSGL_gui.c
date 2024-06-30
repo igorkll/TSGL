@@ -345,7 +345,7 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
             if (root->needDraw || _needDrawTree(root, false)) {
                 tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
             } else {
-                tsgl_display_asyncCopySend(root->display, root->target, asyncFramebuffer);
+                tsgl_display_send(root->display, root->target);
             }
         } else {
             tsgl_display_send(root->display, root->target);

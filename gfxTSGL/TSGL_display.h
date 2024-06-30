@@ -59,7 +59,7 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
 // ---------------- control
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
-void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer.
+void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer. the problem is that it is OFTEN slower than just using tsgl_display_send
 
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
 
