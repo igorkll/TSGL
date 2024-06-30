@@ -86,7 +86,7 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 void gui_test() {
     //tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
-    tsgl_gui_setColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode));
+    gui->color = tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode);
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
     button4->x = 50;
@@ -95,7 +95,7 @@ void gui_test() {
     button4->height = 100;
 
     tsgl_gui* window = tsgl_gui_addObject(gui);
-    tsgl_gui_setColor(window, tsgl_color_raw(TSGL_GRAY, framebuffer.colormode));
+    window->color = tsgl_color_raw(TSGL_GRAY, framebuffer.colormode);
     window->x = 50;
     window->y = 50;
     window->width = 300;
@@ -103,7 +103,7 @@ void gui_test() {
     window->draggable = true;
 
     tsgl_gui* window2 = tsgl_gui_addObject(gui);
-    tsgl_gui_setColor(window2, tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode));
+    window2->color = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
     window2->x = 200;
     window2->y = 200;
     window2->width = 100;
@@ -111,7 +111,7 @@ void gui_test() {
     window2->draggable = true;
 
     tsgl_gui* window3 = tsgl_gui_addObject(gui);
-    tsgl_gui_setColor(window3, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
+    window3->color = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
     window3->x = 200;
     window3->y = 200;
     window3->width = 100;
@@ -119,7 +119,7 @@ void gui_test() {
     window3->draggable = true;
 
     tsgl_gui* testPlane = tsgl_gui_addObject(window);
-    tsgl_gui_setColor(testPlane, tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), framebuffer.colormode));
+    testPlane->color = tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), framebuffer.colormode);
     testPlane->x = 250;
     testPlane->y = 0;
     testPlane->width = 50;
@@ -140,7 +140,7 @@ void gui_test() {
     button2->draggable = true;
 
     tsgl_gui* button3 = tsgl_gui_addObject(button);
-    tsgl_gui_setColor(button3, tsgl_color_raw(tsgl_color_fromHex(0xffffff), framebuffer.colormode));
+    button3->color = tsgl_color_raw(tsgl_color_fromHex(0xffffff), framebuffer.colormode);
     button3->x = 10;
     button3->y = 10;
     button3->width = 30;

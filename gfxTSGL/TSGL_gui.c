@@ -6,12 +6,6 @@
 #include <esp_random.h>
 #include <string.h>
 
-typedef struct {
-    void* arg;
-    void (*callback) (tsgl_gui* root, void* arg);
-    bool free_arg;
-} _callback_data;
-
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
     
@@ -50,6 +44,8 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
+        object->old_math_x = object->math_x;
+        object->old_math_y = object->math_y;
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
         object->math_x = localMathX;
@@ -103,15 +99,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
 
 static void _initCallback(tsgl_gui* object) {
     if (object->create_callback != NULL) object->create_callback(object);
-}
-
-static void _fillObject(tsgl_gui* root, void* _color) {
-    tsgl_rawcolor* color = _color;
-    if (root->buffered) {
-        tsgl_framebuffer_fill(root->target, root->math_x, root->math_y, root->math_width, root->math_height, *color);
-    } else {
-        tsgl_display_fill(root->target, root->math_x, root->math_y, root->math_width, root->math_height, *color);
-    }
 }
 
 static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
@@ -196,6 +183,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
+/*
 static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
     bool anyDraw = object->mathed;
     if (mathedReset) object->mathed = false;
@@ -212,6 +200,7 @@ static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
 
     return anyDraw;
 }
+*/
 
 static bool _checkIntersection(tsgl_gui* object1, tsgl_gui* object2) {
     return (object1->math_x < object2->math_x + object2->math_width && 
@@ -227,12 +216,15 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     bool anyDraw = false;
-    bool forceDraw = force || object->needDraw /*|| _childrenMathed(object, true)*/;
+    bool forceDraw = force || object->needDraw;
 
     if (forceDraw) {
-        if (object->predrawData != NULL) {
-            _callback_data* callback_data = (_callback_data*)object->predrawData;
-            callback_data->callback(object, callback_data->arg);
+        if (!object->color.invalid) {
+            if (object->buffered) {
+                tsgl_framebuffer_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
+            } else {
+                tsgl_display_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
+            }
         }
 
         if (object->draw_callback != NULL)
@@ -240,20 +232,13 @@ static bool _draw(tsgl_gui* object, bool force) {
 
         object->needDraw = false;
         anyDraw = true;
-    /*
-    } else if (object->children != NULL) {
-        for (size_t i = 0; i < object->childrenCount - 1; i++) {
-            tsgl_gui* child = object->children[i];
-            if (child->needDraw) forceDraw = true;
-        }
-        */
     } else {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
             if (child->needDraw) {
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
-                    if (child != child2 && _checkIntersection(child, child2)) {
+                    if (child != child2 && !child2->needDraw && _checkIntersection(child, child2)) {
                         child2->needDraw = true;
                     }
                 }
@@ -276,6 +261,7 @@ tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colo
     tsgl_gui* gui = _createRoot(display, false, display->width, display->height);
     gui->colormode = colormode;
     gui->display = display;
+    gui->color = display->black;
     _initCallback(gui);
     return gui;
 }
@@ -284,6 +270,7 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* fr
     tsgl_gui* gui = _createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
     gui->colormode = framebuffer->colormode;
     gui->display = display;
+    gui->color = framebuffer->black;
     _initCallback(gui);
     return gui;
 }
@@ -311,38 +298,14 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->displayable = true;
     newObject->needMath = true;
     newObject->needDraw = true;
+    newObject->color = TSGL_INVALID_RAWCOLOR;
     object->children[object->childrenCount - 1] = newObject;
     _initCallback(newObject);
     return newObject;
 }
 
-void tsgl_gui_setColor(tsgl_gui* object, tsgl_rawcolor color) {
-    tsgl_rawcolor* mColor = (tsgl_rawcolor*)malloc(sizeof(tsgl_rawcolor));
-    memcpy(mColor, &color, sizeof(tsgl_rawcolor));
-    tsgl_gui_attachPredrawCallback(object, true, mColor, _fillObject);
-}
-
-void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, void (*predraw)(tsgl_gui* root, void* arg)) {
-    if (object->predrawData != NULL) {
-        _callback_data* callback_data = (_callback_data*)object->predrawData;
-        if (callback_data->free_arg) free(callback_data->arg);
-        free(object->predrawData);
-    }
-
-    _callback_data* callback_data = malloc(sizeof(_callback_data));
-    callback_data->arg = arg;
-    callback_data->callback = predraw;
-    callback_data->free_arg = free_arg;
-    object->predrawData = callback_data;
-}
-
 void tsgl_gui_free(tsgl_gui* object) {
     if (object->free_callback) object->free_callback(object);
-    if (object->predrawData != NULL) {
-        _callback_data* callback_data = (_callback_data*)object->predrawData;
-        if (callback_data->free_arg) free(callback_data->arg);
-        free(object->predrawData);
-    }
     if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui_free(object->children[i]);
@@ -391,11 +354,12 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
+    if (!root->mathed) _math(root, 0, 0, false);
     if (_draw(root, false) && root->buffered) {
         _math(root, 0, 0, false);
 
         if (asyncFramebuffer != NULL) {
-            if (root->needDraw || _childrenMathed(root, false)) {
+            if (root->needDraw) {
                 tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
             } else {
                 tsgl_display_send(root->display, root->target);
