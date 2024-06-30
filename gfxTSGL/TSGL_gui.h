@@ -43,6 +43,7 @@ struct tsgl_gui {
     tsgl_pos tdy;
 
     // internal
+    tsgl_display* display;
     void* target;
     bool buffered;
     tsgl_colormode colormode;
@@ -69,7 +70,7 @@ struct tsgl_gui {
 };
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode); //you specify the colormode yourself because on some screens it must be different from the colormode specified in the driver
-tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer);
+tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer);
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
@@ -79,4 +80,4 @@ void tsgl_gui_attachPredrawCallback(tsgl_gui* object, bool free_arg, void* arg, 
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)); //the callback will be called with your argument in cases where the redrawing has occurred
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer);

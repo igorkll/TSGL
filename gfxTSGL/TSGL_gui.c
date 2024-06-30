@@ -223,13 +223,15 @@ static bool _draw(tsgl_gui* object, bool force) {
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
     tsgl_gui* gui = _createRoot(display, false, display->width, display->height);
     gui->colormode = colormode;
+    gui->display = display;
     _initCallback(gui);
     return gui;
 }
 
-tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_framebuffer* framebuffer) {
+tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     tsgl_gui* gui = _createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
     gui->colormode = framebuffer->colormode;
+    gui->display = display;
     _initCallback(gui);
     return gui;
 }
@@ -335,10 +337,14 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
     }
 }
 
-void tsgl_gui_processGui(tsgl_gui* root, void* arg, void (*onDraw)(tsgl_gui* root, void* arg)) {
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
     _math(root, 0, 0, false);
 
-    if (_draw(root, false)) {
-        onDraw(root, arg);
+    if (_draw(root, false) && root->buffered) {
+        if (asyncFramebuffer != NULL) {
+            tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
+        } else {
+            tsgl_display_send(root->display, root->target);
+        }
     }
 }

@@ -83,12 +83,8 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
     tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
 }
 
-void gui_test_onDraw(tsgl_gui* root, void* _) {
-    tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
-}
-
 void gui_test() {
-    tsgl_gui* gui = tsgl_gui_createRoot_buffer(&framebuffer);
+    tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     tsgl_gui_setColor(gui, tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode));
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
@@ -156,7 +152,7 @@ void gui_test() {
         tsgl_benchmark_endRendering(&benchmark);
 
         tsgl_benchmark_startSend(&benchmark);
-        tsgl_gui_processGui(gui, NULL, gui_test_onDraw);
+        tsgl_gui_processGui(gui, &framebuffer2);
         tsgl_benchmark_endSend(&benchmark);
 
         tsgl_benchmark_print(&benchmark);
