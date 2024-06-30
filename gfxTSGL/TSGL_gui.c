@@ -174,13 +174,13 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
     return object->pressed;
 }
 
-static bool _needDrawTree(tsgl_gui* object) {
+static bool _needDrawTree(tsgl_gui* object, bool mathedReset) {
     bool anyDraw = object->mathed;
-    object->mathed = false;
+    if (mathedReset) object->mathed = false;
 
     if (object->parents != NULL && !anyDraw) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            if (_needDrawTree(object->parents[i])) anyDraw = true;
+            if (_needDrawTree(object->parents[i], mathedReset)) anyDraw = true;
         }
     }
 
@@ -194,7 +194,7 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     bool anyDraw = false;
-    bool forceDraw = force || object->needDraw || _needDrawTree(object);
+    bool forceDraw = force || object->needDraw || _needDrawTree(object, true);
 
     if (forceDraw) {
         if (object->predrawData != NULL) {
@@ -338,13 +338,19 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
-    _math(root, 0, 0, false);
-
     if (_draw(root, false) && root->buffered) {
+        _math(root, 0, 0, false);
+
         if (asyncFramebuffer != NULL) {
-            tsgl_display_asyncCopySend(root->display, root->target, asyncFramebuffer);
+            if (root->needDraw || _needDrawTree(root, false)) {
+                tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
+            } else {
+                tsgl_display_asyncCopySend(root->display, root->target, asyncFramebuffer);
+            }
         } else {
             tsgl_display_send(root->display, root->target);
         }
+    } else {
+        _math(root, 0, 0, false);
     }
 }
