@@ -104,6 +104,7 @@ void gui_test() {
     button->y = 10;
     button->width = 50;
     button->height = 50;
+    button->draggable = true;
 
     while (true) {
         tsgl_benchmark_startRendering(&benchmark);
