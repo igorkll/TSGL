@@ -213,6 +213,13 @@ static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
     return anyDraw;
 }
 
+static bool _checkIntersection(tsgl_gui* object1, tsgl_gui* object2) {
+    return (object1->math_x < object2->math_x + object2->math_width && 
+            object1->math_x + object1->math_width > object2->math_x && 
+            object1->math_y < object2->math_y + object2->math_height && 
+            object1->math_y + object1->math_height > object2->math_y);
+}
+
 static bool _draw(tsgl_gui* object, bool force) {
     if (!object->displayable) {
         object->needDraw = false;
@@ -220,7 +227,7 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     bool anyDraw = false;
-    bool forceDraw = force || object->needDraw || _childrenMathed(object, true);
+    bool forceDraw = force || object->needDraw /*|| _childrenMathed(object, true)*/;
 
     if (forceDraw) {
         if (object->predrawData != NULL) {
@@ -233,10 +240,24 @@ static bool _draw(tsgl_gui* object, bool force) {
 
         object->needDraw = false;
         anyDraw = true;
+    /*
     } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount - 1; i++) {
             tsgl_gui* child = object->children[i];
             if (child->needDraw) forceDraw = true;
+        }
+        */
+    } else {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            tsgl_gui* child = object->children[i];
+            if (child->needDraw) {
+                for (size_t i = 0; i < object->childrenCount; i++) {
+                    tsgl_gui* child2 = object->children[i];
+                    if (child != child2 && _checkIntersection(child, child2)) {
+                        child2->needDraw = true;
+                    }
+                }
+            }
         }
     }
 
