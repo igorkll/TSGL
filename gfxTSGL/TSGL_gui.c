@@ -133,9 +133,10 @@ static void _toUpLevel(tsgl_gui* object) {
             }
             object->parent->children[object->parent->childrenCount - 1] = object;
         }
-    } else {
-        _toUpLevel(object->parent);
+        object->needMath = true;
+        object->needDraw = true;
     }
+    _toUpLevel(object->parent);
 }
 
 static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
