@@ -41,8 +41,9 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
     return 0;
 }
 
-static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY) {
-    if (object->parent != NULL && object->needMath) {
+static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
+    bool forceParentsMath = force;
+    if (object->parent != NULL && (object->needMath || forceParentsMath)) {
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
         object->math_x = offsetX + localMathX;
@@ -59,18 +60,13 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
 
-        if (object->parents != NULL) {
-            for (size_t i = 0; i < object->parentsCount; i++) {
-                object->parents[i]->needMath = true;
-            }
-        }
-
+        forceParentsMath = true;
         object->needMath = false;
     }
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, forceOffsetX + object->offsetX, forceOffsetY + object->offsetY);
+            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, forceOffsetX + object->offsetX, forceOffsetY + object->offsetY, forceParentsMath);
         }
     }
 }
@@ -254,7 +250,7 @@ void tsgl_gui_free(tsgl_gui* object) {
 
 
 void tsgl_gui_math(tsgl_gui* root) {
-    _math(root, 0, 0, 0, 0);
+    _math(root, 0, 0, 0, 0, false);
 }
 
 bool tsgl_gui_draw(tsgl_gui* object) {
@@ -264,12 +260,12 @@ bool tsgl_gui_draw(tsgl_gui* object) {
     }
 
     bool anyDraw = false;
-
+    
     if (object->data && object->data_as_callback) {
         _callback_data* callback_data = (_callback_data*)object->data;
         callback_data->callback(object, callback_data->arg);
     }
-    
+
     if (object->needDraw) {
         if (object->draw_callback != NULL)
             object->draw_callback(object);

@@ -106,8 +106,15 @@ void gui_test() {
     button->height = 50;
 
     while (true) {
+        tsgl_benchmark_startRendering(&benchmark);
         tsgl_gui_processTouchscreen(gui, &touchscreen);
+        tsgl_benchmark_endRendering(&benchmark);
+
+        tsgl_benchmark_startSend(&benchmark);
         tsgl_gui_processGui(gui, NULL, gui_test_onDraw);
+        tsgl_benchmark_endSend(&benchmark);
+
+        tsgl_benchmark_print(&benchmark);
     }
 
     tsgl_gui_free(gui);
