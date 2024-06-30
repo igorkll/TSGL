@@ -89,7 +89,7 @@ static void _math(tsgl_gui* object, tsgl_pos offsetX, tsgl_pos offsetY, tsgl_pos
 
     if (object->parents != NULL) {
         for (size_t i = 0; i < object->parentsCount; i++) {
-            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, forceOffsetX + object->offsetX, forceOffsetY + object->offsetY, forceParentsMath);
+            _math(object->parents[i], object->math_x - object->offsetX, object->math_y - object->offsetY, object->offsetX, object->offsetY, forceParentsMath);
         }
     }
 }

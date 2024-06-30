@@ -99,12 +99,34 @@ void gui_test() {
     window->height = 150;
     window->draggable = true;
 
-    tsgl_gui* button = tsgl_gui_addButton(window);
-    button->x = 10;
-    button->y = 10;
+    tsgl_gui* testPlane = tsgl_gui_addObject(window);
+    tsgl_gui_setColor(testPlane, tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), framebuffer.colormode));
+    testPlane->x = 250;
+    testPlane->y = 0;
+    testPlane->width = 50;
+    testPlane->height = 150;
+
+    tsgl_gui* button = tsgl_gui_addButton(testPlane);
+    button->x = 0;
+    button->y = 0;
     button->width = 50;
     button->height = 50;
     button->draggable = true;
+
+    tsgl_gui* button2 = tsgl_gui_addButton(window);
+    button2->x = 10;
+    button2->y = 10;
+    button2->width = 50;
+    button2->height = 50;
+    button2->draggable = true;
+
+    tsgl_gui* button3 = tsgl_gui_addObject(button2);
+    tsgl_gui_setColor(button3, tsgl_color_raw(tsgl_color_fromHex(0xffffff), framebuffer.colormode));
+    button3->x = 10;
+    button3->y = 10;
+    button3->width = 30;
+    button3->height = 30;
+    button3->draggable = true;
 
     while (true) {
         tsgl_benchmark_startRendering(&benchmark);
