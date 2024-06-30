@@ -225,6 +225,13 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
                             memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
                         }
                         break;
+
+                    case 3:
+                        for (tsgl_pos ix = x; ix < x + width; ix++) {
+                            size_t index = _getBufferIndex(framebuffer, ix, y);
+                            memset(framebuffer->buffer + index, color.arr[0], height * framebuffer->colorsize);
+                        }
+                        break;
                     
                     default:
                         for (tsgl_pos iy = y; iy < y + height; iy++) {
