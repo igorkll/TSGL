@@ -111,7 +111,7 @@ void gui_test() {
     window2->draggable = true;
 
     tsgl_gui* window3 = tsgl_gui_addObject(gui);
-    window3->color = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
+    window3->color = tsgl_color_raw(TSGL_GREEN, framebuffer.colormode);
     window3->x = 200;
     window3->y = 200;
     window3->width = 100;
