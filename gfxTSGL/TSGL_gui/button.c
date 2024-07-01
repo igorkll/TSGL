@@ -5,16 +5,17 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
     switch (event) {
         case tsgl_gui_click:
             self->intData = 1;
+            self->needDraw = true;
             break;
 
         case tsgl_gui_drop:
             self->intData = 0;
+            self->needDraw = true;
             break;
 
         default:
             break;
     }
-    self->needDraw = true;
 }
 
 static void _draw_callback(tsgl_gui* self) {
