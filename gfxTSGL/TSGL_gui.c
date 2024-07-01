@@ -217,8 +217,9 @@ static bool _draw(tsgl_gui* object, bool force) {
 
     bool anyDraw = false;
     bool forceDraw = force || object->needDraw;
+    bool anyDrawLater = false;
 
-    if (!forceDraw && (object->color.invalid || object->redefining_color)) {
+    if (object->children != NULL && !forceDraw && (object->color.invalid || object->redefining_color)) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
             if (child->localMovent) {
@@ -252,14 +253,16 @@ static bool _draw(tsgl_gui* object, bool force) {
 
         object->needDraw = false;
         anyDraw = true;
-    } else {
+    } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
             if (child->needDraw) {
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
-                    if (child != child2 && !child2->needDraw && _checkIntersection(child, child2)) {
-                        child2->needDraw = true;
+                    if (child != child2 && !child2->drawLater && _checkIntersection(child, child2)) {
+                        child2->drawLater = true;
+                        child2->needDraw = false;
+                        anyDrawLater = true;
                     }
                 }
             }
@@ -269,6 +272,16 @@ static bool _draw(tsgl_gui* object, bool force) {
     if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             if (_draw(object->children[i], forceDraw)) anyDraw = true;
+        }
+
+        if (anyDrawLater) {
+            for (size_t i = 0; i < object->childrenCount; i++) {
+                tsgl_gui* child = object->children[i];
+                if (child->drawLater && _draw(child, true)) {
+                    anyDraw = true;
+                    child->drawLater = false;
+                }
+            }
         }
     }
 
