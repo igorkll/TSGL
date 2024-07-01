@@ -230,7 +230,7 @@ static bool _draw(tsgl_gui* object, bool force) {
     }
 
     if (forceDraw) {
-        if (object->localMovent) {
+        if (object->localMovent && !force) {
             if (!object->parent->color.invalid && !object->parent->redefining_color) {
                 if (object->buffered) {
                     tsgl_framebuffer_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
