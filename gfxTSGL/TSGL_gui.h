@@ -27,8 +27,7 @@ struct tsgl_gui {
     bool displayable;
     bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
 
-    tsgl_rawcolor color; //if you set this color, the call to the object rendering callback will stop, however, if you set the "redefining_color" flag, this field will be ignored by the gui and can be used to configure the object
-    bool redefining_color;
+    tsgl_rawcolor color; //if you set this color, instead of rendering the object, it will be filled with a rectangle of a certain color
 
     // callbacks
     void (*create_callback)(tsgl_gui* self);
