@@ -8,3 +8,4 @@ dependencies.lock
 target
 Cargo.lock
 *.ttf
+.private
