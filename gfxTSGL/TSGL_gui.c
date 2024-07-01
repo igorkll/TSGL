@@ -209,13 +209,13 @@ static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_g
             y + object1->math_height > object2->math_y);
 }
 
-static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child) {
-    for (size_t i = 0; i < object->childrenCount; i++) {
+static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index) {
+    for (size_t i = index + 1; i < object->childrenCount; i++) {
         tsgl_gui* child2 = object->children[i];
         if (child != child2 && !child2->drawLater && !child2->drawLaterLater && !child->localMovent && _checkIntersection(child->math_x, child->math_y, child, child2)) {
             child2->drawLater = true;
             child2->needDraw = false;
-            _recursionDrawLater(object, child2);
+            _recursionDrawLater(object, child2, i);
         }
     }
 }
@@ -275,7 +275,7 @@ static bool _draw(tsgl_gui* object, bool force) {
                         child2->drawLater = true;
                         child2->needDraw = false;
                         anyDrawLater = true;
-                        _recursionDrawLater(object, child2);
+                        _recursionDrawLater(object, child2, i);
                     }
                 }
             } else if (child->needDraw && !child->draggable) {
