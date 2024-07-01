@@ -238,8 +238,8 @@ static bool _draw(tsgl_gui* object, bool force) {
                     tsgl_display_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
                 }
             }
-            object->localMovent = false;
         }
+        object->localMovent = false;
 
         if (!object->color.invalid && !object->redefining_color) {
             if (object->buffered) {
