@@ -10,7 +10,7 @@ static uint8_t _getLedcChannel() {
 }
 
 uint8_t tsgl_ledc_CRTValue(uint8_t val) {
-    return (0.0003066 * pow(val, 2.46));
+    return 0.0003066 * pow(val, 2.46);
 }
 
 #define LEDC_TIMER              LEDC_TIMER_0

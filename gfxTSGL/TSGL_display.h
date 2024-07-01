@@ -47,7 +47,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
 void tsgl_display_free(tsgl_display* display);
 
 // ---------------- backlight
-esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t value); //on some displays, brightness control works without this, but on others you need to use a separate pin
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t value); //on some displays, brightness control works without this, but on others you need to use a separate pin. it can be called even before initialization
 void tsgl_display_setBacklight(tsgl_display* display, uint8_t value); //changes the display backlight states using the appropriate registers specified in the driver. if the Q method is called, it uses hardware backlight control instead of registers
 
 // ---------------- low level methods (it is not recommended to use)
