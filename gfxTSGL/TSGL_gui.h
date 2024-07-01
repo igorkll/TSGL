@@ -4,6 +4,8 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_display.h"
 
+#define TSGL_GUI_DRAW(gui, name, ...) if (gui->buffered) tsgl_framebuffer_##name(gui->target, __VA_ARGS__); else tsgl_display_##name(gui->target, __VA_ARGS__)
+
 typedef enum {
     tsgl_gui_absolute,
     tsgl_gui_percent

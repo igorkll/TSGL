@@ -243,21 +243,13 @@ static bool _draw(tsgl_gui* object, bool force) {
     if (forceDraw) {
         if (object->localMovent && !force) {
             if (!object->parent->color.invalid) {
-                if (object->buffered) {
-                    tsgl_framebuffer_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
-                } else {
-                    tsgl_display_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
-                }
+                TSGL_GUI_DRAW(object, fill, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
             }
         }
         object->localMovent = false;
 
         if (!object->color.invalid) {
-            if (object->buffered) {
-                tsgl_framebuffer_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
-            } else {
-                tsgl_display_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
-            }
+            TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
             object->draw_callback(object);
         }
