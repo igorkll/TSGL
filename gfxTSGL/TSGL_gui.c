@@ -218,11 +218,19 @@ static bool _draw(tsgl_gui* object, bool force) {
     bool anyDraw = false;
     bool forceDraw = force || object->needDraw;
 
+    if (!forceDraw && (object->color.invalid || object->redefining_color)) {
+        for (size_t i = 0; i < object->childrenCount; i++) {
+            tsgl_gui* child = object->children[i];
+            if (child->localMovent) {
+                forceDraw = true;
+                break;
+            }
+        }
+    }
+
     if (forceDraw) {
         if (object->localMovent) {
-            if (object->parent->color.invalid || object->parent->redefining_color) {
-
-            } else {
+            if (!object->parent->color.invalid && !object->parent->redefining_color) {
                 if (object->buffered) {
                     tsgl_framebuffer_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
                 } else {
@@ -232,7 +240,7 @@ static bool _draw(tsgl_gui* object, bool force) {
             object->localMovent = false;
         }
 
-        if (!object->color.invalid && !object->parent->redefining_color) {
+        if (!object->color.invalid && !object->redefining_color) {
             if (object->buffered) {
                 tsgl_framebuffer_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
             } else {
