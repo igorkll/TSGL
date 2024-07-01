@@ -256,12 +256,23 @@ static bool _draw(tsgl_gui* object, bool force) {
     } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
-            if (child->localMovent || (child->needDraw && !child->draggable)) {
-                child->drawLaterLater = child->localMovent;
+            if (child->localMovent) {
+                child->drawLaterLater = true;
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
                     if (child != child2 && _checkIntersection(child->old_math_x, child->old_math_y, child, child2)) {
-                        child2->needDraw = true;
+                        child2->drawLater = true;
+                        child2->needDraw = false;
+                        anyDrawLater = true;
+                    }
+                }
+            } else if (child->needDraw && !child->draggable) {
+                for (size_t i = 0; i < object->childrenCount; i++) {
+                    tsgl_gui* child2 = object->children[i];
+                    if (child != child2 && _checkIntersection(child->math_x, child->math_y, child, child2)) {
+                        child2->drawLater = true;
+                        child2->needDraw = false;
+                        anyDrawLater = true;
                     }
                 }
             }
