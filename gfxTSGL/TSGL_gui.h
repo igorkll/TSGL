@@ -54,6 +54,7 @@ struct tsgl_gui {
     bool needMath;
     bool needDraw;
     bool drawLater;
+    bool drawLaterLater;
 
     bool localMovent;
     tsgl_pos old_math_x;

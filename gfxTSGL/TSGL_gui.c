@@ -257,6 +257,7 @@ static bool _draw(tsgl_gui* object, bool force) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
             if (child->localMovent) {
+                child->drawLaterLater = true;
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
                     if (child != child2 && _checkIntersection(child->old_math_x, child->old_math_y, child, child2)) {
@@ -280,6 +281,14 @@ static bool _draw(tsgl_gui* object, bool force) {
                 if (child->drawLater && _draw(child, true)) {
                     anyDraw = true;
                     child->drawLater = false;
+                }
+            }
+
+            for (size_t i = 0; i < object->childrenCount; i++) {
+                tsgl_gui* child = object->children[i];
+                if (child->drawLaterLater && _draw(child, true)) {
+                    anyDraw = true;
+                    child->drawLaterLater = false;
                 }
             }
         }
