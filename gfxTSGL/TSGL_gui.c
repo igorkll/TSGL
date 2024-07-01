@@ -44,8 +44,6 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        object->old_math_x = object->math_x;
-        object->old_math_y = object->math_y;
         tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
         tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
         object->math_x = localMathX;
@@ -86,7 +84,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_y += object->offsetY + forceOffsetY;
 
         forceParentsMath = true;
-        object->mathed = true;
     }
     object->needMath = false;
 
@@ -157,10 +154,13 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
+                            object->old_math_x = object->math_x;
+                            object->old_math_y = object->math_y;
                             object->offsetX = object->tdx + (x - object->tpx);
                             object->offsetY = object->tdy + (y - object->tpy);
                             object->needMath = true;
                             object->needDraw = true;
+                            object->localMovent = true;
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
@@ -219,23 +219,28 @@ static bool _draw(tsgl_gui* object, bool force) {
     bool forceDraw = force || object->needDraw;
 
     if (forceDraw) {
-        if (object->parent && !object->parent->color.invalid) {
-            if (object->buffered) {
-                tsgl_framebuffer_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
+        if (object->localMovent) {
+            if (object->parent->color.invalid || object->parent->redefining_color) {
+
             } else {
-                tsgl_display_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
+                if (object->buffered) {
+                    tsgl_framebuffer_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
+                } else {
+                    tsgl_display_fill(object->target, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
+                }
             }
+            object->localMovent = false;
         }
-        if (!object->color.invalid) {
+
+        if (!object->color.invalid && !object->parent->redefining_color) {
             if (object->buffered) {
                 tsgl_framebuffer_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
             } else {
                 tsgl_display_fill(object->target, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
             }
-        }
-
-        if (object->draw_callback != NULL)
+        } else if (object->draw_callback != NULL) {
             object->draw_callback(object);
+        }
 
         object->needDraw = false;
         anyDraw = true;
@@ -361,10 +366,8 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 }
 
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
-    if (!root->mathed) _math(root, 0, 0, false);
+    _math(root, 0, 0, false);
     if (_draw(root, false) && root->buffered) {
-        _math(root, 0, 0, false);
-
         if (asyncFramebuffer != NULL) {
             if (root->needDraw) {
                 tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
@@ -374,7 +377,5 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
         } else {
             tsgl_display_send(root->display, root->target);
         }
-    } else {
-        _math(root, 0, 0, false);
     }
 }
