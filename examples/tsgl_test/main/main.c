@@ -2,7 +2,7 @@
 #include <TSGL_drivers/st77XX.h>
 
 #define SPI  TSGL_HOST1
-#define FREQ 60000000
+#define FREQ 80000000
 #define BUFFER TSGL_SPIRAM
 #define DC 21
 #define CS 22

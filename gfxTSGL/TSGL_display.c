@@ -324,6 +324,20 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
 
 // graphic
 
+static void _fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+    tsgl_display_select(display, x, y, width, height);
+    switch (display->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            tsgl_display_sendFlood(display, color.arr, 3, (width * height) / 2);
+            break;
+        
+        default:
+            tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
+            break;
+    }
+}
+
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
     tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, rotation, sprite, transparentColor, display->width, display->height);
 }
@@ -351,18 +365,18 @@ void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos
 }
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    if (width <= 0 || height <= 0) return;
-    tsgl_display_select(display, x, y, width, height);
-    switch (display->colormode) {
-        case tsgl_rgb444:
-        case tsgl_bgr444:
-            tsgl_display_sendFlood(display, color.arr, 3, (width * height) / 2);
-            break;
-        
-        default:
-            tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
-            break;
+    if (x < 0) {
+        width = width + x;
+        x = 0;
     }
+    if (y < 0) {
+        height = height + y;
+        y = 0;
+    }
+    if (width + x > display->width) width = display->width - x;
+    if (height + y > display->height) height = display->height - y;
+    if (width <= 0 || height <= 0) return;
+    _fill(display, x, y, width, height, color);
 }
 
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
@@ -374,5 +388,5 @@ void tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
-    tsgl_display_fill(display, 0, 0, display->width, display->height, color);
+    _fill(display, 0, 0, display->width, display->height, color);
 }
