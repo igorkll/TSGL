@@ -52,6 +52,8 @@ static tsgl_rawcolor initColor;
 static const uint8_t* initFramebuffer;
 static size_t initFramebufferSize;
 static uint8_t initRotation;
+static gpio_num_t initBlPin = -1;
+static gpio_num_t initBlDefaultValue = -1;
 
 void tsgl_display_pushInitColor(tsgl_rawcolor color) {
     initColor = color;
@@ -73,11 +75,19 @@ void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size
     initType = 2;
 }
 
+void tsgl_display_pushBacklight(gpio_num_t pin, uint8_t defaultValue) {
+    initBlPin = pin;
+    initBlDefaultValue = defaultValue;
+}
+
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
 
     display->invertBacklight = settings.invertBacklight;
     display->backlightLedcChannel = -1;
+    if (initBlPin >= 0)
+        tsgl_display_attachBacklight(display, initBlPin, initBlDefaultValue);
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
@@ -141,7 +151,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
                 tsgl_display_clear(display, display->black);
                 break;
         }
-        initType = 0;
 
         // enable display
         _doCommandList(display, settings.driver->enable(&display->storage, true));
@@ -149,6 +158,8 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     } else {
         free(display->interface);
     }
+    initType = 0;
+    initBlPin = -1;
     return result;
 }
 
@@ -250,8 +261,8 @@ void tsgl_display_free(tsgl_display* display) {
     free(display->interface);
 }
 
-esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t value) {
-    display->backlightLedcChannel = tsgl_ledc_new(pin, display->invertBacklight, value);
+esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t defaultValue) {
+    display->backlightLedcChannel = tsgl_ledc_new(pin, display->invertBacklight, defaultValue);
     display->backlightValue = 0;
 
     if (display->backlightLedcChannel < 0) {
