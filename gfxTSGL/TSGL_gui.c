@@ -8,11 +8,11 @@
 #include <string.h>
 
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
-    tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));
-    
+    tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));    
     gui->root = gui;
     gui->target = target;
     gui->buffered = buffered;
+    gui->leaky_walls = true;
 
     gui->interactive = true;
     gui->displayable = true;
@@ -27,7 +27,6 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     gui->height = height;
     gui->math_width = width;
     gui->math_height = height;
-
     return gui;
 }
 
@@ -59,7 +58,7 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
 
-        if (object->parent != object->root) {
+        if (!object->parent->leaky_walls) {
             object->offsetX += localMathX;
             object->offsetY += localMathY;
 
