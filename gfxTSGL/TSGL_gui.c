@@ -45,17 +45,17 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->width);
-        tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->height);
+        tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->math_width);
+        tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->math_height);
         object->math_x = localMathX;
         object->math_y = localMathY;
-        object->math_width = _localMath(object->format_width, object->width, object->parent->width);
-        object->math_height = _localMath(object->format_height, object->height, object->parent->height);
+        object->math_width = _localMath(object->format_width, object->width, object->parent->math_width);
+        object->math_height = _localMath(object->format_height, object->height, object->parent->math_height);
 
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;
-        tsgl_pos maxWidth = object->parent->width - localMathX;
-        tsgl_pos maxHeight = object->parent->height - localMathY;
+        tsgl_pos maxWidth = object->parent->math_width - localMathX;
+        tsgl_pos maxHeight = object->parent->math_height - localMathY;
         if (object->math_width > maxWidth) object->math_width = maxWidth;
         if (object->math_height > maxHeight) object->math_height = maxHeight;
 
@@ -66,14 +66,14 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             if (object->offsetX < 0) {
                 object->offsetX = 0;
             } else {
-                tsgl_pos maxOffset = object->parent->width - object->math_width;
+                tsgl_pos maxOffset = object->parent->math_width - object->math_width;
                 if (object->offsetX > maxOffset) object->offsetX = maxOffset;
             }
             
             if (object->offsetY < 0) {
                 object->offsetY = 0;
             } else {
-                tsgl_pos maxOffset = object->parent->height - object->math_height;
+                tsgl_pos maxOffset = object->parent->math_height - object->math_height;
                 if (object->offsetY > maxOffset) object->offsetY = maxOffset;
             }
 
@@ -383,6 +383,23 @@ void tsgl_gui_free(tsgl_gui* object) {
     if (object->data != NULL) free(object->data);
     free(object->children);
     free(object);
+}
+
+
+
+void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_x = format;
+    object->format_y = format;
+}
+
+void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_width = format;
+    object->format_height = format;
+}
+
+void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    tsgl_gui_setPosFormat(object, format);
+    tsgl_gui_setScaleFormat(object, format);
 }
 
 

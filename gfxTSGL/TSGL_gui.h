@@ -82,6 +82,11 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* fr
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
+// these are just shortcuts in order to set formats in one line
+void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark);
