@@ -73,19 +73,7 @@ void delay(int time) {
     vTaskDelay(time / portTICK_PERIOD_MS);
 }
 
-void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
-    tsgl_print_settings printSettings = {
-        .font = font,
-        .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
-    };
-    
-    tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, display.width, display.height, printSettings, text);
-    tsgl_framebuffer_rect(&framebuffer, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 1);
-    tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
-}
-
-void gui_test() {
+void test_gui() {
     tsgl_framebuffer sprite;
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&sprite, display.colormode, 300, 150, BUFFER));
     tsgl_framebuffer_clear(&sprite, sprite.black);
@@ -182,12 +170,13 @@ void gui_test() {
 }
 
 void app_main() {
-    ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
-    ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL, 0));
     ESP_ERROR_CHECK(tsgl_spi_init(settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode], SPI));
     tsgl_display_pushInitColor(tsgl_color_raw(TSGL_RED, settings.driver->colormode));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
-    ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_display_attachBacklight(&display, BL, 255));
+    tsgl_display_setBacklight(&display, 255);
+    ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
+    ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer, display.colormode, settings.width, settings.height, BUFFER));
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
 
@@ -195,54 +184,7 @@ void app_main() {
     tsgl_display_rotate(&display, 1);
     touchscreen.rotation = 1;
 
-    tsgl_rawcolor blue = tsgl_color_raw(TSGL_BLUE, framebuffer.colormode);
-    tsgl_rawcolor yellow = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
-    tsgl_rawcolor red = tsgl_color_raw(TSGL_RED, framebuffer.colormode);
-    tsgl_pos center = framebuffer.width / 2;
-    tsgl_pos sinSize = framebuffer.width / 4;
-    
     while (true) {
-        gui_test();
-
-        tsgl_framebuffer_clear(&framebuffer, display.black);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, 0, tsgl_color_raw(TSGL_RED, framebuffer.colormode), 5);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, framebuffer.width, framebuffer.height, tsgl_color_raw(TSGL_GREEN, framebuffer.colormode), 5);
-        tsgl_framebuffer_line(&framebuffer, 0, 0, 0, framebuffer.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 5);
-        drawTextWithRect(20, framebuffer.height - 21, " FONT ");
-        tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
-        delay(3000);
-
-        tsgl_benchmark_reset(&benchmark);
-        for (tsgl_pos i = 0; i < display.width; i += tsgl_benchmark_processMulInt(&benchmark, 30)) {
-            tsgl_benchmark_startRendering(&benchmark);
-            tsgl_framebuffer_clear(&framebuffer, display.black);
-            float sinValue = 0;
-            tsgl_pos oldY = -1;
-            for (tsgl_pos pos = 0; pos < display.width; pos++) {
-                float lsin = sin(fmap((pos - i) % sinSize, 0, sinSize, 0, M_PI * 2));
-                uint16_t y = (display.height / 2) - (lsin * display.height * 0.4);
-                if (pos == center) sinValue = lsin;
-                if (oldY >= 0) {
-                    tsgl_framebuffer_line(&framebuffer, pos, y, pos, oldY, yellow, 1);
-                }
-                tsgl_framebuffer_set(&framebuffer, pos, y, yellow);
-                oldY = y;
-            }
-            tsgl_framebuffer_line(&framebuffer, i, 0, i, framebuffer.height - 1, blue, 1);
-            tsgl_framebuffer_line(&framebuffer, center, 0, center, framebuffer.height - 1, red, 1);
-            uint8_t touchCount = tsgl_touchscreen_touchCount(&touchscreen);
-            for (uint8_t i = 0; i < touchCount; i++) {
-                tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(&touchscreen, i);
-                tsgl_framebuffer_fill(&framebuffer, point.x - 32, point.y - 32, 64, 64, tsgl_color_raw(TSGL_RED, framebuffer.colormode));
-            }
-            tsgl_benchmark_endRendering(&benchmark);
-
-            tsgl_benchmark_startSend(&benchmark);
-            tsgl_display_setBacklight(&display, fmap(sinValue, -1, 1, 64, 255));
-            tsgl_display_asyncSend(&display, &framebuffer, &framebuffer2);
-            tsgl_benchmark_endSend(&benchmark);
-            tsgl_benchmark_print(&benchmark);
-        }
-        tsgl_display_setBacklight(&display, 255);
+        test_gui();
     }
 }
