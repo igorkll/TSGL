@@ -115,7 +115,6 @@ void gui_test() {
     tsgl_sprite spriteData = {
         .rotation = 0,
         .sprite = &sprite,
-        .flixX = true,
         .transparentColor = TSGL_INVALID_RAWCOLOR
     };
 
