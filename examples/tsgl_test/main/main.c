@@ -103,8 +103,7 @@ void gui_test() {
     button4->width = 100;
     button4->height = 100;
 
-    tsgl_gui* window = tsgl_gui_addObject(gui);
-    window->color = tsgl_color_raw(TSGL_GRAY, framebuffer.colormode);
+    tsgl_gui* window = tsgl_gui_framebuffer(gui, 0, &sprite, TSGL_INVALID_RAWCOLOR);
     window->x = 50;
     window->y = 50;
     window->width = 300;
