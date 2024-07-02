@@ -426,5 +426,7 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsg
             tsgl_display_send(root->display, root->target);
         }
         if (benchmark != NULL) tsgl_benchmark_endSend(benchmark);
+    } else {
+        tsgl_benchmark_noSend(benchmark);
     }
 }

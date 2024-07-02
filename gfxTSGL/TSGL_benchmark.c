@@ -21,23 +21,24 @@ void tsgl_benchmark_endRendering(tsgl_benchmark* benchmark) {
     benchmark->renderingTime = benchmark->endRenderingTime - benchmark->startRenderingTime;
 }
 
+void tsgl_benchmark_noRendering(tsgl_benchmark* benchmark) {
+    benchmark->renderingFlag = false;
+}
+
 void tsgl_benchmark_startSend(tsgl_benchmark* benchmark) {
     benchmark->startSendTime = esp_timer_get_time();
 }
 
 void tsgl_benchmark_endSend(tsgl_benchmark* benchmark) {
-    benchmark->currentFrame++;
-    benchmark->_currentFrame++;
-
     benchmark->endSendTime = esp_timer_get_time();
     benchmark->sendTime = benchmark->endSendTime - benchmark->startSendTime;
-    benchmark->totalTime = benchmark->renderingTime + benchmark->sendTime;
-    benchmark->totalFPS = 1.0 / (benchmark->totalTime / 1000.0 / 1000.0);
-    
+
+    benchmark->currentFrame++;
     if (benchmark->endSendCalled) {
         if (benchmark->endSendTime - benchmark->oldEndSendTime > 1000000) {
-            benchmark->realFPS = benchmark->_currentFrame;
-            benchmark->_currentFrame = 0;
+            benchmark->realFPS = benchmark->currentFrame;
+            benchmark->realFPSexists = true;
+            benchmark->currentFrame = 0;
             benchmark->oldEndSendTime = benchmark->endSendTime;
         }
     } else {
@@ -46,12 +47,21 @@ void tsgl_benchmark_endSend(tsgl_benchmark* benchmark) {
     benchmark->endSendCalled = true;
 }
 
+void tsgl_benchmark_noSend(tsgl_benchmark* benchmark) {
+    benchmark->sendFlag = false;
+}
+
 void tsgl_benchmark_print(tsgl_benchmark* benchmark) {
+    benchmark->totalTime = 0;
+    if (benchmark->renderingFlag) benchmark->totalTime += benchmark->renderingTime;
+    if (benchmark->sendFlag) benchmark->totalTime += benchmark->sendTime;
+    benchmark->totalFPS = 1.0 / (benchmark->totalTime / 1000.0 / 1000.0);
+
     ESP_LOGI(TAG, "------ tsgl benchmark ------");
-    ESP_LOGI(TAG, "rendering time: %.3f", benchmark->renderingTime / 1000.0 / 1000.0);
-    ESP_LOGI(TAG, "send      time: %.3f", benchmark->sendTime / 1000.0 / 1000.0);
+    if (benchmark->renderingFlag) ESP_LOGI(TAG, "rendering time: %.3f", benchmark->renderingTime / 1000.0 / 1000.0);
+    if (benchmark->sendFlag) ESP_LOGI(TAG, "send      time: %.3f", benchmark->sendTime / 1000.0 / 1000.0);
     ESP_LOGI(TAG, "total     fps:  %.3f", benchmark->totalFPS);
-    ESP_LOGI(TAG, "real      fps:  %li",  benchmark->realFPS);
+    if (benchmark->realFPSexists) ESP_LOGI(TAG, "real      fps:  %li",  benchmark->realFPS);
     ESP_LOGI(TAG, "----------------------------");
 }
 

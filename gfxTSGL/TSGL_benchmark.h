@@ -5,27 +5,34 @@ typedef struct {
     int64_t startRenderingTime;
     int64_t endRenderingTime;
     int64_t renderingTime;
+    bool renderingFlag;
 
     int64_t startSendTime;
     int64_t endSendTime;
     int64_t oldEndSendTime;
     int64_t sendTime;
+    bool sendFlag;
 
     int64_t totalTime;
 
     uint64_t currentFrame;
-    uint64_t _currentFrame;
     bool endSendCalled;
 
     float totalFPS; //this parameter is relevant only if rendering and sending are performed in the same thread, they go strictly in turn and there is nothing between them
     uint32_t realFPS; //calculates based on the number of tsgl_benchmark_endSend calls per second
+    bool realFPSexists;
 } tsgl_benchmark;
 
 void tsgl_benchmark_reset(tsgl_benchmark* benchmark); //call reset before using benchmark if the benchmark object has stopped being used for a while
+
 void tsgl_benchmark_startRendering(tsgl_benchmark* benchmark);
 void tsgl_benchmark_endRendering(tsgl_benchmark* benchmark);
+void tsgl_benchmark_noRendering(tsgl_benchmark* benchmark); //call it when nothing is being rendered to reset the result
+
 void tsgl_benchmark_startSend(tsgl_benchmark* benchmark);
 void tsgl_benchmark_endSend(tsgl_benchmark* benchmark);
+void tsgl_benchmark_noSend(tsgl_benchmark* benchmark); //you will call when nothing is sent to reset the result
+
 void tsgl_benchmark_print(tsgl_benchmark* benchmark);
 void tsgl_benchmark_wait(tsgl_benchmark* benchmark, float targetFPS); //waits for the right time in order not to exceed the target frequency of frames, you need to call after endSend
 
