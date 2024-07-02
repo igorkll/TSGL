@@ -153,8 +153,8 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
 
 // graphic
 
-void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
-    tsgl_gfx_push(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, rotation, sprite, transparentColor, framebuffer->width, framebuffer->height);
+void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+    tsgl_gfx_push(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, sprite, framebuffer->width, framebuffer->height);
 }
 
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
@@ -296,6 +296,7 @@ tsgl_rawcolor tsgl_framebuffer_getWithoutCheck(tsgl_framebuffer* framebuffer, ts
         default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
             tsgl_rawcolor rawcolor;
+            rawcolor.invalid = false;
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 rawcolor.arr[i] = framebuffer->buffer[index + i];
             }
@@ -318,6 +319,7 @@ tsgl_rawcolor tsgl_framebuffer_rotationGet(tsgl_framebuffer* framebuffer, uint8_
         default: {
             size_t index = _rotateGetBufferIndex(framebuffer, rotation, x, y);
             tsgl_rawcolor rawcolor;
+            rawcolor.invalid = false;
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
                 rawcolor.arr[i] = framebuffer->buffer[index + i];
             }

@@ -77,3 +77,5 @@ typedef struct {
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)
+
+typedef struct tsgl_sprite tsgl_sprite;

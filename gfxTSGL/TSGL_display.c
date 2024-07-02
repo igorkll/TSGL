@@ -338,8 +338,8 @@ static void _fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width,
     }
 }
 
-void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor) {
-    tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, rotation, sprite, transparentColor, display->width, display->height);
+void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+    tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, sprite, display->width, display->height);
 }
 
 void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {

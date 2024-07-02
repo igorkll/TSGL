@@ -75,6 +75,7 @@ struct tsgl_gui {
     tsgl_gui* parent;
     tsgl_gui* root;
 
+    bool noFreeData;
     void* data;
     int intData;
 };

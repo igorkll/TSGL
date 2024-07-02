@@ -93,26 +93,26 @@ void tsgl_gfx_line(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill)
     }
 }
 
-void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, uint8_t rotation, tsgl_framebuffer* sprite, tsgl_rawcolor transparentColor, tsgl_pos screenWidth, tsgl_pos screenHeight) {
-    rotation = ((uint8_t)(-rotation)) % (uint8_t)4;
+void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos screenWidth, tsgl_pos screenHeight) {
+    sprite->rotation = ((uint8_t)(-sprite->rotation)) % (uint8_t)4;
 
-    if (sprite->hardwareRotate) {
+    if (sprite->sprite->hardwareRotate) {
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
         return;
     }
 
     tsgl_pos spriteWidth;
     tsgl_pos spriteHeight;
-    switch (rotation) {
+    switch (sprite->rotation) {
         case 1:
         case 3:
-            spriteWidth = sprite->defaultHeight;
-            spriteHeight = sprite->defaultWidth;
+            spriteWidth = sprite->sprite->defaultHeight;
+            spriteHeight = sprite->sprite->defaultWidth;
             break;
 
         default:
-            spriteWidth = sprite->defaultWidth;
-            spriteHeight = sprite->defaultHeight;
+            spriteWidth = sprite->sprite->defaultWidth;
+            spriteHeight = sprite->sprite->defaultHeight;
             break;
     }
 
@@ -128,8 +128,8 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, u
         tsgl_pos setPosX = posX + x;
         for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
-            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite, rotation, posX, posY);
-            if (transparentColor.invalid || memcmp(color.arr, transparentColor.arr, sprite->colorsize) != 0) {
+            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation, posX, posY);
+            if (sprite->transparentColor.invalid || memcmp(color.arr, sprite->transparentColor.arr, sprite->sprite->colorsize) != 0) {
                 set(arg, setPosX, setPosY, color);
             }
         } 

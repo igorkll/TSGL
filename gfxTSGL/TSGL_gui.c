@@ -383,7 +383,7 @@ void tsgl_gui_free(tsgl_gui* object) {
             }
         }
     }
-    if (object->data != NULL) free(object->data);
+    if (object->data != NULL && !object->noFreeData) free(object->data);
     free(object->children);
     free(object);
 }
