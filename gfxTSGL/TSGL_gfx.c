@@ -101,13 +101,18 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, u
         return;
     }
 
-    tsgl_pos spriteWidth = sprite->defaultWidth;
-    tsgl_pos spriteHeight = sprite->defaultHeight;
+    tsgl_pos spriteWidth;
+    tsgl_pos spriteHeight;
     switch (rotation) {
         case 1:
         case 3:
             spriteWidth = sprite->defaultHeight;
             spriteHeight = sprite->defaultWidth;
+            break;
+
+        default:
+            spriteWidth = sprite->defaultWidth;
+            spriteHeight = sprite->defaultHeight;
             break;
     }
 
@@ -115,12 +120,14 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, u
     tsgl_pos startY = 0;
     if (x < 0) startX = -x;
     if (y < 0) startY = -y;
+    tsgl_pos maxSpriteWidth = screenWidth - x;
+    tsgl_pos maxSpriteHeight = screenHeight - y;
+    if (spriteWidth > maxSpriteWidth) spriteWidth = maxSpriteWidth;
+    if (spriteHeight > maxSpriteHeight) spriteHeight = maxSpriteHeight;
     for (tsgl_pos posX = startX; posX < spriteWidth; posX++) {
         tsgl_pos setPosX = posX + x;
-        if (setPosX >= screenWidth) break;
         for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
-            if (setPosY >= screenHeight) break;
             tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite, rotation, posX, posY);
             if (transparentColor.invalid || memcmp(color.arr, transparentColor.arr, sprite->colorsize) != 0) {
                 set(arg, setPosX, setPosY, color);

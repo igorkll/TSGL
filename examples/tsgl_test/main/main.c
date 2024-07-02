@@ -86,6 +86,13 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 }
 
 void gui_test() {
+    tsgl_framebuffer sprite;
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(&sprite, display.colormode, 300, 150, BUFFER));
+    tsgl_framebuffer_clear(&sprite, sprite.black);
+    for (int i = 0; i < 300; i++) {
+        tsgl_framebuffer_set(&sprite, esp_random() % sprite.width, esp_random() % sprite.height, tsgl_color_raw(TSGL_RED, sprite.colormode));
+    }
+
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui->color = tsgl_color_raw(tsgl_color_fromHex(0x3b3b3b), gui->colormode);
@@ -96,8 +103,7 @@ void gui_test() {
     button4->width = 100;
     button4->height = 100;
 
-    tsgl_gui* window = tsgl_gui_addObject(gui);
-    window->color = tsgl_color_raw(TSGL_GRAY, gui->colormode);
+    tsgl_gui* window = tsgl_gui_addFramebuffer(gui, 0, &sprite, TSGL_INVALID_RAWCOLOR);
     window->x = 50;
     window->y = 50;
     window->width = 300;
