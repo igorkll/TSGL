@@ -80,7 +80,7 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
         .fg = tsgl_color_raw(TSGL_MAGENTA, framebuffer.colormode)
     };
     
-    tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, printSettings, text);
+    tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, display.width, display.height, printSettings, text);
     tsgl_framebuffer_rect(&framebuffer, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, framebuffer.colormode), 1);
     tsgl_framebuffer_text(&framebuffer, x, y, printSettings, text);
 }
@@ -98,9 +98,11 @@ void gui_test() {
         .font = font,
         .bg = TSGL_INVALID_RAWCOLOR,
         .fg = tsgl_color_raw(TSGL_ORANGE, sprite.colormode),
-        .locationMode = tsgl_print_start_top
+        .locationMode = tsgl_print_start_top,
+        .scale = 0.6
     };
-    tsgl_framebuffer_text(&sprite, 1, 1, sets, "LOLZ");
+    tsgl_print_textArea textArea = tsgl_framebuffer_text(&sprite, 1, 1, sets, "LOLZ");
+    tsgl_framebuffer_rect(&sprite, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, sprite.colormode), 3);
 
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);

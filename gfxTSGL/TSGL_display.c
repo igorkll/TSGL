@@ -324,20 +324,6 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
 
 // graphic
 
-static void _fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    tsgl_display_select(display, x, y, width, height);
-    switch (display->colormode) {
-        case tsgl_rgb444:
-        case tsgl_bgr444:
-            tsgl_display_sendFlood(display, color.arr, 3, (width * height) / 2);
-            break;
-        
-        default:
-            tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
-            break;
-    }
-}
-
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
     tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, sprite, display->width, display->height);
 }
@@ -361,7 +347,7 @@ void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcol
 }
 
 void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fill, x1, y1, x2, y2, color, stroke, display->width, display->height);
+    tsgl_gfx_line(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x1, y1, x2, y2, color, stroke, display->width, display->height);
 }
 
 void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
@@ -376,17 +362,31 @@ void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
     if (width + x > display->width) width = display->width - x;
     if (height + y > display->height) height = display->height - y;
     if (width <= 0 || height <= 0) return;
-    _fill(display, x, y, width, height, color);
+    tsgl_display_fillWithoutCheck(display, x, y, width, height, color);
+}
+
+void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+    tsgl_display_select(display, x, y, width, height);
+    switch (display->colormode) {
+        case tsgl_rgb444:
+        case tsgl_bgr444:
+            tsgl_display_sendFlood(display, color.arr, 3, (width * height) / 2);
+            break;
+        
+        default:
+            tsgl_display_sendFlood(display, (const uint8_t*)color.arr, display->colorsize, width * height);
+            break;
+    }
 }
 
 void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
     tsgl_gfx_rect(display, (TSGL_FILL_REFERENCE())tsgl_display_fill, x, y, width, height, color, stroke);
 }
 
-void tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_font_rasterize(display, (TSGL_SET_REFERENCE())tsgl_display_set, x, y, sets, text);
+tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    return tsgl_font_rasterize(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, display->width, display->height, sets, text);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
-    _fill(display, 0, 0, display->width, display->height, color);
+    tsgl_display_fillWithoutCheck(display, 0, 0, display->width, display->height, color);
 }

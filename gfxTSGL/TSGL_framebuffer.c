@@ -199,6 +199,10 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
         tsgl_framebuffer_clear(framebuffer, color);
         return;
     }
+    return tsgl_framebuffer_fillWithoutCheck(framebuffer, x, y, width, height, color);
+}
+
+void tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -256,8 +260,8 @@ void tsgl_framebuffer_rect(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     tsgl_gfx_rect(framebuffer, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fill, x, y, width, height, color, stroke);
 }
 
-void tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    tsgl_font_rasterize(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_set, x, y, sets, text);
+tsgl_print_textArea tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    return tsgl_font_rasterize(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fillWithoutCheck, x, y, framebuffer->width, framebuffer->height, sets, text);
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
