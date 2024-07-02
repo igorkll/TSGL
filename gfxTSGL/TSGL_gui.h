@@ -2,6 +2,7 @@
 #include "TSGL.h"
 #include "TSGL_touchscreen.h"
 #include "TSGL_framebuffer.h"
+#include "TSGL_benchmark.h"
 #include "TSGL_display.h"
 
 #define TSGL_GUI_DRAW(gui, name, ...) if (gui->buffered) tsgl_framebuffer_##name(gui->target, __VA_ARGS__); else tsgl_display_##name(gui->target, __VA_ARGS__)
@@ -83,4 +84,4 @@ void tsgl_gui_free(tsgl_gui* object);
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
-void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer);
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark);

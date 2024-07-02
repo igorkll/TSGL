@@ -148,14 +148,8 @@ void gui_test() {
     button3->draggable = true;
 
     while (true) {
-        tsgl_benchmark_startRendering(&benchmark);
         tsgl_gui_processTouchscreen(gui, &touchscreen);
-        tsgl_benchmark_endRendering(&benchmark);
-
-        tsgl_benchmark_startSend(&benchmark);
-        tsgl_gui_processGui(gui, &framebuffer2);
-        tsgl_benchmark_endSend(&benchmark);
-
+        tsgl_gui_processGui(gui, &framebuffer2, &benchmark);
         tsgl_benchmark_print(&benchmark);
     }
 

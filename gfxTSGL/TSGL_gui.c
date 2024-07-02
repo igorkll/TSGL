@@ -1,6 +1,7 @@
 #include "TSGL.h"
 #include "TSGL_touchscreen.h"
 #include "TSGL_framebuffer.h"
+#include "TSGL_benchmark.h"
 #include "TSGL_display.h"
 #include "TSGL_gui.h"
 #include <esp_random.h>
@@ -408,9 +409,13 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
     }
 }
 
-void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark) {
+    if (benchmark != NULL) tsgl_benchmark_startRendering(benchmark);
     _math(root, 0, 0, false);
-    if (_draw(root, false) && root->buffered) {
+    bool needSend = _draw(root, false);
+    if (benchmark != NULL) tsgl_benchmark_endRendering(benchmark);
+    if (needSend && root->buffered) {
+        if (benchmark != NULL) tsgl_benchmark_startSend(benchmark);
         if (asyncFramebuffer != NULL) {
             if (root->needDraw) {
                 tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
@@ -420,5 +425,6 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer) {
         } else {
             tsgl_display_send(root->display, root->target);
         }
+        if (benchmark != NULL) tsgl_benchmark_endSend(benchmark);
     }
 }
