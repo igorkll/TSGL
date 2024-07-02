@@ -3,10 +3,12 @@
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
 
-struct tsgl_sprite {
+struct tsgl_sprite { //the type is declared in "TSGL.h"
     uint8_t rotation;
     tsgl_framebuffer* sprite;
     tsgl_rawcolor transparentColor;
+    bool flixX;
+    bool flixY;
 };
 
 void tsgl_gfx_rect(void* arg, TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke);

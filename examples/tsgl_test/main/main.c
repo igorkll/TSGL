@@ -94,6 +94,14 @@ void gui_test() {
         tsgl_framebuffer_set(&sprite, esp_random() % sprite.width, esp_random() % sprite.height, tsgl_color_raw(TSGL_GREEN, sprite.colormode));
     }
 
+    tsgl_print_settings sets = {
+        .font = font,
+        .bg = TSGL_INVALID_RAWCOLOR,
+        .fg = tsgl_color_raw(TSGL_ORANGE, sprite.colormode),
+        .locationMode = tsgl_print_start_top
+    };
+    tsgl_framebuffer_text(&sprite, 1, 1, sets, "LOLZ");
+
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui->color = tsgl_color_raw(tsgl_color_fromHex(0x3b3b3b), gui->colormode);
@@ -107,6 +115,7 @@ void gui_test() {
     tsgl_sprite spriteData = {
         .rotation = 0,
         .sprite = &sprite,
+        .flixX = true,
         .transparentColor = TSGL_INVALID_RAWCOLOR
     };
 
