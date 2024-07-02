@@ -74,38 +74,19 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), tsgl
             if (charPosition > 0) {
                 uint16_t charWidth = tsgl_font_width(sets.font, chr);
                 uint16_t charHeight = tsgl_font_height(sets.font, chr);
-                uint16_t scaleCharWidth;
-                uint16_t scaleCharHeight;
-                if (sets.scale != 0) {
-                    scaleCharWidth = (((float)charWidth) * sets.scale) + 0.5;
-                    scaleCharHeight = (((float)charHeight) * sets.scale) + 0.5;
-                } else {
-                    scaleCharWidth = charWidth;
-                    scaleCharHeight = charHeight;
-                }
-                for (tsgl_pos iy = 0; iy < scaleCharWidth; iy++) {
-                    for (tsgl_pos ix = 0; ix < scaleCharHeight; ix++) {
-                        tsgl_pos oix;
-                        tsgl_pos oiy;
-                        if (sets.scale != 0) {
-                            oix = ((float)ix) / sets.scale;
-                            oiy = ((float)iy) / sets.scale;
-                        } else {
-                            oix = ix;
-                            oiy = iy;
-                        }
-
+                for (tsgl_pos iy = 0; iy < charWidth; iy++) {
+                    for (tsgl_pos ix = 0; ix < charHeight; ix++) {
                         tsgl_pos px = x + ix + offset;
                         tsgl_pos py = 0;
                         size_t index = 0;
                         switch (sets.locationMode) {
                             case tsgl_print_start_bottom:
-                                index = oix + (((charHeight - 1) - oiy) * charWidth);
+                                index = ix + (((charHeight - 1) - iy) * charWidth);
                                 py = y - iy;
                                 if (py < textArea.top) textArea.top = py;
                                 break;
                             case tsgl_print_start_top:
-                                index = oix + (oiy * charWidth);
+                                index = ix + (iy * charWidth);
                                 py = y + iy;
                                 if (py > textArea.bottom) textArea.bottom = py;
                                 break;
@@ -121,7 +102,7 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), tsgl
                         }
                     }
                 }
-                offset += scaleCharWidth + spacing;
+                offset += charWidth + spacing;
             }
         } else {
             tsgl_pos spaceSize;
