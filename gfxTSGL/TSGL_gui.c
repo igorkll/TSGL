@@ -417,11 +417,7 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsg
     if (needSend && root->buffered) {
         if (benchmark != NULL) tsgl_benchmark_startSend(benchmark);
         if (asyncFramebuffer != NULL) {
-            if (root->needDraw) {
-                tsgl_display_asyncSend(root->display, root->target, asyncFramebuffer);
-            } else {
-                tsgl_display_send(root->display, root->target);
-            }
+            tsgl_display_asyncCopySend(root->display, root->target, asyncFramebuffer);
         } else {
             tsgl_display_send(root->display, root->target);
         }
