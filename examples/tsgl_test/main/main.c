@@ -32,6 +32,7 @@ const tsgl_settings settings = {
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
+#include <esp_random.h>
 #include <esp_timer.h>
 #include <math.h>
 
@@ -47,6 +48,7 @@ const tsgl_settings settings = {
 
 #include <TSGL_fonts/font.h>
 #include <TSGL_gui/button.h>
+#include <TSGL_gui/framebuffer.h>
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
@@ -87,6 +89,13 @@ void gui_test() {
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui->color = tsgl_color_raw(tsgl_color_fromHex(0x1052a3), framebuffer.colormode);
+    
+    tsgl_framebuffer* sprite = malloc(sizeof(tsgl_framebuffer));
+    ESP_ERROR_CHECK(tsgl_framebuffer_init(sprite, display.colormode, 300, 150, BUFFER));
+    tsgl_framebuffer_clear(sprite, sprite->black);
+    for (int i = 0; i < 100; i++) {
+        tsgl_framebuffer_set(sprite, esp_random() % sprite->width, esp_random() % sprite->height, tsgl_color_raw(TSGL_RED, sprite->colormode));
+    }
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
     button4->x = 50;
@@ -94,12 +103,12 @@ void gui_test() {
     button4->width = 100;
     button4->height = 100;
 
-    tsgl_gui* window = tsgl_gui_addObject(gui);
+    tsgl_gui* window = tsgl_gui_framebuffer(gui, 0, sprite, TSGL_INVALID_RAWCOLOR);
     window->color = tsgl_color_raw(TSGL_GRAY, framebuffer.colormode);
     window->x = 50;
     window->y = 50;
-    window->width = 300;
-    window->height = 150;
+    window->width = sprite->width;
+    window->height = sprite->height;
     window->draggable = true;
 
     tsgl_gui* window2 = tsgl_gui_addObject(gui);
@@ -153,6 +162,7 @@ void gui_test() {
         tsgl_benchmark_print(&benchmark);
     }
 
+    free(sprite);
     tsgl_gui_free(gui);
 }
 

@@ -1,5 +1,4 @@
-#include "../TSGL.h"
-#include "../TSGL_gui.h"
+#include "button.h"
 
 static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
     switch (event) {

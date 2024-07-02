@@ -250,6 +250,7 @@ static bool _draw(tsgl_gui* object, bool force) {
         object->localMovent = false;
 
         if (!object->color.invalid) {
+            printf("FILLING\n");
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
             object->draw_callback(object);
