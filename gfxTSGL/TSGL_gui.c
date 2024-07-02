@@ -13,6 +13,7 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     gui->target = target;
     gui->buffered = buffered;
     gui->leaky_walls = true;
+    gui->processing = true;
 
     gui->interactive = true;
     gui->displayable = true;
@@ -39,6 +40,13 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
             return val * max;
     }
     return 0;
+}
+
+static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_gui* object2) {
+    return (x < object2->math_x + object2->math_width && 
+            x + object1->math_width > object2->math_x && 
+            y < object2->math_y + object2->math_height && 
+            y + object1->math_height > object2->math_y);
 }
 
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
@@ -82,14 +90,17 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
 
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
+        object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root, object);
 
         forceParentsMath = true;
     }
     object->needMath = false;
 
-    if (object->children != NULL) {
-        for (size_t i = 0; i < object->childrenCount; i++) {
-            _math(object->children[i], object->math_x, object->math_y, forceParentsMath);
+    if (object->processing) {
+        if (object->children != NULL) {
+            for (size_t i = 0; i < object->childrenCount; i++) {
+                _math(object->children[i], object->math_x, object->math_y, forceParentsMath);
+            }
         }
     }
 }
@@ -124,7 +135,7 @@ static void _toUpLevel(tsgl_gui* object) {
 }
 
 static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
-    if (!object->interactive) {
+    if (!object->interactive || !object->processing) {
         object->pressed = false;
         return false;
     }
@@ -202,13 +213,6 @@ static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
 }
 */
 
-static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_gui* object2) {
-    return (x < object2->math_x + object2->math_width && 
-            x + object1->math_width > object2->math_x && 
-            y < object2->math_y + object2->math_height && 
-            y + object1->math_height > object2->math_y);
-}
-
 static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index) {
     for (size_t i = index + 1; i < object->childrenCount; i++) {
         tsgl_gui* child2 = object->children[i];
@@ -221,7 +225,7 @@ static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index)
 }
 
 static bool _draw(tsgl_gui* object, bool force) {
-    if (!object->displayable) {
+    if (!object->displayable || !object->processing) {
         object->needDraw = false;
         return false;
     }

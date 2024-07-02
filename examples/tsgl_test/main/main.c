@@ -86,16 +86,9 @@ void drawTextWithRect(tsgl_pos x, tsgl_pos y, const char* text) {
 }
 
 void gui_test() {
-    tsgl_framebuffer sprite;
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&sprite, display.colormode, 300, 150, BUFFER));
-    tsgl_framebuffer_clear(&sprite, sprite.black);
-    for (int i = 0; i < 100; i++) {
-        tsgl_framebuffer_set(&sprite, esp_random() % sprite.width, esp_random() % sprite.height, tsgl_color_raw(TSGL_RED, sprite.colormode));
-    }
-
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
-    gui->color = tsgl_color_raw(tsgl_color_fromHex(0x337733), framebuffer.colormode);
+    gui->color = tsgl_color_raw(tsgl_color_fromHex(0x3b3b3b), gui->colormode);
 
     tsgl_gui* button4 = tsgl_gui_addButton(gui);
     button4->x = 50;
@@ -103,15 +96,16 @@ void gui_test() {
     button4->width = 100;
     button4->height = 100;
 
-    tsgl_gui* window = tsgl_gui_framebuffer(gui, 0, &sprite, TSGL_INVALID_RAWCOLOR);
+    tsgl_gui* window = tsgl_gui_addObject(gui);
+    window->color = tsgl_color_raw(TSGL_GRAY, gui->colormode);
     window->x = 50;
     window->y = 50;
-    window->width = sprite.width;
-    window->height = sprite.height;
+    window->width = 300;
+    window->height = 150;
     window->draggable = true;
 
     tsgl_gui* window2 = tsgl_gui_addObject(gui);
-    window2->color = tsgl_color_raw(TSGL_YELLOW, framebuffer.colormode);
+    window2->color = tsgl_color_raw(TSGL_YELLOW, gui->colormode);
     window2->x = 200;
     window2->y = 200;
     window2->width = 100;
@@ -119,7 +113,7 @@ void gui_test() {
     window2->draggable = true;
 
     tsgl_gui* window3 = tsgl_gui_addObject(gui);
-    window3->color = tsgl_color_raw(TSGL_GREEN, framebuffer.colormode);
+    window3->color = tsgl_color_raw(TSGL_GREEN, gui->colormode);
     window3->x = 200;
     window3->y = 200;
     window3->width = 100;
@@ -127,7 +121,7 @@ void gui_test() {
     window3->draggable = true;
 
     tsgl_gui* testPlane = tsgl_gui_addObject(window);
-    testPlane->color = tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), framebuffer.colormode);
+    testPlane->color = tsgl_color_raw(tsgl_color_fromHex(0xbdbdbd), gui->colormode);
     testPlane->x = 250;
     testPlane->y = 0;
     testPlane->width = 50;
@@ -148,7 +142,7 @@ void gui_test() {
     button2->draggable = true;
 
     tsgl_gui* button3 = tsgl_gui_addObject(button);
-    button3->color = tsgl_color_raw(tsgl_color_fromHex(0xffffff), framebuffer.colormode);
+    button3->color = tsgl_color_raw(tsgl_color_fromHex(0xffffff), gui->colormode);
     button3->x = 10;
     button3->y = 10;
     button3->width = 30;
@@ -161,7 +155,6 @@ void gui_test() {
         tsgl_benchmark_print(&benchmark);
     }
 
-    tsgl_framebuffer_free(&sprite);
     tsgl_gui_free(gui);
 }
 
