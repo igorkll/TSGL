@@ -99,8 +99,8 @@ void test_gui() {
     tsgl_gui_setAllFormat(button, tsgl_gui_percentMaxSide);
     button->x = 0.1;
     button->y = 0.1;
-    button->width = 0.2;
-    button->height = 0.2;
+    button->width = 0.4;
+    button->height = 0.4;
     tsgl_gui_text_setParams(button->children[0], tsgl_font_defaultFont, 0.4, TSGL_INVALID_COLOR, TSGL_WHITE);
     tsgl_gui_text_setText(button->children[0], "TEST\nQWER\n123456789", false);
 
