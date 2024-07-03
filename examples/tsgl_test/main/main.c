@@ -100,7 +100,7 @@ void test_gui() {
     button4->y = 50;
     button4->width = 100;
     button4->height = 100;
-    tsgl_gui_button_setText(button4, "TEST");
+    tsgl_gui_button_setText(button4, "TEST", false);
 
     tsgl_sprite spriteData = {
         .rotation = 0,

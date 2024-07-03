@@ -162,6 +162,7 @@ tsgl_color tsgl_color_fromHex(uint32_t color) {
 }
 
 tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
+    if (color.invalid) return TSGL_INVALID_RAWCOLOR;
     tsgl_rawcolor rawcolor;
     rawcolor.invalid = false;
     switch (colormode) {
@@ -231,6 +232,7 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
 }
 
 tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
+    if (rawcolor.invalid) return TSGL_INVALID_COLOR;
     switch (colormode) {
         case tsgl_rgb565_le : {
             return tsgl_color_from565(rawcolor.arr[0] + (rawcolor.arr[1] << 8));

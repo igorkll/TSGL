@@ -4,6 +4,7 @@
 
 //used to make a push without using transparentColor
 #define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.invalid = true})
+#define TSGL_INVALID_COLOR ((tsgl_color) {.invalid = true})
 
 typedef struct {
     bool invalid;
@@ -14,6 +15,7 @@ typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
+    bool invalid;
 } tsgl_color;
 
 extern const tsgl_color TSGL_WHITE;
