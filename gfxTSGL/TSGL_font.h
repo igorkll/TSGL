@@ -8,6 +8,12 @@ typedef enum {
     tsgl_print_start_top //starting from the top left point
 } tsgl_print_locationMode;
 
+typedef enum {
+    tsgl_print_alignment_left = 0,
+    tsgl_print_alignment_center,
+    tsgl_print_alignment_right,
+} tsgl_print_alignment;
+
 typedef struct {
     const void* font;
     tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
@@ -23,6 +29,7 @@ typedef struct {
     tsgl_pos width; //the width and height can be specified so that the text does not bulge out of the frame
     tsgl_pos height;
     bool globalCentering; //place the content in the middle of the box
+    tsgl_print_alignment alignment;
 } tsgl_print_settings;
 
 typedef struct {
