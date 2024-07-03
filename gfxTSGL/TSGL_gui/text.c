@@ -6,7 +6,12 @@ static void _draw_callback(tsgl_gui* self) {
         TSGL_GUI_DRAW(self, fill, self->math_x, self->math_y, self->math_width, self->math_height, data->bg);
     }
     if (data->text != NULL) {
-        TSGL_GUI_DRAW(self, text, self->math_x, self->math_y, data->sets, data->text);
+        tsgl_print_textArea textArea = tsgl_font_getTextArea(self->math_x, self->math_y, -1, -1, data->sets, data->text);
+        TSGL_GUI_DRAW(self, text,
+            (self->math_x + (self->math_width / 2)) - (textArea.width / 2),
+            (self->math_y + (self->math_height / 2)) - (textArea.height / 2),
+            data->sets, data->text
+        );
     }
 }
 
