@@ -5,13 +5,11 @@ static void _draw_callback(tsgl_gui* self) {
     if (!data->bg.invalid) {
         TSGL_GUI_DRAW(self, fill, self->math_x, self->math_y, self->math_width, self->math_height, data->bg);
     }
+
     if (data->text != NULL) {
-        tsgl_print_textArea textArea = tsgl_font_getTextArea(self->math_x, self->math_y, -1, -1, data->sets, data->text);
-        TSGL_GUI_DRAW(self, text,
-            (self->math_x + (self->math_width / 2)) - (textArea.width / 2),
-            (self->math_y + (self->math_height / 2)) - (textArea.height / 2),
-            data->sets, data->text
-        );
+        data->sets.width = self->math_width;
+        data->sets.height = self->math_height;
+        TSGL_GUI_DRAW(self, text, self->math_x, self->math_y, data->sets, data->text);
     }
 }
 
@@ -29,6 +27,7 @@ tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
     data->sets.font = tsgl_font_defaultFont;
     data->sets.locationMode = tsgl_print_start_top;
     data->sets.multiline = true;
+    data->sets.globalCentering = true;
     obj->interactive = false;
     obj->data = data;
     obj->draw_callback = _draw_callback;

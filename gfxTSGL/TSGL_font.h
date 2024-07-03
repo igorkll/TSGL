@@ -13,14 +13,16 @@ typedef struct {
     tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
     tsgl_rawcolor fg;
 
-    bool multiline;
-    tsgl_pos width;
-    tsgl_pos height;
-
     float scale; //if 0, scaling is disabled
     tsgl_pos spacing; //the distance between characters. if 0, is calculated automatically
     tsgl_pos spaceSize; //the size of the space character. if 0, is calculated automatically
     tsgl_print_locationMode locationMode;
+
+    // the following options only work if multiline is enabled
+    bool multiline;
+    tsgl_pos width; //the width and height can be specified so that the text does not bulge out of the frame
+    tsgl_pos height;
+    bool globalCentering; //place the content in the middle of the box
 } tsgl_print_settings;
 
 typedef struct {

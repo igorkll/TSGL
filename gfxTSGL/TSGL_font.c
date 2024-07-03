@@ -68,6 +68,16 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
     if (spacing <= 0) spacing = 1;
 
     if (sets.multiline) {
+        if (sets.globalCentering) {
+            tsgl_print_settings lSets;
+            memcpy(&lSets, &sets, sizeof(tsgl_print_settings));
+            lSets.globalCentering = false;
+
+            tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, screenWidth, screenHeight, lSets, text);
+            if (sets.width > 0) x = (x + (sets.width / 2)) - (textArea.width / 2);
+            if (sets.height > 0) y = (y + (sets.height / 2)) - (textArea.height / 2);
+        }
+
         tsgl_print_settings newSets = {
             .font = sets.font,
             .bg = sets.bg,
