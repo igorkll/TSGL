@@ -31,9 +31,12 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     return gui;
 }
 
-static tsgl_pos _localMath(tsgl_gui_paramFormat format, float val, float max) {
+static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, float max) {
     switch (format) {
         case tsgl_gui_absolute:
+            if (side && val < 0) {
+                return max;
+            }
             return val + 0.5;
 
         case tsgl_gui_percent:
@@ -52,12 +55,12 @@ static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_g
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        tsgl_pos localMathX = _localMath(object->format_x, object->x, object->parent->math_width);
-        tsgl_pos localMathY = _localMath(object->format_y, object->y, object->parent->math_height);
+        tsgl_pos localMathX = _localMath(object->format_x, false, object->x, object->parent->math_width);
+        tsgl_pos localMathY = _localMath(object->format_y, false, object->y, object->parent->math_height);
         object->math_x = localMathX;
         object->math_y = localMathY;
-        object->math_width = _localMath(object->format_width, object->width, object->parent->math_width);
-        object->math_height = _localMath(object->format_height, object->height, object->parent->math_height);
+        object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width);
+        object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height);
 
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;
@@ -351,8 +354,8 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->parent = object;
     newObject->x = 0;
     newObject->y = 0;
-    newObject->width = object->width;
-    newObject->height = object->height;
+    newObject->width = -1; //-1 fills everything without using the percent mode
+    newObject->height = -1;
     newObject->interactive = true;
     newObject->displayable = true;
     newObject->needMath = true;

@@ -20,6 +20,8 @@ tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
     tsgl_gui_textData* data = calloc(1, sizeof(tsgl_gui_textData));
     data->bg = TSGL_INVALID_RAWCOLOR;
     data->sets.bg = TSGL_INVALID_RAWCOLOR;
+    data->sets.fg = tsgl_color_raw(TSGL_WHITE, obj->colormode);
+    data->sets.font = tsgl_font_defaultFont;
     data->sets.locationMode = tsgl_print_start_top;
     obj->interactive = false;
     obj->data = data;

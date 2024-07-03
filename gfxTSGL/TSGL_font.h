@@ -1,6 +1,7 @@
 #pragma once
 #include "TSGL.h"
 #include "TSGL_color.h"
+#include "TSGL_fonts/default.h"
 
 typedef enum {
     tsgl_print_start_bottom = 0, //the text is drawn starting from the bottom left point
