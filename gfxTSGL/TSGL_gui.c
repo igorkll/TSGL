@@ -32,7 +32,7 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     return gui;
 }
 
-static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, float max) {
+static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, float max, float minSide, float maxSide) {
     switch (format) {
         case tsgl_gui_absolute:
             if (side && val < 0) {
@@ -42,6 +42,12 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, fl
 
         case tsgl_gui_percent:
             return val * max;
+
+        case tsgl_gui_percentMinSide:
+            return val * minSide;
+
+        case tsgl_gui_percentMaxSide:
+            return val * maxSide;
     }
     return 0;
 }
@@ -56,12 +62,14 @@ static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_g
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        tsgl_pos localMathX = _localMath(object->format_x, false, object->x, object->parent->math_width);
-        tsgl_pos localMathY = _localMath(object->format_y, false, object->y, object->parent->math_height);
+        tsgl_pos minSide = TSGL_MIN(object->parent->math_width, object->parent->math_height);
+        tsgl_pos maxSide = TSGL_MAX(object->parent->math_width, object->parent->math_height);
+        tsgl_pos localMathX = _localMath(object->format_x, false, object->x, object->parent->math_width, minSide, maxSide);
+        tsgl_pos localMathY = _localMath(object->format_y, false, object->y, object->parent->math_height, minSide, maxSide);
         object->math_x = localMathX;
         object->math_y = localMathY;
-        object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width);
-        object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height);
+        object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width, minSide, maxSide);
+        object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height, minSide, maxSide);
 
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;

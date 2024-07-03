@@ -79,10 +79,8 @@ tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2) {
     return result;
 }
 
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
 static int lclip(int n, int lower, int upper) {
-  return max(lower, min(n, upper));
+  return TSGL_MAX(lower, TSGL_MIN(n, upper));
 }
 
 tsgl_color tsgl_color_mul(tsgl_color color, float mul) {

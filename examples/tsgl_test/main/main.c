@@ -95,13 +95,14 @@ void test_gui() {
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui->color = tsgl_color_raw(tsgl_color_fromHex(0x3b3b3b), gui->colormode);
 
-    tsgl_gui* button4 = tsgl_gui_addButton(gui);
-    button4->x = 50;
-    button4->y = 50;
-    button4->width = 100;
-    button4->height = 100;
-    tsgl_gui_text_setParams(button4->children[0], tsgl_font_defaultFont, 0.4, TSGL_INVALID_COLOR, TSGL_WHITE);
-    tsgl_gui_text_setText(button4->children[0], "TEST\nQWER\n123456789", false);
+    tsgl_gui* button = tsgl_gui_addButton(gui);
+    tsgl_gui_setAllFormat(button, tsgl_gui_percentMaxSide);
+    button->x = 0.1;
+    button->y = 0.1;
+    button->width = 0.2;
+    button->height = 0.2;
+    tsgl_gui_text_setParams(button->children[0], tsgl_font_defaultFont, 0.4, TSGL_INVALID_COLOR, TSGL_WHITE);
+    tsgl_gui_text_setText(button->children[0], "TEST\nQWER\n123456789", false);
 
     /*
     tsgl_sprite spriteData = {
