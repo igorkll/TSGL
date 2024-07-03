@@ -13,6 +13,10 @@ typedef struct {
     tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
     tsgl_rawcolor fg;
 
+    bool multiline;
+    tsgl_pos width;
+    tsgl_pos height;
+
     float scale; //if 0, scaling is disabled
     tsgl_pos spacing; //the distance between characters. if 0, is calculated automatically
     tsgl_pos spaceSize; //the size of the space character. if 0, is calculated automatically
@@ -26,6 +30,7 @@ typedef struct {
     tsgl_pos bottom;
     tsgl_pos width;
     tsgl_pos height;
+    size_t strlen;
 } tsgl_print_textArea;
 
 bool tsgl_font_isSmoothing(const void* font);
@@ -33,6 +38,7 @@ size_t tsgl_font_find(const void* font, char chr);
 uint16_t tsgl_font_width(const void* font, char chr);
 uint16_t tsgl_font_height(const void* font, char chr);
 uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index);
+size_t tsgl_font_len(const char* str);
 
 tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL_SET_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text);
 tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text); // this function allows you to calculate in advance in which area the text will be drawn

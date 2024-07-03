@@ -28,6 +28,7 @@ tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
     data->sets.fg = tsgl_color_raw(TSGL_WHITE, obj->colormode);
     data->sets.font = tsgl_font_defaultFont;
     data->sets.locationMode = tsgl_print_start_top;
+    data->sets.multiline = true;
     obj->interactive = false;
     obj->data = data;
     obj->draw_callback = _draw_callback;
@@ -47,4 +48,5 @@ void tsgl_gui_text_setParams(tsgl_gui* self, const void* font, float scale, tsgl
     data->sets.font = font;
     data->bg = tsgl_color_raw(background, self->colormode);
     data->sets.fg = tsgl_color_raw(foreground, self->colormode);
+    data->sets.scale = scale;
 }
