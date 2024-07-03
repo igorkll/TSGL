@@ -101,7 +101,7 @@ void test_gui() {
     button4->width = 100;
     button4->height = 100;
     tsgl_gui_text_setParams(button4->children[0], tsgl_font_defaultFont, 0.4, TSGL_INVALID_COLOR, TSGL_WHITE);
-    tsgl_gui_text_setText(button4->children[0], "TEST\n123", false);
+    tsgl_gui_text_setText(button4->children[0], "TEST\nQWER\n123456789", false);
 
     /*
     tsgl_sprite spriteData = {

@@ -82,21 +82,40 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
             .font = sets.font,
             .bg = sets.bg,
             .fg = sets.fg,
-
+            ._heightClamp = true,
             .scale = sets.scale,
             .spacing = sets.spacing,
             .spaceSize = sets.spaceSize,
             .locationMode = sets.locationMode
         };
 
+        switch (sets.locationMode) {
+            case tsgl_print_start_bottom:
+                newSets._minHeight = y - sets.height;
+                newSets._maxHeight = y;
+                break;
+
+            case tsgl_print_start_top:
+                newSets._minHeight = y;
+                newSets._maxHeight = y + sets.height;
+                break;
+        }
+
         textArea.top = TSGL_POS_MAX;
         textArea.bottom = TSGL_POS_MIN;
         textArea.left = TSGL_POS_MAX;
         textArea.right = TSGL_POS_MIN;
 
+        tsgl_pos localWidth;
+        if (sets.width > 0) {
+            localWidth = x + sets.width;
+        } else {
+            localWidth = screenWidth;
+        }
+
         tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
-            tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, currentY, screenWidth, screenHeight, newSets, text + i);
+            tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, currentY, localWidth, screenHeight, newSets, text + i);
             if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
             if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
             if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;
@@ -148,18 +167,18 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
                     scaleCharHeight = charHeight;
                 }
                 for (tsgl_pos iy = 0; iy < scaleCharHeight; iy++) {
-                    if (screenHeight > 0) {
-                        tsgl_pos py = 0;
-                        switch (sets.locationMode) {
-                            case tsgl_print_start_bottom:
-                                py = y - iy;
-                                break;
-                            case tsgl_print_start_top:
-                                py = y + iy;
-                                break;
-                        }
-                        if (py >= screenHeight) break;
+                    tsgl_pos checkPy = 0;
+                    switch (sets.locationMode) {
+                        case tsgl_print_start_bottom:
+                            checkPy = y - iy;
+                            break;
+                        case tsgl_print_start_top:
+                            checkPy = y + iy;
+                            break;
                     }
+                    if (screenHeight > 0 && checkPy >= screenHeight) break;
+                    if (sets._heightClamp && (checkPy < sets._minHeight || checkPy > sets._maxHeight)) break;
+
                     for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
                         tsgl_pos px = x + ix + offset;
                         if (screenWidth > 0 && px >= screenWidth) break;
