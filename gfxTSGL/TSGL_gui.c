@@ -108,10 +108,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
     }
 }
 
-static void _initCallback(tsgl_gui* object) {
-    if (object->create_callback != NULL) object->create_callback(object);
-}
-
 static bool _inObjectCheck(tsgl_gui* object, tsgl_pos x, tsgl_pos y) {
     return x >= object->math_x && y >= object->math_y && x < (object->math_x + object->math_width) && y < (object->math_y + object->math_height);
 }
@@ -324,7 +320,6 @@ tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colo
     gui->colormode = colormode;
     gui->display = display;
     gui->color = display->black;
-    _initCallback(gui);
     return gui;
 }
 
@@ -333,7 +328,6 @@ tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* fr
     gui->colormode = framebuffer->colormode;
     gui->display = display;
     gui->color = framebuffer->black;
-    _initCallback(gui);
     return gui;
 }
 
@@ -362,7 +356,6 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
     object->children[object->childrenCount - 1] = newObject;
-    _initCallback(newObject);
     return newObject;
 }
 

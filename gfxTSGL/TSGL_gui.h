@@ -34,7 +34,6 @@ struct tsgl_gui {
     tsgl_rawcolor color; //if you set this color, instead of rendering the object, it will be filled with a rectangle of a certain color
 
     // callbacks
-    void (*create_callback)(tsgl_gui* self);
     void (*event_callback)(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event);
     void (*draw_callback)(tsgl_gui* self);
     void (*free_callback)(tsgl_gui* self);
