@@ -60,6 +60,13 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
         .strlen = realsize
     };
 
+    tsgl_pos standartWidth = tsgl_font_width(sets.font, 'A');
+    if (sets.scale != 0) {
+        standartWidth = (((float)standartWidth) * sets.scale) + 0.5;
+    }
+    tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
+    if (spacing <= 0) spacing = 1;
+
     if (sets.multiline) {
         tsgl_print_settings newSets = {
             .font = sets.font,
@@ -72,13 +79,23 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
             .locationMode = sets.locationMode
         };
 
+        tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
-            tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, y, screenWidth, screenHeight, sets, text + i);
+            tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, currentY, screenWidth, screenHeight, newSets, text + i);
             if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
             if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
             if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;
             if (lTextArea.right > textArea.right) textArea.right = lTextArea.right;
             i += lTextArea.strlen + 1;
+            switch (sets.locationMode) {
+                case tsgl_print_start_bottom:
+                    currentY -= lTextArea.height + spacing;
+                    break;
+
+                case tsgl_print_start_top:
+                    currentY += lTextArea.height + spacing;
+                    break;
+            }
         }
         textArea.width = (textArea.right - textArea.left) + 1;
         textArea.height = (textArea.bottom - textArea.top) + 1;
@@ -99,12 +116,6 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
     size_t strsize = tsgl_font_len(text);
     textArea.strlen = strsize;
     tsgl_pos offset = 0;
-    tsgl_pos standartWidth = tsgl_font_width(sets.font, 'A');
-    if (sets.scale != 0) {
-        standartWidth = (((float)standartWidth) * sets.scale) + 0.5;
-    }
-    tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
-    if (spacing <= 0) spacing = 1;
     for (size_t i = 0; i < strsize; i++) {
         char chr = text[i];
         if (chr != ' ') {
