@@ -224,7 +224,7 @@ static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index)
     }
 }
 
-static bool _draw(tsgl_gui* object, bool force) {
+static bool _draw(tsgl_gui* object, bool force, float dt) {
     if (!object->displayable || !object->processing) {
         object->needDraw = false;
         return false;
@@ -257,10 +257,10 @@ static bool _draw(tsgl_gui* object, bool force) {
         if (fabs(delta) > object->animationTolerance) {
             bool animEnd;
             if (delta > 0) {
-                object->animationState += object->animationSpeed;
+                object->animationState += object->animationSpeed * dt;
                 animEnd = object->animationState > object->animationTarget;
             } else {
-                object->animationState -= object->animationSpeed;
+                object->animationState -= object->animationSpeed * dt;
                 animEnd = object->animationState < object->animationTarget;
             }
             if (animEnd || fabs(object->animationTarget - object->animationState) <= object->animationTolerance) {
@@ -306,13 +306,13 @@ static bool _draw(tsgl_gui* object, bool force) {
 
     if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
-            if (_draw(object->children[i], forceDraw)) anyDraw = true;
+            if (_draw(object->children[i], forceDraw, dt)) anyDraw = true;
         }
 
         if (anyDrawLater) {
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
-                if (child->drawLater && _draw(child, true)) {
+                if (child->drawLater && _draw(child, true, dt)) {
                     anyDraw = true;
                     child->drawLater = false;
                 }
@@ -320,7 +320,7 @@ static bool _draw(tsgl_gui* object, bool force) {
 
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
-                if (child->drawLaterLater && _draw(child, true)) {
+                if (child->drawLaterLater && _draw(child, true, dt)) {
                     anyDraw = true;
                     child->drawLaterLater = false;
                 }
