@@ -79,6 +79,21 @@ tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2) {
     return result;
 }
 
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+static int lclip(int n, int lower, int upper) {
+  return max(lower, min(n, upper));
+}
+
+tsgl_color tsgl_color_mul(tsgl_color color, float mul) {
+    tsgl_color result = {
+        .r = lclip(color.r * mul, 0, 255),
+        .g = lclip(color.g * mul, 0, 255),
+        .b = lclip(color.b * mul, 0, 255)
+    };
+    return result;
+}
+
 tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
     float h = hue / 255.0;
     float s = saturation / 255.0;

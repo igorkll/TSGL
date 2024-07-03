@@ -374,7 +374,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needMath = true;
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
-    newObject->animationSpeed = 2;
+    newObject->animationSpeed = 4;
     newObject->animationTolerance = 0.05;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;

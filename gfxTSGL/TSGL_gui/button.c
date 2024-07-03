@@ -38,7 +38,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {
     tsgl_gui* text = tsgl_gui_addText(obj);
     tsgl_gui_buttonData* data = calloc(1, sizeof(tsgl_gui_buttonData));
     data->color = TSGL_BLUE;
-    data->pressedColor = TSGL_CYAN;
+    data->pressedColor = tsgl_color_mul(data->color, 0.8);
     data->text = text;
     obj->data = data;
     obj->event_callback = _event_callback;

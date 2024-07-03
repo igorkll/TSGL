@@ -31,6 +31,7 @@ extern const tsgl_color TSGL_BLACK;
 
 tsgl_color tsgl_color_pack(uint8_t r, uint8_t g, uint8_t b);
 tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2);
+tsgl_color tsgl_color_mul(tsgl_color color, float mul);
 tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value);
 
 uint16_t tsgl_color_to565(tsgl_color color);
