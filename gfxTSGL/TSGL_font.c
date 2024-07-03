@@ -79,6 +79,11 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
             .locationMode = sets.locationMode
         };
 
+        textArea.top = TSGL_POS_MAX;
+        textArea.bottom = TSGL_POS_MIN;
+        textArea.left = TSGL_POS_MAX;
+        textArea.right = TSGL_POS_MIN;
+
         tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
             tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, currentY, screenWidth, screenHeight, newSets, text + i);

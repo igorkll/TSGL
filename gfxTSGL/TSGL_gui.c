@@ -256,7 +256,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         float delta = object->animationTarget - object->animationState;
         if (fabs(delta) > object->animationTolerance) {
             bool animEnd;
-            float stateDelta = object->animationSpeed * dt;
+            float stateDelta = dt / object->animationSpeed;
             if (delta > 0) {
                 object->animationState += stateDelta;
                 animEnd = object->animationState > object->animationTarget;
@@ -374,7 +374,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needMath = true;
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
-    newObject->animationSpeed = 4;
+    newObject->animationSpeed = 0.25;
     newObject->animationTolerance = 0.05;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;
