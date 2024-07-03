@@ -257,16 +257,25 @@ static bool _draw(tsgl_gui* object, bool force) {
             object->draw_callback(object);
         }
 
-        float delta = object->animationTarget - object->animationState;
-        bool animUp = delta > 0;
-        bool animDown = delta < 0;
-        if (abs(delta) <= object->animationTolerance) {
-            object->animationState = object->animationTarget;
-            object->needDraw = false;
-        } else {
-            object->needDraw = true;
-        }
+        object->needDraw = false;
         anyDraw = true;
+
+        float delta = object->animationTarget - object->animationState;
+        if (abs(delta) > object->animationTolerance) {
+            bool animEnd;
+            if (delta > 0) {
+                object->animationState += object->animationSpeed;
+                animEnd = object->animationState > object->animationTarget;
+            } else {
+                object->animationState -= object->animationSpeed;
+                animEnd = object->animationState < object->animationTarget;
+            }
+            if (animEnd || abs(object->animationTarget - object->animationState) <= object->animationTolerance) {
+                object->animationState = object->animationTarget;
+            } else {
+                object->needDraw = true;
+            }
+        }
     } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
