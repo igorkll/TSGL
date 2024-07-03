@@ -6,6 +6,7 @@
 #include "TSGL_gui.h"
 #include <esp_random.h>
 #include <string.h>
+#include <math.h>
 
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));    
@@ -251,17 +252,9 @@ static bool _draw(tsgl_gui* object, bool force) {
         }
         object->localMovent = false;
 
-        if (!object->color.invalid) {
-            TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
-        } else if (object->draw_callback != NULL) {
-            object->draw_callback(object);
-        }
-
         object->needDraw = false;
-        anyDraw = true;
-
         float delta = object->animationTarget - object->animationState;
-        if (abs(delta) > object->animationTolerance) {
+        if (fabs(delta) > object->animationTolerance) {
             bool animEnd;
             if (delta > 0) {
                 object->animationState += object->animationSpeed;
@@ -270,12 +263,20 @@ static bool _draw(tsgl_gui* object, bool force) {
                 object->animationState -= object->animationSpeed;
                 animEnd = object->animationState < object->animationTarget;
             }
-            if (animEnd || abs(object->animationTarget - object->animationState) <= object->animationTolerance) {
+            if (animEnd || fabs(object->animationTarget - object->animationState) <= object->animationTolerance) {
                 object->animationState = object->animationTarget;
             } else {
                 object->needDraw = true;
             }
         }
+
+        if (!object->color.invalid) {
+            TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
+        } else if (object->draw_callback != NULL) {
+            object->draw_callback(object);
+        }
+
+        anyDraw = true;
     } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
@@ -372,7 +373,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needMath = true;
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
-    newObject->animationSpeed = 1;
+    newObject->animationSpeed = 0.1;
     newObject->animationTolerance = 0.05;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;

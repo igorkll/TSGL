@@ -4,11 +4,15 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
     switch (event) {
         case tsgl_gui_click:
             self->intData = 1;
+            self->animationTarget = 1;
             self->needDraw = true;
             break;
 
         case tsgl_gui_drop:
             self->intData = 0;
+            if (self->animationState == 1) {
+                self->animationTarget = 0;
+            }
             self->needDraw = true;
             break;
 
@@ -20,8 +24,13 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_buttonData* data = self->data;
     TSGL_GUI_DRAW(self, fill, self->math_x, self->math_y, self->math_width, self->math_height,
-        self->intData ? tsgl_color_raw(data->pressedColor, self->colormode) : tsgl_color_raw(data->color, self->colormode)
+        tsgl_color_raw(tsgl_color_combine(self->animationState, data->color, data->pressedColor), self->colormode)
     );
+
+    if (self->intData == 0 && self->animationState == 1) {
+        self->animationTarget = 0;
+        self->needDraw = true;
+    }
 }
 
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {

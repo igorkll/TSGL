@@ -102,6 +102,7 @@ void test_gui() {
     button4->height = 100;
     tsgl_gui_text_setText(button4->children[0], "TEST", false);
 
+    /*
     tsgl_sprite spriteData = {
         .rotation = 0,
         .sprite = sprite,
@@ -159,11 +160,12 @@ void test_gui() {
     button3->width = 30;
     button3->height = 40;
     button3->draggable = true;
+    */
 
     while (true) {
         tsgl_gui_processTouchscreen(gui, &touchscreen);
         tsgl_gui_processGui(gui, &framebuffer2, &benchmark);
-        tsgl_benchmark_print(&benchmark);
+        //tsgl_benchmark_print(&benchmark);
     }
 
     tsgl_gui_free(gui);
