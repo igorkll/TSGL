@@ -257,7 +257,15 @@ static bool _draw(tsgl_gui* object, bool force) {
             object->draw_callback(object);
         }
 
-        object->needDraw = false;
+        float delta = object->animationTarget - object->animationState;
+        bool animUp = delta > 0;
+        bool animDown = delta < 0;
+        if (abs(delta) <= object->animationTolerance) {
+            object->animationState = object->animationTarget;
+            object->needDraw = false;
+        } else {
+            object->needDraw = true;
+        }
         anyDraw = true;
     } else if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
@@ -355,6 +363,8 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needMath = true;
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
+    newObject->animationSpeed = 1;
+    newObject->animationTolerance = 0.05;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;
 }

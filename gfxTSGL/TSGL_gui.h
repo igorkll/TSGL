@@ -47,6 +47,12 @@ struct tsgl_gui {
     tsgl_pos tdx;
     tsgl_pos tdy;
 
+    // animation
+    float animationState;
+    float animationTarget;
+    float animationTolerance;
+    float animationSpeed;
+
     // internal
     tsgl_display* display;
     void* target;
