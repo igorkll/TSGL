@@ -100,6 +100,10 @@ void test_gui() {
     button4->y = 50;
     button4->width = 100;
     button4->height = 100;
+    tsgl_gui_buttonData* buttonData = button4->data;
+    buttonData->textData->sets.font = font;
+    buttonData->textData->sets.fg = tsgl_color_raw(TSGL_ORANGE, sprite->colormode);
+    buttonData->textData->text = "TEST BUTTON";
 
     tsgl_sprite spriteData = {
         .rotation = 0,
