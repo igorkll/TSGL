@@ -11,3 +11,5 @@ typedef struct {
 } tsgl_gui_textData;
 
 tsgl_gui* tsgl_gui_addText(tsgl_gui* gui);
+void tsgl_gui_text_setText(tsgl_gui* self, const char* text, bool freeText);
+void tsgl_gui_text_setTextParams(tsgl_gui* self, const void* font, float scale, tsgl_color background, tsgl_color foreground);

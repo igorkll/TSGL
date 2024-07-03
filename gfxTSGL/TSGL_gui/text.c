@@ -27,3 +27,17 @@ tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
     obj->free_callback = _free_callback;
     return obj;
 }
+
+void tsgl_gui_text_setText(tsgl_gui* self, const char* text, bool freeText) {
+    tsgl_gui_textData* data = self->data;
+    if (data->freeText) free(data->text);
+    data->freeText = freeText;
+    data->text = text;
+}
+
+void tsgl_gui_text_setTextParams(tsgl_gui* self, const void* font, float scale, tsgl_color background, tsgl_color foreground) {
+    tsgl_gui_textData* data = self->data;
+    data->sets.font = font;
+    data->bg = tsgl_color_raw(background, self->colormode);
+    data->sets.fg = tsgl_color_raw(foreground, self->colormode);
+}
