@@ -37,7 +37,7 @@ void tsgl_gui_text_setText(tsgl_gui* self, const char* text, bool freeText) {
     data->text = text;
 }
 
-void tsgl_gui_text_setTextParams(tsgl_gui* self, const void* font, float scale, tsgl_color background, tsgl_color foreground) {
+void tsgl_gui_text_setParams(tsgl_gui* self, const void* font, float scale, tsgl_color background, tsgl_color foreground) {
     tsgl_gui_textData* data = self->data;
     data->sets.font = font;
     data->bg = tsgl_color_raw(background, self->colormode);

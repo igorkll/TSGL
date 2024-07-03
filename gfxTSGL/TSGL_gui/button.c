@@ -32,16 +32,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {
     data->pressedColor = TSGL_CYAN;
     data->text = text;
     obj->data = data;
+    obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;
     return obj;
-}
-
-void tsgl_gui_button_setText(tsgl_gui* self, const char* text, bool freeText) {
-    tsgl_gui_buttonData* data = self->data;
-    tsgl_gui_text_setText(data->text, text, freeText);
-}
-
-void tsgl_gui_button_setTextParams(tsgl_gui* self, const void* font, float scale, tsgl_color background, tsgl_color foreground) {
-    tsgl_gui_buttonData* data = self->data;
-    tsgl_gui_text_setTextParams(data->text, font, scale, background, foreground);
 }
