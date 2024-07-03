@@ -88,6 +88,7 @@ static bool _isDenseColor(tsgl_rawcolor color, uint8_t colorsize) {
 
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
+    memset(framebuffer, 0, sizeof(tsgl_framebuffer));
     framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
     framebuffer->colorsize = tsgl_colormodeSizes[colormode];
     framebuffer->width = width;
@@ -95,10 +96,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->defaultWidth = width;
     framebuffer->defaultHeight = height;
     framebuffer->rotationWidth = width;
-    framebuffer->rotation = 0;
-    framebuffer->realRotation = 0;
     framebuffer->colormode = colormode;
-    framebuffer->hardwareRotate = false;
     framebuffer->buffersize = width * height * framebuffer->colorsize;
     double notUsed;
     framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
@@ -120,8 +118,19 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     }
 }
 
+tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
+    tsgl_framebuffer* framebuffer = malloc(sizeof(tsgl_framebuffer));
+    if (tsgl_framebuffer_init(framebuffer, colormode, width, height, caps) != ESP_OK) {
+        free(framebuffer);
+        return NULL;
+    }
+    framebuffer->heap = true;
+    return framebuffer;
+}
+
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
     free(framebuffer->buffer);
+    if (framebuffer->heap) free(framebuffer);
 }
 
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {

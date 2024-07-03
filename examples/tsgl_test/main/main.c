@@ -48,7 +48,7 @@ const tsgl_settings settings = {
 
 #include <TSGL_fonts/font.h>
 #include <TSGL_gui/button.h>
-#include <TSGL_gui/framebuffer.h>
+#include <TSGL_gui/sprite.h>
 
 tsgl_display display;
 tsgl_framebuffer framebuffer;
@@ -74,23 +74,22 @@ void delay(int time) {
 }
 
 void test_gui() {
-    tsgl_framebuffer sprite;
-    ESP_ERROR_CHECK(tsgl_framebuffer_init(&sprite, display.colormode, 300, 150, BUFFER));
-    tsgl_framebuffer_clear(&sprite, sprite.black);
+    tsgl_framebuffer* sprite = tsgl_framebuffer_new(display.colormode, 300, 150, BUFFER);
+    tsgl_framebuffer_clear(sprite, sprite->black);
     for (int i = 0; i < 150; i++) {
-        tsgl_framebuffer_set(&sprite, esp_random() % sprite.width, esp_random() % sprite.height, tsgl_color_raw(TSGL_RED, sprite.colormode));
-        tsgl_framebuffer_set(&sprite, esp_random() % sprite.width, esp_random() % sprite.height, tsgl_color_raw(TSGL_GREEN, sprite.colormode));
+        tsgl_framebuffer_set(sprite, esp_random() % sprite->width, esp_random() % sprite->height, tsgl_color_raw(TSGL_RED, sprite->colormode));
+        tsgl_framebuffer_set(sprite, esp_random() % sprite->width, esp_random() % sprite->height, tsgl_color_raw(TSGL_GREEN, sprite->colormode));
     }
 
     tsgl_print_settings sets = {
         .font = font,
         .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(TSGL_ORANGE, sprite.colormode),
+        .fg = tsgl_color_raw(TSGL_ORANGE, sprite->colormode),
         .locationMode = tsgl_print_start_top,
         .scale = 0.6
     };
-    tsgl_print_textArea textArea = tsgl_framebuffer_text(&sprite, 1, 1, sets, "LOLZ");
-    tsgl_framebuffer_rect(&sprite, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, sprite.colormode), 3);
+    tsgl_print_textArea textArea = tsgl_framebuffer_text(sprite, 1, 1, sets, "LOLZ");
+    tsgl_framebuffer_rect(sprite, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, sprite->colormode), 3);
 
     tsgl_gui* gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     //tsgl_gui* gui = tsgl_gui_createRoot_display(&display, display.colormode);
@@ -104,11 +103,11 @@ void test_gui() {
 
     tsgl_sprite spriteData = {
         .rotation = 0,
-        .sprite = &sprite,
+        .sprite = sprite,
         .transparentColor = TSGL_INVALID_RAWCOLOR
     };
 
-    tsgl_gui* window = tsgl_gui_addFramebuffer(gui, &spriteData);
+    tsgl_gui* window = tsgl_gui_addSprite(gui, &spriteData);
     window->x = 50;
     window->y = 50;
     window->width = 300;
