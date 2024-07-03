@@ -57,7 +57,6 @@ size_t tsgl_font_len(const char* str) { //custom strlen
 tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL_SET_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
-        .left = x,
         .strlen = realsize
     };
 
@@ -75,14 +74,18 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
 
         for (size_t i = 0; i < realsize;) {
             tsgl_print_textArea lTextArea = tsgl_font_rasterize(arg, set, fill, x, y, screenWidth, screenHeight, sets, text + i);
+            if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
+            if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
+            if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;
+            if (lTextArea.right > textArea.right) textArea.right = lTextArea.right;
             i += lTextArea.strlen + 1;
-
         }
         textArea.width = (textArea.right - textArea.left) + 1;
         textArea.height = (textArea.bottom - textArea.top) + 1;
         return textArea;
     }
 
+    textArea.left = x;
     switch (sets.locationMode) {
         case tsgl_print_start_bottom:
             textArea.top = TSGL_POS_MAX;
