@@ -24,6 +24,7 @@ void tsgl_benchmark_endRendering(tsgl_benchmark* benchmark) {
 
 void tsgl_benchmark_noRendering(tsgl_benchmark* benchmark) {
     benchmark->renderingFlag = false;
+    benchmark->renderingTime = 0;
 }
 
 void tsgl_benchmark_startSend(tsgl_benchmark* benchmark) {
@@ -51,6 +52,7 @@ void tsgl_benchmark_endSend(tsgl_benchmark* benchmark) {
 
 void tsgl_benchmark_noSend(tsgl_benchmark* benchmark) {
     benchmark->sendFlag = false;
+    benchmark->sendTime = 0;
     benchmark->realFPSexists = false;
 }
 

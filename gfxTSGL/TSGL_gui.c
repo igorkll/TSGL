@@ -256,11 +256,12 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         float delta = object->animationTarget - object->animationState;
         if (fabs(delta) > object->animationTolerance) {
             bool animEnd;
+            float stateDelta = object->animationSpeed * dt;
             if (delta > 0) {
-                object->animationState += object->animationSpeed * dt;
+                object->animationState += stateDelta;
                 animEnd = object->animationState > object->animationTarget;
             } else {
-                object->animationState -= object->animationSpeed * dt;
+                object->animationState -= stateDelta;
                 animEnd = object->animationState < object->animationTarget;
             }
             if (animEnd || fabs(object->animationTarget - object->animationState) <= object->animationTolerance) {
@@ -373,7 +374,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needMath = true;
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
-    newObject->animationSpeed = 0.1;
+    newObject->animationSpeed = 2;
     newObject->animationTolerance = 0.05;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;
@@ -448,7 +449,12 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark) {
     if (benchmark != NULL) tsgl_benchmark_startRendering(benchmark);
     _math(root, 0, 0, false);
-    bool needSend = _draw(root, false);
+    bool needSend;
+    if (benchmark != NULL) {
+        needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime) / 1000.0 / 1000.0);
+    } else {
+        needSend = _draw(root, false, 100);
+    }
     if (benchmark != NULL) tsgl_benchmark_endRendering(benchmark);
     if (needSend && root->buffered) {
         if (benchmark != NULL) tsgl_benchmark_startSend(benchmark);
