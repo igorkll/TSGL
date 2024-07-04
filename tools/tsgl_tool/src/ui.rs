@@ -9,18 +9,17 @@ use std::ops::*;
 #[derive(Default)]
 pub struct TSGLTool {
     window: nwg::Window,
-    name_edit: nwg::TextInput,
-    hello_button: nwg::Button
+    load_font: nwg::Button
 }
 
 impl TSGLTool {
     fn say_hello(&self) {
-        nwg::modal_info_message(&self.window, "Hello", &format!("Hello {}", self.name_edit.text()));
+        //nwg::modal_info_message(&self.window, "Hello", &format!("Hello {}", self.name_edit.text()));
     }
     
     fn say_goodbye(&self) {
-        nwg::modal_info_message(&self.window, "Goodbye", &format!("Goodbye {}", self.name_edit.text()));
-        nwg::stop_thread_dispatch();
+        //nwg::modal_info_message(&self.window, "Goodbye", &format!("Goodbye {}", self.name_edit.text()));
+        //nwg::stop_thread_dispatch();
     }
 }
 
@@ -38,20 +37,12 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             .title("TSGL Tool")
             .build(&mut data.window)?;
 
-        nwg::TextInput::builder()
-            .size((280, 35))
-            .position((10, 10))
-            .text("Heisenberg")
-            .parent(&data.window)
-            .focus(true)
-            .build(&mut data.name_edit)?;
-
         nwg::Button::builder()
             .size((280, 70))
             .position((10, 50))
-            .text("Say my name")
+            .text("convert font")
             .parent(&data.window)
-            .build(&mut data.hello_button)?;
+            .build(&mut data.load_font)?;
 
         // Wrap-up
         let ui = TSGLToolUi {
@@ -65,7 +56,7 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             if let Some(ui) = evt_ui.upgrade() {
                 match evt {
                     Event::OnButtonClick => 
-                        if &handle == &ui.hello_button {
+                        if &handle == &ui.load_font {
                             TSGLTool::say_hello(&ui);
                         },
                     Event::OnWindowClose => 

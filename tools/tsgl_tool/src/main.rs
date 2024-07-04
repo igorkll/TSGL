@@ -114,9 +114,7 @@ fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
     return executable;
 }
 
-fn process_font(path: &Path) {
-    let contrast = 50;
-    let px = 80.0;
+fn process_font(path: &Path, contrast: u8, px: f32) {
     let name = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
     let info = generate_info(&name, px, contrast);
 
@@ -136,11 +134,11 @@ fn main() {
 
     match result {
         Response::Okay(path) => {
-            process_font(&Path::new(&path));
+            process_font(&Path::new(&path), 50, 80.0);
         },
         Response::Cancel => println!("User canceled"),
         _ => ()
     }
 
-    //ui::run();
+    ui::run();
 }
