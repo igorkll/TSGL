@@ -64,12 +64,6 @@ static size_t _getRaw8BufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsg
 }
 
 static uint8_t _get8Offset(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    if (framebuffer->realRotation == 1 || framebuffer->realRotation == 3) {
-        return x % 8;
-    } else {
-        return y % 8;
-    }
-
     switch (framebuffer->realRotation) {
         case 1:
             return x % 8;
