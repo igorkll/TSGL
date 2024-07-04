@@ -1,4 +1,5 @@
 #pragma once
+#include <esp_heap_caps.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -7,6 +8,9 @@
 typedef int16_t tsgl_pos;
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767
+
+#define TSGL_SPIRAM   MALLOC_CAP_SPIRAM
+#define TSGL_RAM      0
 
 extern const float tsgl_colormodeSizes[];
 
@@ -77,6 +81,7 @@ typedef struct {
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)
+
 #define TSGL_MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define TSGL_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
