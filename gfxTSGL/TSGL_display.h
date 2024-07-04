@@ -10,7 +10,7 @@ typedef enum {
     tsgl_display_interface_spi
 } tsgl_display_interfaceType;
 
-typedef struct {
+typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;
     tsgl_pos width;
     tsgl_pos height;
@@ -29,6 +29,8 @@ typedef struct {
 
     int8_t backlightLedcChannel;
     uint8_t backlightValue;
+
+    //bool softwareInvert; //it can cause severe lags, it is used to invert colors to displays that do not support this hardware
 
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
