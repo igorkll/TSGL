@@ -24,8 +24,7 @@ typedef enum {
     tsgl_bgr888,
     tsgl_rgb444,
     tsgl_bgr444,
-    tsgl_mono8_ver,
-    tsgl_mono8_hor
+    tsgl_monochrome
 } tsgl_colormode;
 
 size_t tsgl_getPartSize();

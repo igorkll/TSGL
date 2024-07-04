@@ -238,8 +238,7 @@ tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
             break;
         }
 
-        case tsgl_mono8_ver:
-        case tsgl_mono8_hor:
+        case tsgl_monochrome:
             rawcolor.arr[0] = color.r > 0 || color.g > 0 || color.b > 0;
             break;
     }
@@ -309,8 +308,7 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
             return color;
         }
 
-        case tsgl_mono8_ver:
-        case tsgl_mono8_hor:
+        case tsgl_monochrome:
             uint8_t val = rawcolor.arr[0] ? 255 : 0;
             tsgl_color color = {
                 .r = val,
@@ -322,7 +320,7 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     return TSGL_BLACK;
 }
 
-void tsgl_color_monoHorWrite(size_t index, uint8_t offset, uint8_t* buffer, tsgl_rawcolor color) {
+void tsgl_color_monoWrite(size_t index, uint8_t offset, uint8_t* buffer, tsgl_rawcolor color) {
     if (color.arr[0]) {
         buffer[index] |= 1 << offset;
     } else {

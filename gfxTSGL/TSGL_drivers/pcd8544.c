@@ -1,7 +1,7 @@
 #include "../TSGL.h"
 
 const tsgl_driver pcd8544 = {
-    .colormode = tsgl_mono8_hor,
+    .colormode = tsgl_monochrome,
     .init = {
         {0x21, {0}, 0, 0},
         {0x10 + 4, {0}, 0, 0},

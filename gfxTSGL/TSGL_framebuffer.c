@@ -55,7 +55,7 @@ static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl
     }
 }
 
-static size_t _getRaw8BufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+static size_t _getRawHorBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     if (framebuffer->realRotation == 0) {
         return x + ((y / 8) * framebuffer->rotationWidth);
     } else {
@@ -63,7 +63,7 @@ static size_t _getRaw8BufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsg
     }
 }
 
-static uint8_t _get8Offset(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+static uint8_t _getHorOffset(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     switch (framebuffer->realRotation) {
         case 1:
             return x % 8;
@@ -205,8 +205,8 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
             tsgl_color_444write(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
             break;
 
-        case tsgl_mono8_hor:
-            tsgl_color_monoHorWrite(_getRaw8BufferIndex(framebuffer, x, y), _get8Offset(framebuffer, x, y), framebuffer->buffer, color);
+        case tsgl_monochrome:
+            tsgl_color_monoWrite(_getRawHorBufferIndex(framebuffer, x, y), _getHorOffset(framebuffer, x, y), framebuffer->buffer, color);
             break;
         
         default: {
@@ -249,10 +249,10 @@ void tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x
             }
             break;
 
-        case tsgl_mono8_hor:
+        case tsgl_monochrome:
             for (tsgl_pos ix = x; ix < x + width; ix++) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    tsgl_color_monoHorWrite(_getRaw8BufferIndex(framebuffer, ix, iy), _get8Offset(framebuffer, ix, iy), framebuffer->buffer, color);
+                    tsgl_color_monoWrite(_getRawHorBufferIndex(framebuffer, ix, iy), _getHorOffset(framebuffer, ix, iy), framebuffer->buffer, color);
                 }
             }
             break;
@@ -323,8 +323,7 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) 
             }
             break;
 
-        case tsgl_mono8_ver:
-        case tsgl_mono8_hor:
+        case tsgl_monochrome:
             if (color.arr[0]) {
                 memset(framebuffer->buffer, 255, framebuffer->buffersize);
             } else {
