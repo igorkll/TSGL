@@ -181,6 +181,10 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
         case tsgl_bgr444:
             tsgl_color_444write(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
             break;
+
+        case tsgl_mono8_hor:
+            tsgl_color_monoHorWrite(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
+            break;
         
         default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
@@ -218,6 +222,14 @@ void tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x
             for (tsgl_pos ix = x; ix < x + width; ix++) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
                     tsgl_color_444write(_getRawBufferIndex(framebuffer, ix, iy), framebuffer->buffer, color);
+                }
+            }
+            break;
+
+        case tsgl_mono8_hor:
+            for (tsgl_pos ix = x; ix < x + width; ix++) {
+                for (tsgl_pos iy = y; iy < y + height; iy++) {
+                    tsgl_color_monoHorWrite(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
                 }
             }
             break;
@@ -285,6 +297,15 @@ void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) 
                 for (size_t i = 0; i <= rawBuffersize; i++) {
                     tsgl_color_444write(i, framebuffer->buffer, color);
                 }
+            }
+            break;
+
+        case tsgl_mono8_ver:
+        case tsgl_mono8_hor:
+            if (color.arr[0]) {
+                memset(framebuffer->buffer, 255, framebuffer->buffersize);
+            } else {
+                memset(framebuffer->buffer, 0, framebuffer->buffersize);
             }
             break;
         

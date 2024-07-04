@@ -6,7 +6,7 @@
 #define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.invalid = true})
 #define TSGL_INVALID_COLOR ((tsgl_color) {.invalid = true})
 
-#define TSGL_MONO_SET ((tsgl_color) {.arr = {255}})
+#define TSGL_MONO_SET ((tsgl_color) {.arr = {1}})
 #define TSGL_MONO_CLR ((tsgl_color) {.arr = {0}})
 
 typedef struct {
@@ -45,6 +45,8 @@ tsgl_color tsgl_color_fromHex(uint32_t color);
 
 tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
 tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
+
+void tsgl_color_monoHorWrite(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color);
 
 void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color);
 tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer);
