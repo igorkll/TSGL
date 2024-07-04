@@ -29,6 +29,10 @@ impl TSGLTool {
             _ => ()
         }
     }
+
+    fn exit(&self) {
+        nwg::stop_thread_dispatch();
+    }
 }
 
 pub struct TSGLToolUi {
@@ -66,6 +70,10 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
                     Event::OnButtonClick => 
                         if &handle == &ui.convert_font {
                             TSGLTool::load_font(&ui);
+                        },
+                    Event::OnWindowClose => 
+                        if &handle == &ui.window {
+                            TSGLTool::exit(&ui);
                         },
                     _ => {}
                 }
