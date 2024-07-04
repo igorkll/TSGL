@@ -1,12 +1,14 @@
 extern crate native_windows_gui as nwg;
 use nwg::NativeUi;
 use nwg::Event as Event;
+use nfd::Response;
+use std::path::*;
 
 use std::rc::*;
 use std::cell::*;
 use std::ops::*;
 
-mod font;
+use crate::font;
 
 #[derive(Default)]
 pub struct TSGLTool {
@@ -15,13 +17,17 @@ pub struct TSGLTool {
 }
 
 impl TSGLTool {
-    fn say_hello(&self) {
+    fn load_font(&self) {
         //nwg::modal_info_message(&self.window, "Hello", &format!("Hello {}", self.name_edit.text()));
-    }
-    
-    fn say_goodbye(&self) {
-        //nwg::modal_info_message(&self.window, "Goodbye", &format!("Goodbye {}", self.name_edit.text()));
-        //nwg::stop_thread_dispatch();
+        let result = nfd::open_file_dialog(None, None).unwrap();
+
+        match result {
+            Response::Okay(path) => {
+                font::process_font(&Path::new(&path), 50, 80.0);
+            },
+            Response::Cancel => println!("User canceled"),
+            _ => ()
+        }
     }
 }
 
@@ -59,11 +65,7 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
                 match evt {
                     Event::OnButtonClick => 
                         if &handle == &ui.convert_font {
-                            TSGLTool::say_hello(&ui);
-                        },
-                    Event::OnWindowClose => 
-                        if &handle == &ui.window {
-                            TSGLTool::say_goodbye(&ui);
+                            TSGLTool::load_font(&ui);
                         },
                     _ => {}
                 }

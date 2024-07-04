@@ -1,5 +1,4 @@
 use fontdue;
-use nfd::Response;
 
 use std::fs;
 use std::path::*;
