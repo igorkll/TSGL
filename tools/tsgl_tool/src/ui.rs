@@ -6,10 +6,12 @@ use std::rc::*;
 use std::cell::*;
 use std::ops::*;
 
+mod font;
+
 #[derive(Default)]
 pub struct TSGLTool {
     window: nwg::Window,
-    load_font: nwg::Button
+    convert_font: nwg::Button
 }
 
 impl TSGLTool {
@@ -42,7 +44,7 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             .position((10, 50))
             .text("convert font")
             .parent(&data.window)
-            .build(&mut data.load_font)?;
+            .build(&mut data.convert_font)?;
 
         // Wrap-up
         let ui = TSGLToolUi {
@@ -56,7 +58,7 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             if let Some(ui) = evt_ui.upgrade() {
                 match evt {
                     Event::OnButtonClick => 
-                        if &handle == &ui.load_font {
+                        if &handle == &ui.convert_font {
                             TSGLTool::say_hello(&ui);
                         },
                     Event::OnWindowClose => 
