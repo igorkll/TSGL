@@ -114,8 +114,7 @@ fn generate_executable(data: &Vec<u8>, name: &String, info: &String) -> String {
     return executable;
 }
 
-fn process_font(path: &String) {
-    let path = Path::new(path);
+fn process_font(path: &Path) {
     let contrast = 50;
     let px = 80.0;
     let name = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
@@ -127,7 +126,7 @@ fn process_font(path: &String) {
     charmaps.push(String::from(gen_ascii('0', '9')));
 
     let parsed_font = parse(&path, px, contrast, &charmaps);
-    fs::write(path.with_extension("tgf"), &parsed_font).expect("failed to write");
+    fs::write(path.with_extension("fnt"), &parsed_font).expect("failed to write");
     fs::write(path.with_extension("h"), generate_header(&name, &info)).expect("failed to write");
     fs::write(path.with_extension("c"), generate_executable(&parsed_font, &String::from("font"), &info)).expect("failed to write");
 }
@@ -137,11 +136,11 @@ fn main() {
 
     match result {
         Response::Okay(path) => {
-            process_font(&path);
+            process_font(&Path::new(&path));
         },
         Response::Cancel => println!("User canceled"),
         _ => ()
     }
 
-    ui::run();
+    //ui::run();
 }
