@@ -322,9 +322,7 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     return TSGL_BLACK;
 }
 
-void tsgl_color_monoHorWrite(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) {
-    size_t index = rawindex * 0.125;
-    uint8_t offset = rawindex & 0b00000111;
+void tsgl_color_monoHorWrite(size_t index, uint8_t offset, uint8_t* buffer, tsgl_rawcolor color) {
     if (color.arr[0]) {
         buffer[index] |= 1 << offset;
     } else {

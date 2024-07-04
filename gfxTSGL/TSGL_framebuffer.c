@@ -55,6 +55,35 @@ static size_t _getRawBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl
     }
 }
 
+static size_t _getRaw8BufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    if (framebuffer->realRotation == 0) {
+        return x + ((y / 8) * framebuffer->rotationWidth);
+    } else {
+        return _rotateX(framebuffer, x, y) + ((_rotateY(framebuffer, x, y) / 8) * framebuffer->rotationWidth);
+    }
+}
+
+static uint8_t _get8Offset(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    if (framebuffer->realRotation == 1 || framebuffer->realRotation == 3) {
+        return x % 8;
+    } else {
+        return y % 8;
+    }
+
+    switch (framebuffer->realRotation) {
+        case 1:
+            return x % 8;
+
+        case 2:
+            return 7 - (y % 8);
+
+        case 3:
+            return 7 - (x % 8);
+    }
+
+    return y % 8;
+}
+
 static size_t _getBufferIndex(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     return _getRawBufferIndex(framebuffer, x, y) * framebuffer->colorsize;
 }
@@ -183,7 +212,7 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
             break;
 
         case tsgl_mono8_hor:
-            tsgl_color_monoHorWrite(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
+            tsgl_color_monoHorWrite(_getRaw8BufferIndex(framebuffer, x, y), _get8Offset(framebuffer, x, y), framebuffer->buffer, color);
             break;
         
         default: {
@@ -229,7 +258,7 @@ void tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x
         case tsgl_mono8_hor:
             for (tsgl_pos ix = x; ix < x + width; ix++) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    tsgl_color_monoHorWrite(_getRawBufferIndex(framebuffer, x, y), framebuffer->buffer, color);
+                    tsgl_color_monoHorWrite(_getRaw8BufferIndex(framebuffer, ix, iy), _get8Offset(framebuffer, ix, iy), framebuffer->buffer, color);
                 }
             }
             break;

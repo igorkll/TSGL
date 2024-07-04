@@ -16,7 +16,7 @@ void tsgl_sendFlood(void* arg, void(*send)(void* arg, void* part, size_t size), 
     size_t part = (tsgl_getPartSize() / size) * size;
     size_t bytesCount = flood * size;
     size_t offset = 0;
-    void* floodPart = malloc(part);
+    uint8_t* floodPart = malloc(part);
     if (floodPart == NULL) return;
     for (size_t i = 0; i < part; i += size) {
         memcpy(floodPart + i, data, size);
