@@ -153,7 +153,9 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         }
 
         // enable display
-        _doCommandList(display, settings.driver->enable(&display->storage, true));
+        if (settings.driver->enable != NULL) {
+            _doCommandList(display, settings.driver->enable(&display->storage, true));
+        }
         tsgl_display_rotate(display, 0);
     } else {
         free(display->interface);
@@ -195,12 +197,14 @@ void tsgl_display_selectIfNeed(tsgl_display* display) {
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-    _doCommandList(display,
-        display->driver->select(&display->storage,
-        display->offsetX + x,
-        display->offsetY + y, (display->offsetX + x + width) - 1,
-        (display->offsetY + y + height) - 1)
-    );
+    if (display->driver->select != NULL) {
+        _doCommandList(display,
+            display->driver->select(&display->storage,
+            display->offsetX + x,
+            display->offsetY + y, (display->offsetX + x + width) - 1,
+            (display->offsetY + y + height) - 1)
+        );
+    }
 }
 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
@@ -238,9 +242,11 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
 
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
     display->enable = state;
-    _doCommandList(display, display->driver->enable(&display->storage, state));
-    if (state) {
-        tsgl_display_selectIfNeed(display);
+    if (display->driver->enable) {
+        _doCommandList(display, display->driver->enable(&display->storage, state));
+        if (state) {
+            tsgl_display_selectIfNeed(display);
+        }
     }
 }
 
