@@ -61,7 +61,7 @@ typedef struct {
 
 typedef struct {
     const tsgl_driver* driver;
-    bool invertBacklight; //inverts only the backlight, which is controlled by the screen driver through its registers. if the backlight on your screen is controlled by a separate pin, then you must invert it during initialization
+    bool invertBacklight;
     bool invert;
     bool swapRGB;
     bool flipX;
