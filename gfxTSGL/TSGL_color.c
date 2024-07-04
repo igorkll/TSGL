@@ -1,5 +1,6 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
+#include "TSGL_math.h"
 
 const tsgl_color TSGL_WHITE = {
     .r = 255,
@@ -79,15 +80,11 @@ tsgl_color tsgl_color_combine(float v, tsgl_color color1, tsgl_color color2) {
     return result;
 }
 
-static int lclip(int n, int lower, int upper) {
-  return TSGL_MAX(lower, TSGL_MIN(n, upper));
-}
-
 tsgl_color tsgl_color_mul(tsgl_color color, float mul) {
     tsgl_color result = {
-        .r = lclip(color.r * mul, 0, 255),
-        .g = lclip(color.g * mul, 0, 255),
-        .b = lclip(color.b * mul, 0, 255)
+        .r = TSGL_MATH_CLAMP(color.r * mul, 0, 255),
+        .g = TSGL_MATH_CLAMP(color.g * mul, 0, 255),
+        .b = TSGL_MATH_CLAMP(color.b * mul, 0, 255)
     };
     return result;
 }

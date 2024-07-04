@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include "TSGL_math.h"
 
 typedef int16_t tsgl_pos;
 #define TSGL_POS_MIN -32768
@@ -23,6 +24,8 @@ typedef enum {
     tsgl_bgr888,
     tsgl_rgb444,
     tsgl_bgr444,
+    tsgl_mono8_ver,
+    tsgl_mono8_hor
 } tsgl_colormode;
 
 size_t tsgl_getPartSize();
@@ -81,8 +84,5 @@ typedef struct {
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)
-
-#define TSGL_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define TSGL_MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 typedef struct tsgl_sprite tsgl_sprite;

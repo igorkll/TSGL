@@ -6,6 +6,9 @@
 #define TSGL_INVALID_RAWCOLOR ((tsgl_rawcolor) {.invalid = true})
 #define TSGL_INVALID_COLOR ((tsgl_color) {.invalid = true})
 
+#define TSGL_MONO_SET ((tsgl_color) {.arr = {255}})
+#define TSGL_MONO_CLR ((tsgl_color) {.arr = {0}})
+
 typedef struct {
     bool invalid;
     uint8_t arr[3];

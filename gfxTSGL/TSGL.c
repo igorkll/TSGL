@@ -2,7 +2,7 @@
 #include <esp_heap_caps.h>
 #include <string.h>
 
-const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5};
+const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125, 0.125};
 
 size_t tsgl_getPartSize() {
     multi_heap_info_t info;

@@ -62,8 +62,8 @@ static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_g
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        tsgl_pos minSide = TSGL_MIN(object->parent->math_width, object->parent->math_height);
-        tsgl_pos maxSide = TSGL_MAX(object->parent->math_width, object->parent->math_height);
+        tsgl_pos minSide = TSGL_MATH_MIN(object->parent->math_width, object->parent->math_height);
+        tsgl_pos maxSide = TSGL_MATH_MAX(object->parent->math_width, object->parent->math_height);
         tsgl_pos localMathX = _localMath(object->format_x, false, object->x, object->parent->math_width, minSide, maxSide);
         tsgl_pos localMathY = _localMath(object->format_y, false, object->y, object->parent->math_height, minSide, maxSide);
         object->math_x = localMathX;
