@@ -48,3 +48,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {
     obj->draw_callback = _draw_callback;
     return obj;
 }
+
+tsgl_gui* tsgl_gui_button_getTextChild(tsgl_gui* self) {
+    return self->children[0];
+}

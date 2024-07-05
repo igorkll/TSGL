@@ -86,7 +86,7 @@ void test_gui() {
         .bg = TSGL_INVALID_RAWCOLOR,
         .fg = tsgl_color_raw(TSGL_ORANGE, sprite->colormode),
         .locationMode = tsgl_print_start_top,
-        .scale = 0.6
+        .targetWidth = 25
     };
     tsgl_print_textArea textArea = tsgl_framebuffer_text(sprite, 1, 1, sets, "LOLZ");
     tsgl_framebuffer_rect(sprite, textArea.left, textArea.top, textArea.width, textArea.height, tsgl_color_raw(TSGL_BLUE, sprite->colormode), 3);
@@ -101,8 +101,8 @@ void test_gui() {
     button->y = 0.1;
     button->width = 0.4;
     button->height = 0.4;
-    tsgl_gui_text_setParams(button->children[0], tsgl_font_defaultFont, 0.4, TSGL_INVALID_COLOR, TSGL_WHITE);
-    tsgl_gui_text_setText(button->children[0], "TEST\nQWER\n123456789", false);
+    tsgl_gui* buttonText = tsgl_gui_button_getTextChild(button);
+    tsgl_gui_text_setText(buttonText, "TEST", false);
 
     /*
     tsgl_sprite spriteData = {

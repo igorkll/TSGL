@@ -11,3 +11,4 @@ typedef struct {
 } tsgl_gui_buttonData;
 
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui);
+tsgl_gui* tsgl_gui_button_getTextChild(tsgl_gui* self);
