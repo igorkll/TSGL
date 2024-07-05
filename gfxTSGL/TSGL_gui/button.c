@@ -6,6 +6,7 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
             self->intData = 1;
             self->animationTarget = 1;
             self->needDraw = true;
+            if (self->user_callback != NULL) self->user_callback(self, 1, NULL, self->userArg);
             break;
 
         case tsgl_gui_drop:
@@ -14,6 +15,7 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
                 self->animationTarget = 0;
             }
             self->needDraw = true;
+            if (self->user_callback != NULL) self->user_callback(self, 0, NULL, self->userArg);
             break;
 
         default:
