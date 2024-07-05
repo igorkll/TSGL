@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "TSGL_math.h"
 
 typedef int16_t tsgl_pos;
 #define TSGL_POS_MIN -32768
@@ -79,7 +78,9 @@ typedef struct {
     tsgl_pos offsetY;
 } tsgl_settings;
 
-// ---------------- defines
+// ----------------
+
+#include "TSGL_math.h"
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)

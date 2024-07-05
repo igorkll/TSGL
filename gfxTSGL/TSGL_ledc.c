@@ -2,7 +2,7 @@
 #include <driver/gpio.h>
 #include <math.h>
 
-static uint8_t _getLedcChannel() {
+int8_t tsgl_ledc_getChannel() {
     static int8_t ledcChannel = -1;
     ledcChannel++;
     if (ledcChannel >= 8) ledcChannel = 0;
@@ -28,11 +28,11 @@ int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value) {
             .clk_cfg          = LEDC_AUTO_CLK
         };
 
-        if (ledc_timer_config(&ledc_timer) != ESP_OK) return -1;
+        ledc_timer_config(&ledc_timer); //there is no check here because the timer can already be initialized by the user with other settings
         ledcInited = true;
     }
 
-    int8_t channel = _getLedcChannel();
+    int8_t channel = tsgl_ledc_getChannel();
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = LEDC_MODE,
         .channel        = channel,
