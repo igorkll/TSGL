@@ -278,7 +278,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                 }
                 animEnd = object->animationState > object->animationTarget;
             } else {
-                if (object->animationSpeedUpMul != 0) {
+                if (object->animationSpeedDownMul != 0) {
                     object->animationState -= stateDelta * object->animationSpeedDownMul;
                 } else {
                     object->animationState -= stateDelta;
@@ -290,6 +290,8 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             } else {
                 object->needDraw = true;
             }
+        } else {
+            object->animationState = object->animationTarget;
         }
 
         if (!object->color.invalid) {
