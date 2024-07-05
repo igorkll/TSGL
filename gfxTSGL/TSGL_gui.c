@@ -271,10 +271,18 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                 stateDelta = dt / object->animationSpeed;
             }
             if (delta > 0) {
-                object->animationState += stateDelta;
+                if (object->animationSpeedUpMul != 0) {
+                    object->animationState += stateDelta * object->animationSpeedUpMul;
+                } else {
+                    object->animationState += stateDelta;
+                }
                 animEnd = object->animationState > object->animationTarget;
             } else {
-                object->animationState -= stateDelta;
+                if (object->animationSpeedUpMul != 0) {
+                    object->animationState -= stateDelta * object->animationSpeedDownMul;
+                } else {
+                    object->animationState -= stateDelta;
+                }
                 animEnd = object->animationState < object->animationTarget;
             }
             if (animEnd || fabs(object->animationTarget - object->animationState) <= object->animationTolerance) {
