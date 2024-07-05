@@ -69,8 +69,11 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
     }
 
     tsgl_pos standartHeight = tsgl_font_height(sets.font, 'A');
-    if (sets.targetWidth != 0) {
-        sets.scaleY = ((float)sets.targetWidth) / ((float)standartHeight);
+    if (sets.targetHeight == 0) {
+        sets.targetHeight = sets.targetWidth;
+    }
+    if (sets.targetHeight != 0) {
+        sets.scaleY = ((float)sets.targetHeight) / ((float)standartHeight);
     }
     if (sets.scaleY != 0) {
         standartHeight = (((float)standartHeight) * sets.scaleY) + 0.5;
