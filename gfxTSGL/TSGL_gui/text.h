@@ -4,7 +4,6 @@
 #include "../TSGL_font.h"
 
 typedef struct {
-    tsgl_rawcolor bg;
     tsgl_print_settings sets;
     const char* text;
     bool freeText;
@@ -12,4 +11,4 @@ typedef struct {
 
 tsgl_gui* tsgl_gui_addText(tsgl_gui* gui);
 void tsgl_gui_text_setText(tsgl_gui* self, const char* text, bool freeText);
-void tsgl_gui_text_setParams(tsgl_gui* self, tsgl_rawcolor bg, tsgl_print_settings sets);
+void tsgl_gui_text_setParams(tsgl_gui* self, tsgl_print_settings sets);

@@ -16,6 +16,7 @@ typedef enum {
 
 typedef struct {
     const void* font;
+    tsgl_rawcolor fill;
     tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
     tsgl_rawcolor fg;
 

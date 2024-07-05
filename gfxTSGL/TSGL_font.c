@@ -82,6 +82,11 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
     tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
     if (spacing <= 0) spacing = 1;
 
+    if (!sets.fill.invalid && fill != NULL) {
+        tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, screenWidth, screenHeight, sets, text);
+        fill(arg, textArea.left, textArea.top, textArea.width, textArea.height, sets.fill);
+    }
+
     if (sets.multiline) {
         if (sets.globalCentering) {
             tsgl_print_settings lSets;
@@ -95,6 +100,7 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
 
         tsgl_print_settings newSets = {
             .font = sets.font,
+            .fill = TSGL_INVALID_RAWCOLOR,
             .bg = sets.bg,
             .fg = sets.fg,
             ._heightClamp = true,

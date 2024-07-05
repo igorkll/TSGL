@@ -83,7 +83,8 @@ void test_gui() {
 
     tsgl_print_settings sets = {
         .font = font,
-        .bg = TSGL_INVALID_RAWCOLOR,
+        .fill = tsgl_color_raw(TSGL_RED, sprite->colormode),
+        .bg = tsgl_color_raw(TSGL_GREEN, sprite->colormode),
         .fg = tsgl_color_raw(TSGL_ORANGE, sprite->colormode),
         .locationMode = tsgl_print_start_top,
         .targetWidth = 25
