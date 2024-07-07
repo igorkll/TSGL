@@ -8,6 +8,7 @@
 #include <freertos/task.h>
 #include <soc/soc.h>
 #include <esp_log.h>
+#include <string.h>
 
 static const char* TAG = "TSGL_sound";
 
@@ -24,8 +25,11 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     } else {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
-    dac_oneshot_output_voltage(sound->channel1, *(((uint8_t*)sound->data) + sound->position));
-    sound->position += sound->bit_rate;
+    if (sound->channel1Bool)
+        dac_oneshot_output_voltage(sound->channel1, *(((uint8_t*)sound->data) + sound->position));
+    if (sound->channel2Bool)
+        dac_oneshot_output_voltage(sound->channel2, *(((uint8_t*)sound->data) + sound->position + (sound->channels > 1 ? sound->bit_rate : 0)));
+    sound->position += sound->bit_rate * sound->channels;
 }
 
 static void _pushTask(void* _sound) {
@@ -37,11 +41,9 @@ static void _pushTask(void* _sound) {
 }
 
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
+    memset(sound, 0, sizeof(tsgl_sound));
     FILE* file = fopen(path, "rb");
     if (file == NULL) return ESP_FAIL;
-    sound->playing = false;
-    sound->pause = false;
-    sound->position = 0;
     sound->speed = 1.0;
     sound->len = tsgl_filesystem_getFileSize(path);
     sound->sample_rate = sample_rate;
