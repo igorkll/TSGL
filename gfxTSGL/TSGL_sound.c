@@ -4,6 +4,8 @@
 #include <driver/timer.h>
 #include <stdio.h>
 #include <esp_attr.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 static const char* TAG = "TSGL_sound";
 
@@ -24,6 +26,14 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     sound->position += sound->bit_rate;
 }
 
+static void _pushTask(void* _sound) {
+    tsgl_sound* sound = _sound;
+    while (sound->playing) vTaskDelay(1);
+    tsgl_sound_free(sound);
+    free(sound);
+    vTaskDelete(NULL);
+}
+
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
     FILE* file = fopen(path, "rb");
     if (file == NULL) return ESP_FAIL;
@@ -40,15 +50,17 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     return ESP_OK;
 }
 
-void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel) {
+void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel, dac_channel_t channel2) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
         return;
     }
 
-    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel));
+    if (channel >= 0) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel));
+    if (channel2 >= 0) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel2));
     sound->playing = true;
     sound->channel = channel;
+    sound->channel2 = channel2;
 
     timer_config_t config = {
 		.divider = 8,
@@ -83,6 +95,14 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     free(sound->data);
+}
+
+void tsgl_sound_pushPcm(const char* path, size_t sample_rate, size_t bit_rate, size_t channels, float speed, dac_channel_t channel, dac_channel_t channel2) {
+    tsgl_sound* sound = malloc(sizeof(tsgl_sound));
+    tsgl_sound_load_pcm(sound, path, sample_rate, bit_rate, channels);
+    sound->speed = speed;
+    tsgl_sound_play(sound, channel, channel2);
+    xTaskCreate(_pushTask, NULL, 2048, &sound, 1, NULL);
 }
 
 #endif
