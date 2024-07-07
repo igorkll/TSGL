@@ -264,6 +264,11 @@ void tsgl_display_free(tsgl_display* display) {
             spi_bus_remove_device(*((spi_device_handle_t*)display->interface));
             break;
     }
+
+    if (display->backlight != NULL) {
+        tsgl_ledc_free(display->backlight);
+    }
+
     free(display->interface);
 }
 
