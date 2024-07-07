@@ -22,7 +22,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     } else {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
-    dac_output_voltage(DAC_CHANNEL_1, *(((uint8_t*)sound->data) + sound->position));
+    dac_output_voltage(sound->channel, *(((uint8_t*)sound->data) + sound->position));
     sound->position += sound->bit_rate;
 }
 
