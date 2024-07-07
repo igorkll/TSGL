@@ -18,7 +18,9 @@ typedef struct {
     size_t bit_rate;
     size_t channels;
 
-    dac_oneshot_handle_t channel;
+    bool channel1Bool;
+    dac_oneshot_handle_t channel1;
+    bool channel2Bool;
     dac_oneshot_handle_t channel2;
 
     timer_idx_t timer;
@@ -32,5 +34,5 @@ void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel, dac_channel_t cha
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
 
-void tsgl_sound_pushPcm(const char* path, size_t sample_rate, size_t bit_rate, size_t channels, float speed, dac_channel_t channel, dac_channel_t channel2);
+void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, dac_channel_t channel, dac_channel_t channel2);
 #endif
