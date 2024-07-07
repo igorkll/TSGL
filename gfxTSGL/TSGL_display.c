@@ -82,10 +82,10 @@ void tsgl_display_pushBacklight(gpio_num_t pin, uint8_t defaultValue) {
 
 
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
+    memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
 
     display->invertBacklight = settings.invertBacklight;
-    display->backlight = NULL;
     if (initBlPin >= 0)
         tsgl_display_attachBacklight(display, initBlPin, initBlDefaultValue);
     display->storage.swapRGB = settings.swapRGB;
