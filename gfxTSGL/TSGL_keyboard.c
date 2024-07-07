@@ -58,6 +58,13 @@ bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
                 ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
                 break;
         }
+        bindState->whenPressed = false;
+        bindState->whenReleasing = false;
+        if (state != bindState->oldState) {
+            if (state) bindState->whenPressed = true;
+            if (!state) bindState->whenReleasing = true;
+            bindState->oldState = state;
+        }
     }
     return state;
 }
