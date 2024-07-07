@@ -32,6 +32,13 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
     keyboard->binds[keyboard->bindsCount] = bindState;
 }
 
+void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    if (bindState != NULL) {
+        bindState->object = object;
+    }
+}
+
 bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
     for (size_t i = 0; i < keyboard->bindsCount; i++) {
         bind_state* bindState = keyboard->binds[i];
