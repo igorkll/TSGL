@@ -12,16 +12,13 @@ static const char* TAG = "TSGL_sound";
 
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
-    timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
     if (sound->position >= sound->len) {
         sound->position = 0;
         if (sound->loop) {
-            timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
         } else {
-            sound->playing = false;
+            tsgl_sound_stop(sound);
         }
     } else {
-        timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
     dac_oneshot_output_voltage(sound->channel1, *(((uint8_t*)sound->data) + sound->position));
     sound->position += sound->bit_rate;
@@ -52,7 +49,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     return ESP_OK;
 }
 
-void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel1, dac_channel_t channel2) {
+void tsgl_sound_play(tsgl_sound* sound, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
         return;
@@ -118,7 +115,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
     free(sound->data);
 }
 
-void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, dac_channel_t channel1, dac_channel_t channel2) {
+void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
     tsgl_sound* sound = malloc(sizeof(tsgl_sound));
     tsgl_sound_load_pcm(sound, path, sample_rate, bit_rate, channels);
     sound->speed = speed;

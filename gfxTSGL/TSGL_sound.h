@@ -4,6 +4,8 @@
 #include <driver/dac_oneshot.h>
 #include <driver/timer.h>
 
+typedef int tsgl_sound_channel;
+
 typedef struct {
     bool playing; //get
     bool pause; //get
@@ -30,9 +32,9 @@ typedef struct {
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample_rate, size_t bit_rate, size_t channels);
-void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel, dac_channel_t channel2);
+void tsgl_sound_play(tsgl_sound* sound, tsgl_sound_channel channel, tsgl_sound_channel channel2);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
 
-void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, dac_channel_t channel, dac_channel_t channel2);
+void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_channel channel, tsgl_sound_channel channel2);
 #endif
