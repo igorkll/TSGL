@@ -31,16 +31,23 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
 
 void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel) {
     if (sound->playing) {
-        ESP_LOGE(TAG, "tsgl_sound_play skipped. the track is already playing");
+        ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
         return;
     }
 
+    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel));
     sound->playing = true;
     sound->channel = channel;
 
 }
 
 void tsgl_sound_stop(tsgl_sound* sound) {
+    if (!sound->playing) {
+        ESP_LOGW(TAG, "tsgl_sound_stop skipped. the track is not playing");
+        return;
+    }
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_disable(sound->channel));
     sound->playing = false;
 }
 
