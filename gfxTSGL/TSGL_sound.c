@@ -1,11 +1,12 @@
 #if __has_include(<driver/dac.h>)
 #include "TSGL_sound.h"
 #include "TSGL_filesystem.h"
-#include <driver/timer.h>
 #include <stdio.h>
 #include <esp_attr.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <soc/soc.h>
+#include <esp_log.h>
 
 static const char* TAG = "TSGL_sound";
 
@@ -22,7 +23,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     } else {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
-    dac_output_voltage(sound->channel, *(((uint8_t*)sound->data) + sound->position));
+    dac_oneshot_output_voltage(sound->channel, *(((uint8_t*)sound->data) + sound->position));
     sound->position += sound->bit_rate;
 }
 
@@ -56,12 +57,22 @@ void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel, dac_channel_t cha
         return;
     }
 
-    if (channel >= 0) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel));
-    if (channel2 >= 0) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_enable(channel2));
-    sound->playing = true;
-    sound->channel = channel;
-    sound->channel2 = channel2;
+    if (channel >= 0) {
+        dac_oneshot_config_t conf = {
+            .chan_id = channel
+        };
 
+        ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_new_channel(&conf, &sound->channel));
+    }
+    
+    if (channel2 >= 0) {
+        dac_oneshot_config_t conf = {
+            .chan_id = channel2
+        };
+        
+        ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_new_channel(&conf, &sound->channel2));
+    }
+    
     timer_config_t config = {
 		.divider = 8,
 		.counter_dir = TIMER_COUNT_UP,
@@ -73,10 +84,11 @@ void tsgl_sound_play(tsgl_sound* sound, dac_channel_t channel, dac_channel_t cha
 
     sound->timerGroup = TIMER_GROUP_0;
     sound->timer = TIMER_0;
+    sound->playing = true;
 
 	ESP_ERROR_CHECK(timer_init(sound->timerGroup, sound->timer, &config));
 	ESP_ERROR_CHECK(timer_set_counter_value(sound->timerGroup, sound->timer, 0x00000000ULL));
-	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, TIMER_BASE_CLK / config.divider / sound_wav_info.sampleRate));
+	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate));
 	ESP_ERROR_CHECK(timer_enable_intr(sound->timerGroup, sound->timer));
 	timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, &sound, ESP_INTR_FLAG_IRAM, NULL);
 	timer_start(sound->timerGroup, sound->timer);
@@ -89,11 +101,13 @@ void tsgl_sound_stop(tsgl_sound* sound) {
     }
 
     timer_pause(sound->timerGroup, sound->timer);
-    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_output_disable(sound->channel));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(sound->channel));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(sound->channel2));
     sound->playing = false;
 }
 
 void tsgl_sound_free(tsgl_sound* sound) {
+    if (sound->playing) tsgl_sound_stop(sound);
     free(sound->data);
 }
 

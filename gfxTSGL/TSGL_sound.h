@@ -1,7 +1,8 @@
 #pragma once
-#if __has_include(<driver/dac.h>)
+#if __has_include(<driver/dac_oneshot.h>)
 #include "TSGL.h"
-#include <driver/dac.h>
+#include <driver/dac_oneshot.h>
+#include <driver/timer.h>
 
 typedef struct {
     bool playing; //get
@@ -17,8 +18,8 @@ typedef struct {
     size_t bit_rate;
     size_t channels;
 
-    dac_channel_t channel;
-    dac_channel_t channel2;
+    dac_oneshot_handle_t channel;
+    dac_oneshot_handle_t channel2;
 
     timer_idx_t timer;
     timer_group_t timerGroup;
