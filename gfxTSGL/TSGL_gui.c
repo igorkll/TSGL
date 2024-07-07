@@ -450,6 +450,28 @@ void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
 
 
 
+void tsgl_gui_force(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
+    uint8_t touchCount = tsgl_touchscreen_touchCount(touchscreen);
+    if (touchCount > 0) {
+        tsgl_touchscreen_point point = tsgl_touchscreen_getPoint(touchscreen, 0);
+        if (root->pressed) {
+            if (point.x != root->tx || point.y != root->ty) {
+                root->tx = point.x;
+                root->ty = point.y;
+                _event(root, point.x, point.y, tsgl_gui_drag);
+            }
+        } else {
+            root->tx = point.x;
+            root->ty = point.y;
+            _event(root, point.x, point.y, tsgl_gui_click);
+        }
+        root->pressed = true;
+    } else if (root->pressed) {
+        _event(root, root->tx, root->ty, tsgl_gui_drop);
+        root->pressed = false;
+    }
+}
+
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {
     uint8_t touchCount = tsgl_touchscreen_touchCount(touchscreen);
     if (touchCount > 0) {

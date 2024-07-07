@@ -60,14 +60,7 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
     } else {
         keyboard->binds = realloc(keyboard->binds, keyboard->bindsCount * sizeof(size_t));
     }
-    keyboard->binds[keyboard->bindsCount] = bindState;
-}
-
-void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
-    if (bindState != NULL) {
-        bindState->object = object;
-    }
+    keyboard->binds[keyboard->bindsCount - 1] = bindState;
 }
 
 bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
@@ -79,6 +72,13 @@ bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
     }
     ESP_LOGE(TAG, "failed to find button: %i", buttonID);
     return NULL;
+}
+
+void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    if (bindState != NULL) {
+        bindState->object = object;
+    }
 }
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {
