@@ -39,7 +39,7 @@ int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value) {
         .timer_sel      = LEDC_TIMER,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
-        .duty           = invert ? tsgl_ledc_CRTValue(255 - value) : tsgl_ledc_CRTValue(value),
+        .duty           = invert ? (255 - tsgl_ledc_CRTValue(value)) : tsgl_ledc_CRTValue(value),
         .hpoint         = 0
     };
     if (ledc_channel_config(&ledc_channel) != ESP_OK) return -1;
@@ -48,7 +48,7 @@ int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value) {
 
 void tsgl_ledc_set(int8_t channel, bool invert, uint8_t value) {
     if (invert) {
-        ledc_set_duty(LEDC_MODE, channel, tsgl_ledc_CRTValue(255 - value));
+        ledc_set_duty(LEDC_MODE, channel, 255 - tsgl_ledc_CRTValue(value));
     } else {
         ledc_set_duty(LEDC_MODE, channel, tsgl_ledc_CRTValue(value));
     }
