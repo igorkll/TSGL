@@ -105,7 +105,7 @@ void tsgl_sound_play(tsgl_sound* sound, tsgl_sound_channel channel1, tsgl_sound_
 	ESP_ERROR_CHECK(timer_set_counter_value(sound->timerGroup, sound->timer, 0x00000000ULL));
 	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate));
 	ESP_ERROR_CHECK(timer_enable_intr(sound->timerGroup, sound->timer));
-	timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, &sound, ESP_INTR_FLAG_IRAM, NULL);
+	timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
 	timer_start(sound->timerGroup, sound->timer);
 }
 
@@ -123,7 +123,10 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
-    free(sound->data);
+    if (sound->data != NULL) {
+        free(sound->data);
+        sound->data = NULL;
+    }
 }
 
 void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
@@ -131,7 +134,7 @@ void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size
     tsgl_sound_load_pcm(sound, path, sample_rate, bit_rate, channels);
     sound->speed = speed;
     tsgl_sound_play(sound, channel1, channel2);
-    xTaskCreate(_pushTask, NULL, 8096, &sound, 1, NULL);
+    xTaskCreate(_pushTask, NULL, 8096, sound, 1, NULL);
 }
 
 #endif
