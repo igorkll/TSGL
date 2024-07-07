@@ -297,6 +297,9 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         if (!object->color.invalid) {
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
+            if (object->fillParentSize && object->parent != NULL && !object->parent->color.invalid) {
+                TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
+            }
             object->draw_callback(object);
         }
 

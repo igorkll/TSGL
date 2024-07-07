@@ -65,6 +65,7 @@ struct tsgl_gui {
     bool buffered;
     tsgl_colormode colormode;
 
+    bool fillParentSize;
     bool needMath;
     bool needDraw;
     bool drawLater;

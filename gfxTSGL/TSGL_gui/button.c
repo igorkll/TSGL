@@ -25,7 +25,9 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_buttonData* data = self->data;
-    TSGL_GUI_DRAW(self, fill, self->math_x, self->math_y, self->math_width, self->math_height,
+    tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.1);
+
+    TSGL_GUI_DRAW(self, fill, self->math_x + resize, self->math_y + resize, self->math_width - (resize * 2), self->math_height - (resize * 2),
         tsgl_color_raw(tsgl_color_combine(self->animationState, data->color, data->pressedColor), self->colormode)
     );
 
@@ -35,21 +37,17 @@ static void _draw_callback(tsgl_gui* self) {
     }
 }
 
-tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {
-    tsgl_gui* obj = tsgl_gui_addObject(gui);
-    tsgl_gui* text = tsgl_gui_addText(obj);
+tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     tsgl_gui_buttonData* data = calloc(1, sizeof(tsgl_gui_buttonData));
-    data->color = TSGL_BLUE;
+    data->color = color;
     data->pressedColor = tsgl_color_mul(data->color, 0.8);
-    data->text = text;
+
+    tsgl_gui* obj = tsgl_gui_addObject(gui);
     obj->animationSpeedUpMul = 1.5;
     obj->animationSpeedDownMul = 0.5;
     obj->data = data;
     obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;
+    obj->fillParentSize = true;
     return obj;
-}
-
-tsgl_gui* tsgl_gui_button_getTextChild(tsgl_gui* self) {
-    return self->children[0];
 }
