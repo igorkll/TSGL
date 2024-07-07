@@ -36,7 +36,6 @@ static void _draw_callback(tsgl_gui* self) {
         tsgl_color_raw(tsgl_color_combine(self->animationState, data->color, data->pressedColor), self->colormode)
     );
 
-
     switch (data->childType) {
         case 1:
             tsgl_gui* text = self->children[0];
@@ -71,7 +70,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     return obj;
 }
 
-tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, const char* text, bool freeText) {
+tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText) {
     tsgl_gui* button = tsgl_gui_addButton(gui, color);
     tsgl_gui* child = tsgl_gui_addText(button);
     tsgl_print_settings sets = {
@@ -81,7 +80,8 @@ tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color te
         .font = tsgl_font_defaultFont,
         .locationMode = tsgl_print_start_top,
         .multiline = true,
-        .globalCentering = true
+        .globalCentering = true,
+        .targetWidth = targetWidth
     };
 
     tsgl_gui_buttonData* data = button->data;

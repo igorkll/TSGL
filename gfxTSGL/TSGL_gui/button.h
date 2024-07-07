@@ -12,4 +12,4 @@ typedef struct {
 } tsgl_gui_buttonData;
 
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color);
-tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, const char* text, bool freeText);
+tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText);

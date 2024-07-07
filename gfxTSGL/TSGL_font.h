@@ -35,9 +35,11 @@ typedef struct {
     tsgl_pos height;
     bool globalCentering; //place the content in the middle of the box
     tsgl_print_alignment alignment;
+    
+    tsgl_pos _minWidth;
+    tsgl_pos _maxWidth;
     tsgl_pos _minHeight;
     tsgl_pos _maxHeight;
-    tsgl_pos _minPx;
     bool _clamp;
 } tsgl_print_settings;
 
