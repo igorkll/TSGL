@@ -51,6 +51,7 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
 
     bind_state* bindState = calloc(1, sizeof(bind_state));
     bindState->bind = bindPin;
+    bindState->bindType = 0;
     bindState->buttonID = buttonID;
 
     keyboard->bindsCount++;
