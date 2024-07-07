@@ -103,5 +103,6 @@ void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 
 // call it in a perpetual loop for the gui to work
+void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType);
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
 void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark);

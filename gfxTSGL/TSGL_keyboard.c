@@ -17,12 +17,21 @@ static bool _rawRead(bind_state* bindState) {
                 ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
                 break;
         }
+        
         bindState->whenPressed = false;
         bindState->whenReleasing = false;
         if (state != bindState->state) {
-            if (state) bindState->whenPressed = true;
-            if (!state) bindState->whenReleasing = true;
+            if (state) {
+                bindState->whenPressed = true;
+            } else {
+                bindState->whenReleasing = true;
+            }
             bindState->state = state;
+        }
+
+        if (bindState->object != NULL) {
+            if (bindState->whenPressed) tsgl_gui_processClick(bindState->object, 0, 0, tsgl_gui_click);
+            if (bindState->whenReleasing) tsgl_gui_processClick(bindState->object, 0, 0, tsgl_gui_drop);
         }
     }
     return state;
