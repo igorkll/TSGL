@@ -51,3 +51,21 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     obj->fillParentSize = true;
     return obj;
 }
+
+tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, const char* text, bool freeText) {
+    tsgl_gui* button = tsgl_gui_addButton(gui, color);
+    tsgl_gui* child = tsgl_gui_addText(button);
+    tsgl_gui_text_setText(child, text, freeText);
+
+    tsgl_print_settings sets = {
+        .fill = TSGL_INVALID_RAWCOLOR,
+        .bg = TSGL_INVALID_RAWCOLOR,
+        .fg = tsgl_color_raw(textColor, gui->colormode),
+        .font = tsgl_font_defaultFont,
+        .locationMode = tsgl_print_start_top,
+        .multiline = true,
+        .globalCentering = true
+    };
+    tsgl_gui_text_setParams(child, sets);
+    return button;
+}
