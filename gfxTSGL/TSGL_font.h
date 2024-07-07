@@ -37,7 +37,8 @@ typedef struct {
     tsgl_print_alignment alignment;
     tsgl_pos _minHeight;
     tsgl_pos _maxHeight;
-    bool _heightClamp;
+    tsgl_pos _minPx;
+    bool _clamp;
 } tsgl_print_settings;
 
 typedef struct {
