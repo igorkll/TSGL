@@ -1,13 +1,21 @@
 #pragma once
 #include "TSGL.h"
+#include <esp_log.h>
 #include <drivers/gpio.h>
 
 typedef struct {
+    bool highLevel;
+    gpio_num_t pin;
+} bind_pin;
+
+typedef struct {
+    int buttonID;
     bool oldState;
     bool whenPressed;
     bool whenReleasing;
-    int buttonID;
-    bool highLevel;
+
+    uint8_t bindType;
+    void* bind;
 } bind_state;
 
 typedef struct {
@@ -18,6 +26,7 @@ typedef struct {
 // you can use a symbol as the button ID
 void tsgl_keyboard_init(tsgl_keyboard* keyboard);
 void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, bool highLevel, gpio_num_t pin);
+bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed and whenReleasing to update the status
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID);

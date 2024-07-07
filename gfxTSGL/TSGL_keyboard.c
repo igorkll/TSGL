@@ -1,5 +1,7 @@
 #include "TSGL_keyboard.h"
 
+static const TAG = "TSGL_keyboard";
+
 void tsgl_keyboard_init(tsgl_keyboard* keyboard) {
     memset(keyboard, 0, sizeof(tsgl_keyboard));
 }
@@ -21,23 +23,66 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
     bindState->highLevel = highLevel;
     bindState->buttonID = buttonID;
 
-    keyboard->binds[keyboard->bindsCount++] = bindState;
+    keyboard->bindsCount++;
+    if (keyboard->binds == NULL) {
+        keyboard->binds = malloc(keyboard->bindsCount * sizeof(size_t));
+    } else {
+        keyboard->binds = realloc(keyboard->binds, keyboard->bindsCount * sizeof(size_t));
+    }
+    keyboard->binds[keyboard->bindsCount] = bindState;
+}
+
+bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
+    for (size_t i = 0; i < keyboard->bindsCount; i++) {
+        bind_state* bindState = keyboard->binds[i];
+        if (bindState->buttonID == buttonID) {
+            return bindState;
+        }
+    }
+    ESP_LOGE(TAG, "failed to find button: %i", buttonID);
+    return NULL;
 }
 
 bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    bool state = false;
+    if (bindState != NULL) {
+        switch (bindState->bindType) {
+            case 0:
+                bind_pin* bind = bindState->bind;
+                state = gpio_get_level(bind->pin);
+                if (!bind->highLevel) state = !state;
+                break;
 
+            default:
+                ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
+                break;
+        }
+    }
+    return state;
 }
 
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID) {
-
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    if (bindState != NULL) {
+        return bindState->whenPressed;
+    }
+    return false;
 }
 
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID) {
-
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    if (bindState != NULL) {
+        return bindState->whenReleasing;
+    }
+    return false;
 }
 
 void tsgl_keyboard_free(tsgl_keyboard* keyboard) {
     for (size_t i = 0; i < keyboard->bindsCount; i++) {
-        free(keyboard->binds[i]);
+        bind_state* bindState = keyboard->binds[i];
+        free(bindState->bind);
+        free(bindState);
     }
+    free(keyboard->binds);
 }
