@@ -1,6 +1,32 @@
 #include "TSGL_keyboard.h"
+#include <string.h>
 
-static const TAG = "TSGL_keyboard";
+static const char* TAG = "TSGL_keyboard";
+
+static bool _rawRead(bind_state* bindState) {
+    bool state = false;
+    if (bindState != NULL) {
+        switch (bindState->bindType) {
+            case 0:
+                bind_pin* bind = bindState->bind;
+                state = gpio_get_level(bind->pin);
+                if (!bind->highLevel) state = !state;
+                break;
+
+            default:
+                ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
+                break;
+        }
+        bindState->whenPressed = false;
+        bindState->whenReleasing = false;
+        if (state != bindState->state) {
+            if (state) bindState->whenPressed = true;
+            if (!state) bindState->whenReleasing = true;
+            bindState->state = state;
+        }
+    }
+    return state;
+}
 
 void tsgl_keyboard_init(tsgl_keyboard* keyboard) {
     memset(keyboard, 0, sizeof(tsgl_keyboard));
@@ -19,8 +45,12 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
     }
     gpio_config(&io_conf);
 
+    bind_pin* bindPin = calloc(1, sizeof(bind_pin));
+    bindPin->pin = pin;
+    bindPin->highLevel = highLevel;
+
     bind_state* bindState = calloc(1, sizeof(bind_state));
-    bindState->highLevel = highLevel;
+    bindState->bind = bindPin;
     bindState->buttonID = buttonID;
 
     keyboard->bindsCount++;
@@ -52,34 +82,12 @@ bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {
     bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
-    bool state = false;
-    if (bindState != NULL) {
-        switch (bindState->bindType) {
-            case 0:
-                bind_pin* bind = bindState->bind;
-                state = gpio_get_level(bind->pin);
-                if (!bind->highLevel) state = !state;
-                break;
-
-            default:
-                ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
-                break;
-        }
-        bindState->whenPressed = false;
-        bindState->whenReleasing = false;
-        if (state != bindState->state) {
-            if (state) bindState->whenPressed = true;
-            if (!state) bindState->whenReleasing = true;
-            bindState->state = state;
-        }
-    }
-    return state;
+    return _rawRead(bindState);
 }
 
 void tsgl_keyboard_readAll(tsgl_keyboard* keyboard) {
     for (size_t i = 0; i < keyboard->bindsCount; i++) {
-        bind_state* bindState = keyboard->binds[i];
-        tsgl_keyboard_readState(keyboard, bindState);
+        _rawRead(keyboard->binds[i]);
     }
 }
 
