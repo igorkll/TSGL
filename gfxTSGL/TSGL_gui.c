@@ -451,7 +451,7 @@ void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
 
 
 void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType) {
-    _event(obj, obj->x + x, obj->y + y, clickType);
+    _event(obj, obj->math_x + x, obj->math_y + y, clickType);
 }
 
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) {

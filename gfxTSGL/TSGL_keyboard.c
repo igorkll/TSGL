@@ -83,7 +83,7 @@ bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
     return NULL;
 }
 
-void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
+void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
     bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
     if (bindState != NULL) {
         bindState->object = object;
