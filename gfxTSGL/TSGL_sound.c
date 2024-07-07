@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <esp_attr.h>
 #include <freertos/FreeRTOS.h>
+#include <esp_heap_caps.h>
 #include <freertos/task.h>
 #include <soc/soc.h>
 #include <esp_log.h>
@@ -12,13 +13,16 @@ static const char* TAG = "TSGL_sound";
 
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
+    timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
     if (sound->position >= sound->len) {
         sound->position = 0;
         if (sound->loop) {
+            timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
         } else {
             tsgl_sound_stop(sound);
         }
     } else {
+        timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
     dac_oneshot_output_voltage(sound->channel1, *(((uint8_t*)sound->data) + sound->position));
     sound->position += sound->bit_rate;
@@ -43,8 +47,15 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
-    sound->data = malloc(sound->len);
-    fread(sound->data, sound->bit_rate, sound->len, file);
+    sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
+    if (sound->data == NULL) {
+        sound->data = malloc(sound->len);
+    }
+    if (sound->data == NULL) {
+        ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %iKB", sound->len / 1024);
+    } else {
+        fread(sound->data, sound->bit_rate, sound->len, file);
+    }
     fclose(file);
     return ESP_OK;
 }
