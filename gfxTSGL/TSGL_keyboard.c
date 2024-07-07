@@ -50,7 +50,7 @@ bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
     return NULL;
 }
 
-bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
+bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {
     bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
     bool state = false;
     if (bindState != NULL) {
@@ -67,13 +67,28 @@ bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
         }
         bindState->whenPressed = false;
         bindState->whenReleasing = false;
-        if (state != bindState->oldState) {
+        if (state != bindState->state) {
             if (state) bindState->whenPressed = true;
             if (!state) bindState->whenReleasing = true;
-            bindState->oldState = state;
+            bindState->state = state;
         }
     }
     return state;
+}
+
+void tsgl_keyboard_readAll(tsgl_keyboard* keyboard) {
+    for (size_t i = 0; i < keyboard->bindsCount; i++) {
+        bind_state* bindState = keyboard->binds[i];
+        tsgl_keyboard_readState(keyboard, bindState);
+    }
+}
+
+bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
+    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    if (bindState != NULL) {
+        return bindState->state;
+    }
+    return false;
 }
 
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID) {

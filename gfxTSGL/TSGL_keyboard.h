@@ -2,7 +2,7 @@
 #include "TSGL.h"
 #include "TSGL_gui.h"
 #include <esp_log.h>
-#include <drivers/gpio.h>
+#include <driver/gpio.h>
 
 typedef struct {
     bool highLevel;
@@ -11,7 +11,7 @@ typedef struct {
 
 typedef struct {
     int buttonID;
-    bool oldState;
+    bool state;
     bool whenPressed;
     bool whenReleasing;
 
@@ -29,9 +29,11 @@ typedef struct {
 // you can use a symbol as the button ID
 void tsgl_keyboard_init(tsgl_keyboard* keyboard);
 void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, bool highLevel, gpio_num_t pin);
-void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object);
+void tsgl_keyboard_guiBind(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object); //allows you to simulate clicking on an element using a button, to work, you need to call readState at the button
 bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID);
-bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed and whenReleasing to update the status
+bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed, getState, whenReleasing to update the status
+void tsgl_keyboard_readAll(tsgl_keyboard* keyboard); //calls readState on all buttons
+bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID);
 void tsgl_keyboard_free(tsgl_keyboard* keyboard);
