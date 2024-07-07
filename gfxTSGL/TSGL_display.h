@@ -2,6 +2,7 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
+#include "TSGL_ledc.h"
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <esp_err.h>
@@ -27,8 +28,7 @@ typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_pos offsetY;
     bool invertBacklight;
 
-    int8_t backlightLedcChannel;
-    uint8_t backlightValue;
+    tsgl_ledc* backlight;
 
     //bool softwareInvert; //it can cause severe lags, it is used to invert colors to displays that do not support this hardware
 

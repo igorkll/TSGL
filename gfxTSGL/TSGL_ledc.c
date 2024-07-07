@@ -1,6 +1,11 @@
+#include "TSGL_ledc.h"
 #include <driver/ledc.h>
-#include <driver/gpio.h>
 #include <math.h>
+
+#define LEDC_TIMER              LEDC_TIMER_0
+#define LEDC_MODE               LEDC_LOW_SPEED_MODE
+#define LEDC_DUTY_RES           LEDC_TIMER_8_BIT
+#define LEDC_FREQUENCY          5000
 
 int8_t tsgl_ledc_getChannel() {
     static int8_t ledcChannel = -1;
@@ -13,11 +18,7 @@ uint8_t tsgl_ledc_CRTValue(uint8_t val) {
     return 0.0003066 * pow(val, 2.46);
 }
 
-#define LEDC_TIMER              LEDC_TIMER_0
-#define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_DUTY_RES           LEDC_TIMER_8_BIT
-#define LEDC_FREQUENCY          5000
-int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value) {
+esp_err_t tsgl_ledc_new(tsgl_ledc* obj, gpio_num_t pin, bool invert, uint8_t defaultValue) {
     static bool ledcInited = false;
     if (!ledcInited) {
         ledc_timer_config_t ledc_timer = {
@@ -39,18 +40,24 @@ int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value) {
         .timer_sel      = LEDC_TIMER,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
-        .duty           = invert ? (255 - tsgl_ledc_CRTValue(value)) : tsgl_ledc_CRTValue(value),
+        .duty           = invert ? (255 - tsgl_ledc_CRTValue(defaultValue)) : tsgl_ledc_CRTValue(defaultValue),
         .hpoint         = 0
     };
-    if (ledc_channel_config(&ledc_channel) != ESP_OK) return -1;
-    return channel;
+    
+    obj->channel = channel;
+    obj->invert = invert;
+    return ledc_channel_config(&ledc_channel);
 }
 
-void tsgl_ledc_set(int8_t channel, bool invert, uint8_t value) {
-    if (invert) {
-        ledc_set_duty(LEDC_MODE, channel, 255 - tsgl_ledc_CRTValue(value));
+void tsgl_ledc_set(tsgl_ledc* obj, uint8_t value) {
+    if (obj->invert) {
+        ledc_set_duty(LEDC_MODE, obj->channel, 255 - tsgl_ledc_CRTValue(value));
     } else {
-        ledc_set_duty(LEDC_MODE, channel, tsgl_ledc_CRTValue(value));
+        ledc_set_duty(LEDC_MODE, obj->channel, tsgl_ledc_CRTValue(value));
     }
-    ledc_update_duty(LEDC_MODE, channel);
+    ledc_update_duty(LEDC_MODE, obj->channel);
+}
+
+void tsgl_ledc_free(tsgl_ledc* obj) {
+    tsgl_ledc_set(obj, 0);
 }

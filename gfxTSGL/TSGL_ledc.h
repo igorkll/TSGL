@@ -2,7 +2,14 @@
 #include "TSGL.h"
 #include <driver/gpio.h>
 
+typedef struct {
+    int8_t channel;
+    bool invert;
+} tsgl_ledc;
+
 int8_t tsgl_ledc_getChannel();
 uint8_t tsgl_ledc_CRTValue(uint8_t val);
-int8_t tsgl_ledc_new(gpio_num_t pin, bool invert, uint8_t value);
-void tsgl_ledc_set(int8_t channel, bool invert, uint8_t value);
+
+esp_err_t tsgl_ledc_new(tsgl_ledc* obj, gpio_num_t pin, bool invert, uint8_t defaultValue);
+void tsgl_ledc_set(tsgl_ledc* obj, uint8_t value);
+void tsgl_ledc_free(tsgl_ledc* obj);
