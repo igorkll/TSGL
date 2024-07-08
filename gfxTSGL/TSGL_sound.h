@@ -16,12 +16,14 @@ typedef struct {
 } tsgl_sound_output;
 
 typedef struct {
-    bool playing; //get only
-    bool pause; //get only
-    float speed; //get only
-
     bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
+
+    //get only
+    bool playing; 
+    bool pause;
+    float speed;
+    float volume;
     bool loop;
     size_t position;
 
@@ -44,6 +46,9 @@ typedef struct {
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels);
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
+void tsgl_sound_setPause(tsgl_sound* sound, bool pause);
+void tsgl_sound_setLoop(tsgl_sound* sound, bool loop);
+void tsgl_sound_setVolume(tsgl_sound* sound, float volume);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
@@ -52,5 +57,5 @@ void tsgl_sound_free(tsgl_sound* sound);
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);
 #endif
 tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin);
-void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate);
+void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value);
 void tsgl_sound_freeOutput(tsgl_sound_output* output);

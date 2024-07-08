@@ -11,6 +11,7 @@
 #include <string.h>
 
 static const char* TAG = "TSGL_sound";
+static uint32_t cp0_regs[18];
 
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
@@ -30,9 +31,14 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
 
+    xthal_set_cpenable(true);
+    xthal_save_cp0(cp0_regs);
     for (size_t i = 0; i < sound->outputsCount; i++) {
-        tsgl_sound_setOutputValue(sound->outputs[i], sound->data + sound->position + ((i % sound->channels) * sound->bit_rate), sound->bit_rate);
+        uint8_t soundValue = sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)];
+        tsgl_sound_setOutputValue(sound->outputs[i], soundValue * sound->volume);
     }
+    xthal_restore_cp0(cp0_regs);
+    xthal_set_cpenable(false);
 
     sound->position += sound->bit_rate * sound->channels;
 }
@@ -51,6 +57,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path,
     FILE* file = fopen(path, "rb");
     if (file == NULL) return ESP_FAIL;
     sound->speed = 1.0;
+    sound->volume = 1.0;
     sound->len = tsgl_filesystem_getFileSize(path);
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
@@ -80,6 +87,27 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     if (sound->playing) {
         ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
     }
+}
+
+void tsgl_sound_setPause(tsgl_sound* sound, bool pause) {
+    if (sound->pause == pause) return;
+    sound->pause = pause;
+    if (pause) {
+        timer_pause(sound->timerGroup, sound->timer);
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_setOutputValue(sound->outputs[i], 0);
+        }
+    } else {
+        timer_start(sound->timerGroup, sound->timer);
+    }
+}
+
+void tsgl_sound_setLoop(tsgl_sound* sound, bool loop) {
+    sound->loop = loop;
+}
+
+void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
+    sound->volume = volume;
 }
 
 void tsgl_sound_play(tsgl_sound* sound) {
@@ -157,14 +185,14 @@ tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin) {
     return output;
 }
 
-void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
+void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
-            dac_oneshot_output_voltage(*output->channel, *value);
+            dac_oneshot_output_voltage(*output->channel, value);
         }
     #endif
     if (output->ledc != NULL) {
-        tsgl_ledc_rawSet(output->ledc, *value);
+        tsgl_ledc_rawSet(output->ledc, value);
     }
 }
 
