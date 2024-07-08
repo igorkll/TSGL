@@ -141,7 +141,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
 void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
-            //dac_oneshot_output_voltage(output->channel, *value);
+            dac_oneshot_output_voltage(output->channel, *value);
         }
     #endif
 }
