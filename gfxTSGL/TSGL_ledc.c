@@ -6,6 +6,8 @@
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
 #define LEDC_DUTY_RES           LEDC_TIMER_8_BIT
 #define LEDC_FREQUENCY          5000
+
+#define LEDC2_TIMER              LEDC_TIMER_1
 #define LEDC2_FREQUENCY          32000
 
 int8_t tsgl_ledc_getChannel() {
@@ -62,7 +64,7 @@ esp_err_t tsgl_ledc_newFast(tsgl_ledc* obj, gpio_num_t pin, bool invert, uint8_t
     if (!ledcInited) {
         ledc_timer_config_t ledc_timer = {
             .speed_mode       = LEDC_MODE,
-            .timer_num        = LEDC_TIMER,
+            .timer_num        = LEDC2_TIMER,
             .duty_resolution  = LEDC_DUTY_RES,
             .freq_hz          = LEDC2_FREQUENCY,
             .clk_cfg          = LEDC_AUTO_CLK
@@ -76,7 +78,7 @@ esp_err_t tsgl_ledc_newFast(tsgl_ledc* obj, gpio_num_t pin, bool invert, uint8_t
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = LEDC_MODE,
         .channel        = channel,
-        .timer_sel      = LEDC_TIMER,
+        .timer_sel      = LEDC2_TIMER,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
         .duty           = invert ? (255 - tsgl_ledc_CRTValue(defaultValue)) : tsgl_ledc_CRTValue(defaultValue),
