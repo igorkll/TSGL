@@ -55,7 +55,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
-    //sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
+    sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
     if (sound->data == NULL) {
         sound->data = malloc(sound->len);
     }
@@ -81,6 +81,9 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
 void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
+        return;
+    } else if (sound->data == NULL) {
+        ESP_LOGE(TAG, "tsgl_sound_play skipped. uninitialized audio cannot be started");
         return;
     }
 
