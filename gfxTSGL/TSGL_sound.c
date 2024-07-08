@@ -29,7 +29,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     }
 
     for (size_t i = 0; i < sound->outputsCount; i++) {
-        tsgl_sound_setOutputValue(sound->outputs[i], *(((uint8_t*)sound->data) + sound->position + ((i % sound->channels) * sound->bit_rate)), sound->bit_rate);
+        tsgl_sound_setOutputValue(sound->outputs[i], ((uint8_t*)sound->data) + sound->position + ((i % sound->channels) * sound->bit_rate), sound->bit_rate);
     }
 
     sound->position += sound->bit_rate * sound->channels;
@@ -53,7 +53,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
-    sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
+    //sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
     if (sound->data == NULL) {
         sound->data = malloc(sound->len);
     }
@@ -141,7 +141,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
 void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
-            dac_oneshot_output_voltage(output->channel, value);
+            //dac_oneshot_output_voltage(output->channel, *value);
         }
     #endif
 }
