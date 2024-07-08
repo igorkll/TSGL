@@ -40,6 +40,15 @@ static void _pushTask(void* _sound) {
     vTaskDelete(NULL);
 }
 
+static void _freeOutputs(tsgl_sound* sound) {
+    if (sound->freeOutputs) {
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_freeOutput(sound->outputs[i]);
+        }
+    }
+    free(sound->outputs);
+}
+
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
     memset(sound, 0, sizeof(tsgl_sound));
     FILE* file = fopen(path, "rb");
@@ -60,6 +69,16 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     }
     fclose(file);
     return ESP_OK;
+}
+
+void tsgl_sound_setOutput(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs) {
+    _freeOutputs(sound);
+    sound->outputsCount = outputsCount;
+    sound->outputs = malloc(outputsCount * sizeof(size_t));
+    for (size_t i = 0; i < sound->outputsCount; i++) {
+        sound->outputs[i] = outputs[i];
+    }
+    sound->freeOutputs = freeOutputs;
 }
 
 void tsgl_sound_play(tsgl_sound* sound, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
@@ -129,14 +148,40 @@ void tsgl_sound_free(tsgl_sound* sound) {
         free(sound->data);
         sound->data = NULL;
     }
+    _freeOutputs(sound);
 }
 
-void tsgl_sound_push_pcm(const char* path, float speed, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
-    tsgl_sound* sound = malloc(sizeof(tsgl_sound));
-    tsgl_sound_load_pcm(sound, path, sample_rate, bit_rate, channels);
-    sound->speed = speed;
-    tsgl_sound_play(sound, channel1, channel2);
-    xTaskCreate(_pushTask, NULL, 8096, sound, 1, NULL);
+#ifdef HARDWARE_DAC
+    tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel) {
+        tsgl_sound_output* output = calloc(1, sizeof(tsgl_sound_output));
+        output->channel = calloc(1, sizeof(dac_oneshot_handle_t));
+        dac_oneshot_config_t conf = {
+            .chan_id = channel
+        };
+        if (ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_new_channel(&conf, output->channel)) != ESP_OK) {
+            free(output->channel);
+            output->channel = NULL;
+        }
+        return output;
+    }
+#endif
+
+void tsgl_sound_setOutput(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
+    #ifdef HARDWARE_DAC
+        if (output->channel != NULL) {
+            dac_oneshot_output_voltage(output->channel, value);
+        }
+    #endif
+}
+
+void tsgl_sound_freeOutput(tsgl_sound_output* output) {
+    #ifdef HARDWARE_DAC
+        if (output->channel != NULL) {
+            ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(*output->channel));
+            free(output->channel);
+        }
+    #endif
+    free(output);
 }
 
 #endif
