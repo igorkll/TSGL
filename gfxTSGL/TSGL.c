@@ -42,6 +42,6 @@ void* tsgl_malloc(size_t size, int64_t caps) {
             ESP_LOGW(TAG, "failed to allocate buffer with caps. attempt to allocate without caps");
             return malloc(size);
         }
-        return buffer
+        return buffer;
     }
 }

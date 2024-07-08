@@ -4,12 +4,15 @@
     #define HARDWARE_DAC
 #endif
 #include "TSGL.h"
+#include "TSGL_ledc.h"
 #include <driver/timer.h>
+#include <driver/gpio.h>
 
 typedef struct {
     #ifdef HARDWARE_DAC
         dac_oneshot_handle_t* channel;
     #endif
+    tsgl_ledc* ledc;
 } tsgl_sound_output;
 
 typedef struct {
@@ -47,5 +50,6 @@ void tsgl_sound_free(tsgl_sound* sound);
 #ifdef HARDWARE_DAC
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);
 #endif
+tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin, bool invert);
 void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate);
 void tsgl_sound_freeOutput(tsgl_sound_output* output);

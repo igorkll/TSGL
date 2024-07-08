@@ -140,12 +140,25 @@ void tsgl_sound_free(tsgl_sound* sound) {
     }
 #endif
 
+tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin, bool invert) {
+    tsgl_sound_output* output = calloc(1, sizeof(tsgl_sound_output));
+    output->ledc = calloc(1, sizeof(tsgl_ledc));
+    if (ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_ledc_newFast(output->ledc, pin, invert, 0)) != ESP_OK) {
+        free(output->ledc);
+        output->ledc = NULL;
+    }
+    return output;
+}
+
 void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(*output->channel, *value);
         }
     #endif
+    if (output->ledc != NULL) {
+        tsgl_ledc_rawSet(output->ledc, *value);
+    }
 }
 
 void tsgl_sound_freeOutput(tsgl_sound_output* output) {
@@ -155,6 +168,10 @@ void tsgl_sound_freeOutput(tsgl_sound_output* output) {
             free(output->channel);
         }
     #endif
+    if (output->ledc != NULL) {
+        tsgl_ledc_free(output->ledc);
+        free(output->ledc);
+    }
     free(output);
 }
 
