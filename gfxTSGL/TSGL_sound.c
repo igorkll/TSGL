@@ -14,6 +14,16 @@
 static const char* TAG = "TSGL_sound";
 static uint32_t cp0_regs[18];
 
+static uint8_t convertPcm(tsgl_sound* sound, void* source) {
+    switch (sound->pcm_format) {
+        case tsgl_sound_pcm_unsigned:
+            return *((uint8_t*)source);
+        
+        case tsgl_sound_pcm_signed:
+            return *((int8_t*)source) + 128;
+    }
+} 
+
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
     timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
@@ -39,7 +49,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
 
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    TSGL_MATH_MIN(sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)] * sound->volume, 255)
+                    TSGL_MATH_MIN(convertPcm(sound, sound->data + sound->position + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
                 );
             }
 
@@ -48,7 +58,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         } else {
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)]
+                    convertPcm(sound, sound->data + sound->position + ((i % sound->channels) * sound->bit_rate))
                 );
             }
         }
@@ -66,7 +76,7 @@ static void _freeOutputs(tsgl_sound* sound) {
     free(sound->outputs);
 }
 
-esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
+esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
     memset(sound, 0, sizeof(tsgl_sound));
     FILE* file = fopen(path, "rb");
     if (file == NULL) return ESP_FAIL;
@@ -76,6 +86,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path,
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
+    sound->pcm_format = pcm_format;
     sound->data = tsgl_malloc(sound->len, caps);
     if (sound->data == NULL) {
         ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %iKB", sound->len / 1024);

@@ -34,6 +34,7 @@ typedef struct {
     size_t sample_rate;
     size_t bit_rate;
     size_t channels;
+    tsgl_sound_pcm_format pcm_format;
 
     tsgl_sound_output** outputs;
     size_t outputsCount;
@@ -43,9 +44,14 @@ typedef struct {
     timer_group_t timerGroup;
 } tsgl_sound;
 
+typedef enum {
+    tsgl_sound_pcm_unsigned,
+    tsgl_sound_pcm_signed
+} tsgl_sound_pcm_format;
+
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
-esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels);
+esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
 void tsgl_sound_setPause(tsgl_sound* sound, bool pause);
