@@ -75,6 +75,13 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
     sound->freeOutputs = freeOutputs;
 }
 
+void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
+    sound->speed = speed;
+    if (sound->playing) {
+        ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
+    }
+}
+
 void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
@@ -99,7 +106,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
 
 	ESP_ERROR_CHECK(timer_init(sound->timerGroup, sound->timer, &config));
 	ESP_ERROR_CHECK(timer_set_counter_value(sound->timerGroup, sound->timer, 0x00000000ULL));
-	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate));
+	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate / sound->speed));
 	ESP_ERROR_CHECK(timer_enable_intr(sound->timerGroup, sound->timer));
 	timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
 	timer_start(sound->timerGroup, sound->timer);

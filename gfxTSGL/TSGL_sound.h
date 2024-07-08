@@ -18,12 +18,12 @@ typedef struct {
 typedef struct {
     bool playing; //get only
     bool pause; //get only
-    
+    float speed; //get only
+
     bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
     bool loop;
     size_t position;
-    float speed;
 
     uint8_t* data;
     size_t len;
@@ -43,6 +43,7 @@ typedef struct {
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels);
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
+void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
