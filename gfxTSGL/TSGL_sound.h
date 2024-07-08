@@ -50,6 +50,6 @@ void tsgl_sound_free(tsgl_sound* sound);
 #ifdef HARDWARE_DAC
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);
 #endif
-tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin, bool invert);
+tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin);
 void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate);
 void tsgl_sound_freeOutput(tsgl_sound_output* output);

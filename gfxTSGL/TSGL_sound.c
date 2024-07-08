@@ -140,10 +140,10 @@ void tsgl_sound_free(tsgl_sound* sound) {
     }
 #endif
 
-tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin, bool invert) {
+tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin) {
     tsgl_sound_output* output = calloc(1, sizeof(tsgl_sound_output));
     output->ledc = calloc(1, sizeof(tsgl_ledc));
-    if (ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_ledc_newFast(output->ledc, pin, invert, 0)) != ESP_OK) {
+    if (ESP_ERROR_CHECK_WITHOUT_ABORT(tsgl_ledc_newFast(output->ledc, pin, false, 0)) != ESP_OK) {
         free(output->ledc);
         output->ledc = NULL;
     }
