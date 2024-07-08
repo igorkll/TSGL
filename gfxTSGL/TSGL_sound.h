@@ -22,7 +22,7 @@ typedef struct {
     size_t position;
     float speed;
 
-    void* data;
+    uint8_t* data;
     size_t len;
     size_t sample_rate;
     size_t bit_rate;
