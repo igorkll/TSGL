@@ -19,25 +19,20 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         sound->position = 0;
         if (sound->loop) {
             timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+        } else if (sound->freeAfterPlay) {
+            tsgl_sound_free(sound);
         } else {
             tsgl_sound_stop(sound);
         }
     } else {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
-    if (sound->channel1Bool)
-        dac_oneshot_output_voltage(sound->channel1, *(((uint8_t*)sound->data) + sound->position));
-    if (sound->channel2Bool)
-        dac_oneshot_output_voltage(sound->channel2, *(((uint8_t*)sound->data) + sound->position + (sound->channels > 1 ? sound->bit_rate : 0)));
-    sound->position += sound->bit_rate * sound->channels;
-}
 
-static void _pushTask(void* _sound) {
-    tsgl_sound* sound = _sound;
-    while (sound->playing) vTaskDelay(1);
-    tsgl_sound_free(sound);
-    free(sound);
-    vTaskDelete(NULL);
+    for (size_t i = 0; i < sound->outputsCount; i++) {
+        tsgl_sound_setOutputValue(sound->outputs[i], *(((uint8_t*)sound->data) + sound->position + ((i % sound->channels) * sound->bit_rate)), sound->bit_rate);
+    }
+
+    sound->position += sound->bit_rate * sound->channels;
 }
 
 static void _freeOutputs(tsgl_sound* sound) {
@@ -71,7 +66,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     return ESP_OK;
 }
 
-void tsgl_sound_setOutput(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs) {
+void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs) {
     _freeOutputs(sound);
     sound->outputsCount = outputsCount;
     sound->outputs = malloc(outputsCount * sizeof(size_t));
@@ -81,34 +76,12 @@ void tsgl_sound_setOutput(tsgl_sound* sound, tsgl_sound_output** outputs, size_t
     sound->freeOutputs = freeOutputs;
 }
 
-void tsgl_sound_play(tsgl_sound* sound, tsgl_sound_channel channel1, tsgl_sound_channel channel2) {
+void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
         return;
     }
 
-    if (channel1 >= 0) {
-        dac_oneshot_config_t conf = {
-            .chan_id = channel1
-        };
-
-        ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_new_channel(&conf, &sound->channel1));
-        sound->channel1Bool = true;
-    } else {
-        sound->channel1Bool = false;
-    }
-    
-    if (channel2 >= 0) {
-        dac_oneshot_config_t conf = {
-            .chan_id = channel2
-        };
-        
-        ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_new_channel(&conf, &sound->channel2));
-        sound->channel2Bool = true;
-    } else {
-        sound->channel2Bool = false;
-    }
-    
     timer_config_t config = {
 		.divider = 8,
 		.counter_dir = TIMER_COUNT_UP,
@@ -137,8 +110,6 @@ void tsgl_sound_stop(tsgl_sound* sound) {
     }
 
     timer_pause(sound->timerGroup, sound->timer);
-    if (sound->channel1Bool) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(sound->channel1));
-    if (sound->channel2Bool) ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(sound->channel2));
     sound->playing = false;
 }
 
@@ -149,6 +120,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
         sound->data = NULL;
     }
     _freeOutputs(sound);
+    if (sound->heap) free(sound);
 }
 
 #ifdef HARDWARE_DAC
@@ -166,7 +138,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
     }
 #endif
 
-void tsgl_sound_setOutput(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
+void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t* value, size_t bit_rate) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(output->channel, value);
