@@ -24,6 +24,8 @@ typedef struct {
     bool pause;
     float speed;
     float volume;
+    bool mute;
+    bool floatAllow;
     bool loop;
     size_t position;
 

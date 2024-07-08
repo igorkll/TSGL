@@ -1,6 +1,7 @@
 #if __has_include(<driver/dac.h>)
 #include "TSGL_sound.h"
 #include "TSGL_filesystem.h"
+#include "TSGL_math.h"
 #include <stdio.h>
 #include <esp_attr.h>
 #include <freertos/FreeRTOS.h>
@@ -31,14 +32,27 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
 
-    xthal_set_cpenable(true);
-    xthal_save_cp0(cp0_regs);
-    for (size_t i = 0; i < sound->outputsCount; i++) {
-        uint8_t soundValue = sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)];
-        tsgl_sound_setOutputValue(sound->outputs[i], soundValue * sound->volume);
+    if (!sound->mute) {
+        if (sound->floatAllow) {
+            xthal_set_cpenable(true);
+            xthal_save_cp0(cp0_regs);
+
+            for (size_t i = 0; i < sound->outputsCount; i++) {
+                tsgl_sound_setOutputValue(sound->outputs[i],
+                    TSGL_MATH_MIN(sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)] * sound->volume, 255)
+                );
+            }
+
+            xthal_restore_cp0(cp0_regs);
+            xthal_set_cpenable(false);
+        } else {
+            for (size_t i = 0; i < sound->outputsCount; i++) {
+                tsgl_sound_setOutputValue(sound->outputs[i],
+                    sound->data[sound->position + ((i % sound->channels) * sound->bit_rate)]
+                );
+            }
+        }
     }
-    xthal_restore_cp0(cp0_regs);
-    xthal_set_cpenable(false);
 
     sound->position += sound->bit_rate * sound->channels;
 }
@@ -108,6 +122,16 @@ void tsgl_sound_setLoop(tsgl_sound* sound, bool loop) {
 
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
     sound->volume = volume;
+    if (volume == 1) {
+        sound->floatAllow = false;
+        sound->mute = false;
+    } else if (volume == 0) {
+        sound->floatAllow = false;
+        sound->mute = true;
+    } else {
+        sound->floatAllow = true;
+        sound->mute = false;
+    }
 }
 
 void tsgl_sound_play(tsgl_sound* sound) {
