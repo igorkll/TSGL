@@ -22,6 +22,7 @@ static uint8_t convertPcm(tsgl_sound* sound, void* source) {
         case tsgl_sound_pcm_signed:
             return *((int8_t*)source) + 128;
     }
+    return 0;
 } 
 
 static void IRAM_ATTR _timer_ISR(void* _sound) {

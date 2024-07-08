@@ -15,6 +15,11 @@ typedef struct {
     tsgl_ledc* ledc;
 } tsgl_sound_output;
 
+typedef enum {
+    tsgl_sound_pcm_unsigned,
+    tsgl_sound_pcm_signed
+} tsgl_sound_pcm_format;
+
 typedef struct {
     bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
@@ -43,11 +48,6 @@ typedef struct {
     timer_idx_t timer;
     timer_group_t timerGroup;
 } tsgl_sound;
-
-typedef enum {
-    tsgl_sound_pcm_unsigned,
-    tsgl_sound_pcm_signed
-} tsgl_sound_pcm_format;
 
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
