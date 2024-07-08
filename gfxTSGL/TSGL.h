@@ -28,6 +28,7 @@ typedef enum {
 
 size_t tsgl_getPartSize();
 void tsgl_sendFlood(void* arg, void(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
+void* tsgl_malloc(size_t size, int64_t caps);
 
 // ---------------- driver
 

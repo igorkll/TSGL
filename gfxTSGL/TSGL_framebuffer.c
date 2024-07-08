@@ -123,15 +123,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->buffersize = width * height * framebuffer->colorsize;
     double notUsed;
     framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
-    if (caps == 0) {
-        framebuffer->buffer = malloc(framebuffer->buffersize);
-    } else {
-        framebuffer->buffer = heap_caps_malloc(framebuffer->buffersize, caps);
-        if (framebuffer->buffer == NULL) {
-            ESP_LOGW(TAG, "failed to allocate framebuffer with caps. attempt to allocate without caps");
-            framebuffer->buffer = malloc(framebuffer->buffersize);
-        }
-    }
+    framebuffer->buffer = tsgl_malloc(framebuffer->buffersize, caps);
     if (framebuffer->buffer == NULL) {
         ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
         return ESP_FAIL;

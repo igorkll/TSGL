@@ -1,7 +1,9 @@
 #include "TSGL.h"
 #include <esp_heap_caps.h>
+#include <esp_log.h>
 #include <string.h>
 
+static const char* TAG = "TSGL";
 const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
 
 size_t tsgl_getPartSize() {
@@ -29,4 +31,17 @@ void tsgl_sendFlood(void* arg, void(*send)(void* arg, void* part, size_t size), 
         }
     }
     free(floodPart);
+}
+
+void* tsgl_malloc(size_t size, int64_t caps) {
+    if (caps == 0) {
+        return malloc(size);
+    } else {
+        void* buffer = heap_caps_malloc(size, caps);
+        if (buffer == NULL) {
+            ESP_LOGW(TAG, "failed to allocate buffer with caps. attempt to allocate without caps");
+            return malloc(size);
+        }
+        return buffer
+    }
 }

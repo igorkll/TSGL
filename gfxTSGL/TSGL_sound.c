@@ -46,7 +46,7 @@ static void _freeOutputs(tsgl_sound* sound) {
     free(sound->outputs);
 }
 
-esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
+esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels) {
     memset(sound, 0, sizeof(tsgl_sound));
     FILE* file = fopen(path, "rb");
     if (file == NULL) return ESP_FAIL;
@@ -55,10 +55,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, const char* path, size_t sample
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
-    sound->data = heap_caps_malloc(sound->len, MALLOC_CAP_SPIRAM);
-    if (sound->data == NULL) {
-        sound->data = malloc(sound->len);
-    }
+    sound->data = tsgl_malloc(sound->len, caps);
     if (sound->data == NULL) {
         ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %iKB", sound->len / 1024);
     } else {
