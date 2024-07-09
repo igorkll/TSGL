@@ -108,6 +108,10 @@ static bool _isDenseColor(tsgl_rawcolor color, uint8_t colorsize) {
     return true;
 }
 
+static void _doubleSet(tsgl_framebuffer* framebuffer, size_t index, tsgl_rawcolor color) {
+    uint16_t* var = (uint16_t*)(framebuffer->buffer + index);
+    *var = *((uint16_t*)(&color.arr[0]));
+}
 
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
@@ -205,11 +209,16 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
         case tsgl_bgr565_le:
         case tsgl_rgb565_be:
         case tsgl_bgr565_be:
-            size_t index = _getBufferIndex(framebuffer, x, y);
-            uint16_t* var = (uint16_t*)(framebuffer->buffer + index);
-            *var = *((uint16_t*)(&color.arr[0]));
+            _doubleSet(framebuffer, _getBufferIndex(framebuffer, x, y), color);
             break;
         
+        case tsgl_rgb888:
+        case tsgl_bgr888:
+            size_t index = _getBufferIndex(framebuffer, x, y);
+            _doubleSet(framebuffer, index, color);
+            framebuffer->buffer[index + 2] = color.arr[2];
+            break;
+
         default: {
             size_t index = _getBufferIndex(framebuffer, x, y);
             for (uint8_t i = 0; i < framebuffer->colorsize; i++) {
