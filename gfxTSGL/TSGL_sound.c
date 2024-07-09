@@ -53,7 +53,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         uint8_t* t = sound->data;
         sound->data = sound->buffer;
         sound->buffer = t;
-        vTaskResume(&sound->task);
+        vTaskResume(sound->task);
     }
     uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
