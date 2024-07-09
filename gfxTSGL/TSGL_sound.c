@@ -26,6 +26,7 @@ static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
     while (true) {
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        vTaskDelay(1);
         vTaskSuspend(NULL);
     }
 }
@@ -53,7 +54,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         uint8_t* t = sound->data;
         sound->data = sound->buffer;
         sound->buffer = t;
-        vTaskResume(sound->task);
+        xTaskResumeFromISR(sound->task);
     }
     uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
