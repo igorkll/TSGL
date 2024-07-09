@@ -51,6 +51,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
 
     size_t dataOffset = sound->position % sound->bufferSize;
     if (sound->file && dataOffset == 0) {
+        if (eTaskGetState(sound->task) == eRunning) return;
         uint8_t* t = sound->data;
         sound->data = sound->buffer;
         sound->buffer = t;
