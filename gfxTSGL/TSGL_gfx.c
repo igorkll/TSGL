@@ -135,7 +135,7 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
                 sprite->flixY ? (spriteMaxPointY - posY) : posY
             );
 
-            if (sprite->transparentColor.invalid || memcmp(color.arr, sprite->transparentColor.arr, sprite->sprite->colorsize) != 0) {
+            if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize)) {
                 set(arg, setPosX, setPosY, color);
             }
         }

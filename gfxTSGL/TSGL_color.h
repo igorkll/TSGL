@@ -49,3 +49,5 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
 void tsgl_color_monoWrite(size_t index, uint8_t offset, uint8_t* buffer, tsgl_rawcolor color);
 void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color);
 tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer);
+
+bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize);
