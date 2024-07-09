@@ -153,10 +153,9 @@ const tsgl_driver st77XX_rgb444 = { //does not work on st7796
 };
 
 const tsgl_driver st77XX_rgb565 = {
-    .colormode = tsgl_rgb565_le,
+    .colormode = tsgl_rgb565_be,
     .init = {
         {0x3A, {0x05}, 1}, //565
-        {0xB0, {0b00000000, 0b00001000}, 2},
     _SERVICE_CODE
 };
 

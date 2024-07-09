@@ -200,6 +200,15 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
         case tsgl_monochrome:
             tsgl_color_monoWrite(_getRawHorBufferIndex(framebuffer, x, y), _getHorOffset(framebuffer, x, y), framebuffer->buffer, color);
             break;
+
+        case tsgl_rgb565_le:
+        case tsgl_bgr565_le:
+        case tsgl_rgb565_be:
+        case tsgl_bgr565_be:
+            size_t index = _getBufferIndex(framebuffer, x, y);
+            uint16_t* var = (uint16_t*)(framebuffer->buffer + index);
+            *var = (uint16_t)color.arr;
+            break;
         
         default: {
             size_t index = _getBufferIndex(framebuffer, x, y);

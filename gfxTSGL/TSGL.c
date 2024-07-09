@@ -1,4 +1,5 @@
 #include "TSGL.h"
+#include "TSGL_math.h"
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <string.h>
@@ -12,7 +13,6 @@ size_t tsgl_getPartSize() {
     return info.largest_free_block;
 }
 
-#define umin(a,b) (((a) < (b)) ? (a) : (b))
 void tsgl_sendFlood(void* arg, void(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood) {
     if (size <= 0 || flood <= 0) return;
     size_t part = (tsgl_getPartSize() / size) * size;
@@ -24,7 +24,7 @@ void tsgl_sendFlood(void* arg, void(*send)(void* arg, void* part, size_t size), 
         memcpy(floodPart + i, data, size);
     }
     while (true) {
-        send(arg, floodPart, umin(bytesCount - offset, part));
+        send(arg, floodPart, TSGL_MATH_MIN(bytesCount - offset, part));
         offset += part;
         if (offset >= bytesCount) {
             break;
