@@ -25,7 +25,7 @@ static uint8_t convertPcm(tsgl_sound* sound, void* source) {
 static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
     while (true) {
-        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file); //WTF - Guru Meditation Error: Core  0 panic'ed (Cache disabled but cached memory region accessed). 
         vTaskDelay(1);
         vTaskSuspend(NULL);
     }
