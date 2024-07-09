@@ -3,9 +3,7 @@
 #include "TSGL_filesystem.h"
 #include "TSGL_math.h"
 #include <esp_attr.h>
-#include <freertos/FreeRTOS.h>
 #include <esp_heap_caps.h>
-#include <freertos/task.h>
 #include <soc/soc.h>
 #include <esp_log.h>
 #include <string.h>
@@ -22,7 +20,15 @@ static uint8_t convertPcm(tsgl_sound* sound, void* source) {
             return *((int8_t*)source) + 128;
     }
     return 0;
-} 
+}
+
+static void _soundTask(void* _sound) {
+    tsgl_sound* sound = _sound;
+    while (true) {
+        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        vTaskSuspend(NULL);
+    }
+}
 
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
@@ -43,7 +49,12 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     }
 
     size_t dataOffset = sound->position % sound->bufferSize;
-    //if (dataOffset == 0) fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
+    if (sound->file && dataOffset == 0) {
+        uint8_t* t = sound->data;
+        sound->data = sound->buffer;
+        sound->buffer = t;
+        vTaskResume(&sound->task);
+    }
     uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
         if (sound->floatAllow) {
@@ -95,9 +106,16 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     sound->channels = channels;
     sound->pcm_format = pcm_format;
     sound->bufferSize = bufferSize;
+
     sound->data = tsgl_malloc(bufferSize, caps);
     if (sound->data == NULL)
-        ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %i bytes", bufferSize);
+        ESP_LOGE(TAG, "the first buffer for the sound could not be allocated: %i bytes", bufferSize);
+
+    sound->buffer = tsgl_malloc(bufferSize, caps);
+    if (sound->buffer == NULL)
+        ESP_LOGE(TAG, "the second buffer for the sound could not be allocated: %i bytes", bufferSize);
+
+    xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
     return ESP_OK;
 }
 
@@ -191,6 +209,7 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
+    vTaskDelete(sound->task);
     if (sound->data != NULL) free(sound->data);
     if (sound->file != NULL) fclose(sound->file);
     _freeOutputs(sound);

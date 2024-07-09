@@ -6,6 +6,8 @@
 #include "TSGL.h"
 #include "TSGL_ledc.h"
 #include <stdio.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <driver/timer.h>
 #include <driver/gpio.h>
 
@@ -32,10 +34,13 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool mute;
     bool floatAllow;
     bool loop;
+    bool fillBuffer;
     size_t position;
 
+    TaskHandle_t task;
     FILE* file;
     uint8_t* data;
+    uint8_t* buffer;
     size_t bufferSize;
 
     size_t len;
@@ -54,6 +59,7 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
 
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
+//note that the volume allocated for the buffer is doubled (because the sound engine allocates two buffers)
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
