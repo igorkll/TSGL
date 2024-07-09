@@ -207,7 +207,7 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
         case tsgl_bgr565_be:
             size_t index = _getBufferIndex(framebuffer, x, y);
             uint16_t* var = (uint16_t*)(framebuffer->buffer + index);
-            *var = (uint16_t)color.arr;
+            *var = *((uint16_t*)(&color.arr[0]));
             break;
         
         default: {
