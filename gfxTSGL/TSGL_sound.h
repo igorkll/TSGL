@@ -5,6 +5,7 @@
 #endif
 #include "TSGL.h"
 #include "TSGL_ledc.h"
+#include <stdio.h>
 #include <driver/timer.h>
 #include <driver/gpio.h>
 
@@ -20,11 +21,10 @@ typedef enum {
     tsgl_sound_pcm_signed
 } tsgl_sound_pcm_format;
 
-typedef struct {
+typedef struct { //do not write ANYTHING in the fields of the structure. use methods. you can only write values to the first two configuration fields
     bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
 
-    //get only
     bool playing; 
     bool pause;
     float speed;
@@ -34,7 +34,10 @@ typedef struct {
     bool loop;
     size_t position;
 
+    FILE* file;
     uint8_t* data;
+    size_t bufferSize;
+
     size_t len;
     size_t sample_rate;
     size_t bit_rate;
@@ -51,7 +54,7 @@ typedef struct {
 
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
-esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
+esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
 void tsgl_sound_setPause(tsgl_sound* sound, bool pause);

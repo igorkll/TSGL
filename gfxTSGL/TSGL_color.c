@@ -1,6 +1,7 @@
 #include "TSGL.h"
 #include "TSGL_color.h"
 #include "TSGL_math.h"
+#include <string.h>
 
 const tsgl_color TSGL_WHITE = {
     .r = 255,
@@ -364,5 +365,5 @@ tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
 }
 
 bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize) {
-    return memcmp(color1.arr, color2.arr, colorsize) == 0;
+    return memcmp(color1.arr, color2.arr, (size_t)(colorsize + 0.5)) == 0;
 }

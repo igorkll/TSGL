@@ -2,7 +2,6 @@
 #include "TSGL_sound.h"
 #include "TSGL_filesystem.h"
 #include "TSGL_math.h"
-#include <stdio.h>
 #include <esp_attr.h>
 #include <freertos/FreeRTOS.h>
 #include <esp_heap_caps.h>
@@ -43,6 +42,9 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
     }
 
+    size_t dataOffset = sound->position % sound->bufferSize;
+    //if (dataOffset == 0) fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
+    uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
         if (sound->floatAllow) {
             xthal_set_cpenable(true);
@@ -50,7 +52,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
 
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    TSGL_MATH_MIN(convertPcm(sound, sound->data + sound->position + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
+                    TSGL_MATH_MIN(convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
                 );
             }
 
@@ -59,7 +61,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         } else {
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    convertPcm(sound, sound->data + sound->position + ((i % sound->channels) * sound->bit_rate))
+                    convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate))
                 );
             }
         }
@@ -77,10 +79,14 @@ static void _freeOutputs(tsgl_sound* sound) {
     free(sound->outputs);
 }
 
-esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
+esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
     memset(sound, 0, sizeof(tsgl_sound));
-    FILE* file = fopen(path, "rb");
-    if (file == NULL) return ESP_FAIL;
+    sound->file = fopen(path, "rb");
+    if (sound->file == NULL) return ESP_FAIL;
+
+    uint16_t t = bit_rate * channels;
+    bufferSize = (bufferSize / t) * t;
+
     sound->speed = 1.0;
     sound->volume = 1.0;
     sound->len = tsgl_filesystem_getFileSize(path);
@@ -88,13 +94,10 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, int64_t caps, const char* path,
     sound->bit_rate = bit_rate;
     sound->channels = channels;
     sound->pcm_format = pcm_format;
-    sound->data = tsgl_malloc(sound->len, caps);
-    if (sound->data == NULL) {
-        ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %iKB", sound->len / 1024);
-    } else {
-        fread(sound->data, sound->bit_rate, sound->len, file);
-    }
-    fclose(file);
+    sound->bufferSize = bufferSize;
+    sound->data = tsgl_malloc(bufferSize, caps);
+    if (sound->data == NULL)
+        ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %i bytes", bufferSize);
     return ESP_OK;
 }
 
@@ -188,10 +191,8 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
-    if (sound->data != NULL) {
-        free(sound->data);
-        sound->data = NULL;
-    }
+    if (sound->data != NULL) free(sound->data);
+    if (sound->file != NULL) fclose(sound->file);
     _freeOutputs(sound);
     if (sound->heap) free(sound);
 }
