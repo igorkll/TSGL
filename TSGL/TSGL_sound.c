@@ -212,6 +212,7 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
     vTaskDelete(sound->task);
+    if (sound->buffer != NULL) free(sound->buffer);
     if (sound->data != NULL) free(sound->data);
     if (sound->file != NULL) fclose(sound->file);
     _freeOutputs(sound);
