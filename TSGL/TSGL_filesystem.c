@@ -41,7 +41,7 @@ size_t tsgl_filesystem_readFile(const char *path, void* buffer, size_t bufferLen
 
 bool tsgl_filesystem_exists(const char *path) {
     struct stat state;
-    return stat(realPath, &state) == 0;
+    return stat(path, &state) == 0;
 }
 
 bool tsgl_filesystem_isDirectory(const char *path) {
