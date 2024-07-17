@@ -11,7 +11,7 @@
 static const char* TAG = "TSGL_sound";
 static uint32_t cp0_regs[18];
 
-static uint8_t convertPcm(tsgl_sound* sound, void* source) {
+static uint8_t IRAM_ATTR convertPcm(tsgl_sound* sound, void* source) {
     switch (sound->pcm_format) {
         case tsgl_sound_pcm_unsigned:
             return *((uint8_t*)source);
@@ -42,8 +42,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
 
     size_t dataOffset = sound->position % sound->bufferSize;
-    if (sound->file && dataOffset == 0) {
-        if (eTaskGetState(sound->task) == eRunning) return;
+    if (sound->file && dataOffset == 0 && sound->soundTask) {
         uint8_t* t = sound->data;
         sound->data = sound->buffer;
         sound->buffer = t;
@@ -104,12 +103,9 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     sound->file = fopen(path, "rb");
     if (sound->file == NULL) return ESP_FAIL;
 
-    uint16_t t = bit_rate * channels;
-    bufferSize = (bufferSize / t) * t;
-
     sound->speed = 1.0;
     sound->volume = 1.0;
-    sound->len = tsgl_filesystem_size(path);
+    sound->len = tsgl_filesystem_size(path) / 16;
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
@@ -117,23 +113,40 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     sound->bufferSize = bufferSize;
 
     if (bufferSize != TSGL_SOUND_FULLBUFFER) {
+        uint16_t t = bit_rate * channels;
+        bufferSize = (bufferSize / t) * t;
+        sound->bufferSize = bufferSize;
+
         sound->data = tsgl_malloc(bufferSize, caps);
-        if (sound->data == NULL)
+        if (sound->data == NULL) {
             ESP_LOGE(TAG, "the first buffer for the sound could not be allocated: %i bytes", bufferSize);
+            memset(sound, 0, sizeof(tsgl_sound));
+            return ESP_ERR_NO_MEM;
+        }
 
         sound->buffer = tsgl_malloc(bufferSize, caps);
-        if (sound->buffer == NULL)
+        if (sound->buffer == NULL) {
             ESP_LOGE(TAG, "the second buffer for the sound could not be allocated: %i bytes", bufferSize);
-    } else {
-        sound->data = tsgl_malloc(sound->len, caps);
-        if (sound->data == NULL)
-            ESP_LOGE(TAG, "the full buffer for the sound could not be allocated: %i bytes", sound->len);
+            memset(sound, 0, sizeof(tsgl_sound));
+            return ESP_ERR_NO_MEM;
+        }
 
+        sound->soundTask = true;
+        xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
+    } else {
+        sound->bufferSize = bufferSize;
+
+        sound->data = tsgl_malloc(sound->len, caps);
+        if (sound->data == NULL) {
+            ESP_LOGE(TAG, "the full buffer for the sound could not be allocated: %i bytes", sound->len);
+            memset(sound, 0, sizeof(tsgl_sound));
+            return ESP_ERR_NO_MEM;
+        }
+
+        fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
         fclose(sound->file);
         sound->file = NULL;
     }
-
-    xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
     return ESP_OK;
 }
 
@@ -227,7 +240,7 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
-    vTaskDelete(sound->task);
+    if (sound->soundTask) vTaskDelete(sound->task);
     if (sound->buffer != NULL) free(sound->buffer);
     if (sound->data != NULL) free(sound->data);
     if (sound->file != NULL) fclose(sound->file);
@@ -260,7 +273,7 @@ tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin) {
     return output;
 }
 
-void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value) {
+void IRAM_ATTR tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(*output->channel, value);
