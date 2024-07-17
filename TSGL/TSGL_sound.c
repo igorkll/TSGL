@@ -24,6 +24,9 @@ static uint8_t convertPcm(tsgl_sound* sound, void* source) {
 
 static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
+    fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+    vTaskSuspend(NULL);
+
     while (true) {
         timer_pause(sound->timerGroup, sound->timer);
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
@@ -46,6 +49,7 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
         sound->buffer = t;
         xTaskResumeFromISR(sound->task);
     }
+
     uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
         if (sound->floatAllow) {
