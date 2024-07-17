@@ -11,6 +11,9 @@
 #include <driver/timer.h>
 #include <driver/gpio.h>
 
+//use this instead of the bufferSize to load the track immediately into RAM without loading on playing
+#define TSGL_SOUND_FULLBUFFER (2 ^ sizeof(size_t))
+
 typedef struct {
     #ifdef HARDWARE_DAC
         dac_oneshot_handle_t* channel;

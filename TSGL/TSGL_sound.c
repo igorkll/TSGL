@@ -116,13 +116,22 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     sound->pcm_format = pcm_format;
     sound->bufferSize = bufferSize;
 
-    sound->data = tsgl_malloc(bufferSize, caps);
-    if (sound->data == NULL)
-        ESP_LOGE(TAG, "the first buffer for the sound could not be allocated: %i bytes", bufferSize);
+    if (bufferSize != TSGL_SOUND_FULLBUFFER) {
+        sound->data = tsgl_malloc(bufferSize, caps);
+        if (sound->data == NULL)
+            ESP_LOGE(TAG, "the first buffer for the sound could not be allocated: %i bytes", bufferSize);
 
-    sound->buffer = tsgl_malloc(bufferSize, caps);
-    if (sound->buffer == NULL)
-        ESP_LOGE(TAG, "the second buffer for the sound could not be allocated: %i bytes", bufferSize);
+        sound->buffer = tsgl_malloc(bufferSize, caps);
+        if (sound->buffer == NULL)
+            ESP_LOGE(TAG, "the second buffer for the sound could not be allocated: %i bytes", bufferSize);
+    } else {
+        sound->data = tsgl_malloc(sound->len, caps);
+        if (sound->data == NULL)
+            ESP_LOGE(TAG, "the full buffer for the sound could not be allocated: %i bytes", sound->len);
+
+        fclose(sound->file);
+        sound->file = NULL;
+    }
 
     xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
     return ESP_OK;
