@@ -4,6 +4,7 @@
 * designed exclusively for use with ESP-IDF.
 * the esp-idf version I use is 5.1.2.
 * also, this library has an APIs for working with other peripherals.
+* in fact, TSQL is a framework for working with the esp32 peripherals
 
 # features
 * the ability to install custom drivers without having to change the library code

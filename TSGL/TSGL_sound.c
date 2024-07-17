@@ -102,7 +102,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
 
     sound->speed = 1.0;
     sound->volume = 1.0;
-    sound->len = tsgl_filesystem_getFileSize(path);
+    sound->len = tsgl_filesystem_size(path);
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;

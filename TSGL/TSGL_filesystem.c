@@ -17,7 +17,46 @@ esp_err_t tsgl_filesystem_mount_fatfs(const char* path, const char* name) {
     return esp_vfs_fat_spiflash_mount_rw_wl(path, name, &storage_mount_config, &s_wl_handle);
 }
 
-size_t tsgl_filesystem_getFileSize(const char* path) {
+
+FILE* tsgl_filesystem_open(const char* path, const char* mode) {
+    return fopen(path, mode);
+}
+
+size_t tsgl_filesystem_writeFile(const char* path, void* buffer, size_t bufferLen) {
+    FILE *file = tsgl_filesystem_open(path, "wb");
+    if (file == NULL) return 0;
+    size_t size = fwrite(buffer, 1, bufferLen, file);
+    fclose(file);
+    return size;
+}
+
+size_t tsgl_filesystem_readFile(const char *path, void* buffer, size_t bufferLen) {
+    FILE *file = tsgl_filesystem_open(path, "rb");
+    if (file == NULL) return 0;
+    size_t size = fread(buffer, 1, bufferLen, file);
+    fclose(file);
+    return size;
+}
+
+
+bool tsgl_filesystem_exists(const char *path) {
+    struct stat state;
+    return stat(realPath, &state) == 0;
+}
+
+bool tsgl_filesystem_isDirectory(const char *path) {
+    struct stat state;
+    if(stat(path, &state) == 0) {
+        if (state.st_mode & S_IFDIR) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return false;
+}
+
+size_t tsgl_filesystem_size(const char* path) {
     FILE* file = fopen(path, "r");
     if (file == NULL) return 0;
 
