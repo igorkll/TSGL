@@ -105,7 +105,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
 
     sound->speed = 1.0;
     sound->volume = 1.0;
-    sound->len = tsgl_filesystem_size(path) / 16;
+    sound->len = tsgl_filesystem_size(path);
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
@@ -134,7 +134,7 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
         sound->soundTask = true;
         xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
     } else {
-        sound->bufferSize = bufferSize;
+        sound->bufferSize = sound->len;
 
         sound->data = tsgl_malloc(sound->len, caps);
         if (sound->data == NULL) {
