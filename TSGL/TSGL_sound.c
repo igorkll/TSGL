@@ -25,7 +25,10 @@ static uint8_t convertPcm(tsgl_sound* sound, void* source) {
 static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
     while (true) {
-        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file); //WTF - Guru Meditation Error: Core  0 panic'ed (Cache disabled but cached memory region accessed). 
+        timer_pause(sound->timerGroup, sound->timer);
+        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        timer_start(sound->timerGroup, sound->timer);
+
         vTaskDelay(1);
         vTaskSuspend(NULL);
     }
@@ -34,20 +37,6 @@ static void _soundTask(void* _sound) {
 static void IRAM_ATTR _timer_ISR(void* _sound) {
     tsgl_sound* sound = _sound;
     timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
-    if (sound->position >= sound->len) {
-        sound->position = 0;
-        if (sound->loop) {
-            timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
-        } else if (sound->freeAfterPlay) {
-            tsgl_sound_free(sound);
-            return;
-        } else {
-            tsgl_sound_stop(sound);
-            return;
-        }
-    } else {
-        timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
-    }
 
     size_t dataOffset = sound->position % sound->bufferSize;
     if (sound->file && dataOffset == 0) {
@@ -81,6 +70,20 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     }
 
     sound->position += sound->bit_rate * sound->channels;
+    if (sound->position >= sound->len) {
+        sound->position = 0;
+        if (sound->loop) {
+            timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+        } else if (sound->freeAfterPlay) {
+            tsgl_sound_free(sound);
+            return;
+        } else {
+            tsgl_sound_stop(sound);
+            return;
+        }
+    } else {
+        timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+    }
 }
 
 static void _freeOutputs(tsgl_sound* sound) {
