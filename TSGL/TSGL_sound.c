@@ -36,8 +36,9 @@ static void _soundTask(void* _sound) {
     }
 }
 
-static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx) {
+static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
     tsgl_sound* sound = user_ctx;
+    printf("LOLZ\n");
     //timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
 
     size_t dataOffset = sound->position % sound->bufferSize;
@@ -237,18 +238,26 @@ void tsgl_sound_play(tsgl_sound* sound) {
 	//timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
 	//timer_start(sound->timerGroup, sound->timer);
 
+    gptimer_alarm_config_t alarm_config = {
+        .reload_count = 0, // counter will reload with 0 on alarm event
+        .alarm_count = 1000000, // period = 1s @resolution 1MHz
+        .flags.auto_reload_on_alarm = true, // enable auto-reload
+    };
+    
+
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
         .resolution_hz = sound->sample_rate * sound->speed, // 1MHz, 1 tick = 1us
     };
   
-    gptimer_event_callbacks_t cbs = {
+    gptimer_event_callbacks_t callback_config = {
         .on_alarm = _timer_ISR,
     };
 
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &sound->timer));
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(sound->timer, &cbs, sound));
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(sound->timer, &alarm_config));
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(sound->timer, &callback_config, sound));
     ESP_ERROR_CHECK(gptimer_enable(sound->timer));
     ESP_ERROR_CHECK(gptimer_start(sound->timer));
 
