@@ -37,6 +37,8 @@ static void _soundTask(void* _sound) {
 }
 
 static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
+    gptimer_stop(timer);
+    
     tsgl_sound* sound = user_ctx;
     printf("LOLZ\n");
     //timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
