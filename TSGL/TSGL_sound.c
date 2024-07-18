@@ -1,4 +1,3 @@
-#if __has_include(<driver/dac.h>)
 #include "TSGL_sound.h"
 #include "TSGL_filesystem.h"
 #include "TSGL_math.h"
@@ -28,18 +27,18 @@ static void _soundTask(void* _sound) {
     vTaskSuspend(NULL);
 
     while (true) {
-        timer_pause(sound->timerGroup, sound->timer);
+        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
-        timer_start(sound->timerGroup, sound->timer);
+        ESP_ERROR_CHECK(gptimer_start(sound->timer));
 
         vTaskDelay(1);
         vTaskSuspend(NULL);
     }
 }
 
-static void IRAM_ATTR _timer_ISR(void* _sound) {
-    tsgl_sound* sound = _sound;
-    timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
+static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx) {
+    tsgl_sound* sound = user_ctx;
+    //timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
 
     size_t dataOffset = sound->position % sound->bufferSize;
     if (sound->file && dataOffset == 0 && sound->soundTask) {
@@ -76,17 +75,19 @@ static void IRAM_ATTR _timer_ISR(void* _sound) {
     if (sound->position >= sound->len) {
         sound->position = 0;
         if (sound->loop) {
-            timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+            //timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+            return true;
         } else if (sound->freeAfterPlay) {
             tsgl_sound_free(sound);
-            return;
         } else {
             tsgl_sound_stop(sound);
-            return;
         }
     } else {
-        timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+        //timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
+        return true;
     }
+
+    return false;
 }
 
 static void _freeOutputs(tsgl_sound* sound) {
@@ -150,6 +151,17 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     return ESP_OK;
 }
 
+esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent) {
+    if (parent->buffer != NULL) {
+        ESP_LOGE(TAG, "it is not possible to create an instance of a track with dynamic loading");
+        return ESP_FAIL;
+    }
+
+    memcpy(sound, parent, sizeof(tsgl_sound));
+    sound->playing = false;
+    return ESP_OK;
+}
+
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs) {
     _freeOutputs(sound);
     sound->outputsCount = outputsCount;
@@ -163,7 +175,7 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
     if (sound->playing) {
-        ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
+        //ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
     }
 }
 
@@ -171,12 +183,12 @@ void tsgl_sound_setPause(tsgl_sound* sound, bool pause) {
     if (sound->pause == pause) return;
     sound->pause = pause;
     if (pause) {
-        timer_pause(sound->timerGroup, sound->timer);
+        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
         for (size_t i = 0; i < sound->outputsCount; i++) {
             tsgl_sound_setOutputValue(sound->outputs[i], 0);
         }
     } else {
-        timer_start(sound->timerGroup, sound->timer);
+        ESP_ERROR_CHECK(gptimer_start(sound->timer));
     }
 }
 
@@ -207,6 +219,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
         return;
     }
 
+    /*
     timer_config_t config = {
 		.divider = 8,
 		.counter_dir = TIMER_COUNT_UP,
@@ -215,17 +228,31 @@ void tsgl_sound_play(tsgl_sound* sound) {
 		.intr_type = TIMER_INTR_LEVEL,
 		.auto_reload = 1
 	};
+    */
 
-    sound->timerGroup = TIMER_GROUP_0;
-    sound->timer = TIMER_0;
+	//ESP_ERROR_CHECK(timer_init(sound->timerGroup, sound->timer, &config));
+	//ESP_ERROR_CHECK(timer_set_counter_value(sound->timerGroup, sound->timer, 0x00000000ULL));
+	//ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate / sound->speed));
+	//ESP_ERROR_CHECK(timer_enable_intr(sound->timerGroup, sound->timer));
+	//timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
+	//timer_start(sound->timerGroup, sound->timer);
+
+    gptimer_config_t timer_config = {
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
+        .resolution_hz = sound->sample_rate * sound->speed, // 1MHz, 1 tick = 1us
+    };
+  
+    gptimer_event_callbacks_t cbs = {
+        .on_alarm = _timer_ISR,
+    };
+
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &sound->timer));
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(sound->timer, &cbs, sound));
+    ESP_ERROR_CHECK(gptimer_enable(sound->timer));
+    ESP_ERROR_CHECK(gptimer_start(sound->timer));
+
     sound->playing = true;
-
-	ESP_ERROR_CHECK(timer_init(sound->timerGroup, sound->timer, &config));
-	ESP_ERROR_CHECK(timer_set_counter_value(sound->timerGroup, sound->timer, 0x00000000ULL));
-	ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / config.divider / sound->sample_rate / sound->speed));
-	ESP_ERROR_CHECK(timer_enable_intr(sound->timerGroup, sound->timer));
-	timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
-	timer_start(sound->timerGroup, sound->timer);
 }
 
 void tsgl_sound_stop(tsgl_sound* sound) {
@@ -234,7 +261,9 @@ void tsgl_sound_stop(tsgl_sound* sound) {
         return;
     }
 
-    timer_pause(sound->timerGroup, sound->timer);
+    ESP_ERROR_CHECK(gptimer_stop(sound->timer));
+    ESP_ERROR_CHECK(gptimer_disable(sound->timer));
+    ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
     sound->playing = false;
 }
 
@@ -297,5 +326,3 @@ void tsgl_sound_freeOutput(tsgl_sound_output* output) {
     }
     free(output);
 }
-
-#endif
