@@ -8,6 +8,7 @@
 typedef struct {
     tsgl_color color;
     tsgl_color pressedColor;
+    uint8_t childType;
 } tsgl_gui_buttonData;
 
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color);

@@ -22,8 +22,8 @@ typedef struct {
 
     float scaleX; //if 0, scaling is disabled
     float scaleY;
-    tsgl_pos targetWidth; //if this parameter is not zero, the scaleX will be automatically calculated so that the average width of the character is this parameter
-    tsgl_pos targetHeight; //it works the same as targetWidth but configures scaleY. if this parameter is 0 and targetWidth is not 0, then this parameter will become equal to targetWidth
+    tsgl_pos targetWidth;
+    tsgl_pos targetHeight;
 
     tsgl_pos spacing; //the distance between characters. if 0, is calculated automatically
     tsgl_pos spaceSize; //the size of the space character. if 0, is calculated automatically
