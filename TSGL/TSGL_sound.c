@@ -37,11 +37,7 @@ static void _soundTask(void* _sound) {
 }
 
 static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
-    abort();
-
     tsgl_sound* sound = user_ctx;
-    printf("LOLZ\n");
-    //timer_group_clr_intr_status_in_isr(sound->timerGroup, sound->timer);
 
     size_t dataOffset = sound->position % sound->bufferSize;
     if (sound->file && dataOffset == 0 && sound->soundTask) {
@@ -77,17 +73,13 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
     sound->position += sound->bit_rate * sound->channels;
     if (sound->position >= sound->len) {
         sound->position = 0;
-        if (sound->loop) {
-            //timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
-            return true;
-        } else if (sound->freeAfterPlay) {
-            tsgl_sound_free(sound);
-        } else {
-            tsgl_sound_stop(sound);
+        if (!sound->loop) {
+            if (sound->freeAfterPlay) {
+                tsgl_sound_free(sound);
+            } else {
+                tsgl_sound_stop(sound);
+            }
         }
-    } else {
-        //timer_group_enable_alarm_in_isr(sound->timerGroup, sound->timer);
-        return true;
     }
 
     return false;
@@ -240,14 +232,19 @@ void tsgl_sound_play(tsgl_sound* sound) {
 	//timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
 	//timer_start(sound->timerGroup, sound->timer);
 
+    uint64_t freq = sound->sample_rate * sound->speed;
+
     gptimer_alarm_config_t alarm_config = {
-        .alarm_count = 1000000
+        .alarm_count = 1,
+        .flags = {
+            .auto_reload_on_alarm = true
+        }
     };
 
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = 1 * 1000 * 1000, // 1MHz, 1 tick = 1us
+        .resolution_hz = freq // 1MHz, 1 tick = 1us
     };
   
     gptimer_event_callbacks_t callback_config = {
