@@ -198,7 +198,7 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
     if (sound->playing) {
         //ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
-        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
+        gptimer_stop(sound->timer);
         ESP_ERROR_CHECK(gptimer_disable(sound->timer));
         ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
 
