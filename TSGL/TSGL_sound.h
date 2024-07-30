@@ -34,10 +34,7 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool pause;
     float speed;
     float volume;
-    bool mute;
-    bool floatAllow;
     bool loop;
-    bool fillBuffer;
     size_t position;
 
     bool soundTask;
@@ -58,6 +55,8 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool freeOutputs;
 
     gptimer_handle_t timer;
+    bool floatAllow;
+    bool mute;
 } tsgl_sound;
 
 //the bitrate is set not in bits but in bytes
@@ -70,6 +69,8 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
 void tsgl_sound_setPause(tsgl_sound* sound, bool pause);
 void tsgl_sound_setLoop(tsgl_sound* sound, bool loop);
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume);
+void tsgl_sound_setPosition(tsgl_sound* sound, size_t position);
+void tsgl_sound_seek(tsgl_sound* sound, size_t offset);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);

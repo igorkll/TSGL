@@ -167,10 +167,42 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
     sound->freeOutputs = freeOutputs;
 }
 
+static void _initTimer(tsgl_sound* sound) {
+    uint64_t freq = sound->sample_rate * sound->speed;
+
+    gptimer_alarm_config_t alarm_config = {
+        .alarm_count = 1,
+        .flags = {
+            .auto_reload_on_alarm = true
+        }
+    };
+
+    gptimer_config_t timer_config = {
+        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+        .direction = GPTIMER_COUNT_UP,
+        .resolution_hz = freq // 1MHz, 1 tick = 1us
+    };
+  
+    gptimer_event_callbacks_t callback_config = {
+        .on_alarm = _timer_ISR,
+    };
+
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &sound->timer));
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(sound->timer, &alarm_config));
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(sound->timer, &callback_config, sound));
+    ESP_ERROR_CHECK(gptimer_enable(sound->timer));
+    ESP_ERROR_CHECK(gptimer_start(sound->timer));
+}
+
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
     if (sound->playing) {
         //ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
+        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
+        ESP_ERROR_CHECK(gptimer_disable(sound->timer));
+        ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
+
+        _initTimer(sound);
     }
 }
 
@@ -205,6 +237,16 @@ void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
     }
 }
 
+void tsgl_sound_setPosition(tsgl_sound* sound, size_t position) {
+    sound->position = position;
+    if (sound->position < 0) sound->position = 0;
+    if (sound->position >= sound->len) sound->position = sound->len - 1;
+}
+
+void tsgl_sound_seek(tsgl_sound* sound, size_t offset) {
+    tsgl_sound_setPosition(sound, sound->position + offset);
+}
+
 void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
@@ -232,31 +274,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
 	//timer_isr_register(sound->timerGroup, sound->timer, _timer_ISR, sound, ESP_INTR_FLAG_IRAM, NULL);
 	//timer_start(sound->timerGroup, sound->timer);
 
-    uint64_t freq = sound->sample_rate * sound->speed;
-
-    gptimer_alarm_config_t alarm_config = {
-        .alarm_count = 1,
-        .flags = {
-            .auto_reload_on_alarm = true
-        }
-    };
-
-    gptimer_config_t timer_config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = freq // 1MHz, 1 tick = 1us
-    };
-  
-    gptimer_event_callbacks_t callback_config = {
-        .on_alarm = _timer_ISR,
-    };
-
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &sound->timer));
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(sound->timer, &alarm_config));
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(sound->timer, &callback_config, sound));
-    ESP_ERROR_CHECK(gptimer_enable(sound->timer));
-    ESP_ERROR_CHECK(gptimer_start(sound->timer));
-
+    _initTimer(sound);
     sound->playing = true;
 }
 
