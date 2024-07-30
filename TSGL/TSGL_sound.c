@@ -194,11 +194,17 @@ static void _initTimer(tsgl_sound* sound) {
     ESP_ERROR_CHECK(gptimer_start(sound->timer));
 }
 
+static void _freeOutput(tsgl_sound* sound) {
+    for (size_t i = 0; i < sound->outputsCount; i++) {
+        tsgl_sound_setOutputValue(sound->outputs[i], 0);
+    }
+}
+
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
     if (sound->playing) {
         //ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
-        gptimer_stop(sound->timer);
+        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
         ESP_ERROR_CHECK(gptimer_disable(sound->timer));
         ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
 
@@ -209,11 +215,10 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
 void tsgl_sound_setPause(tsgl_sound* sound, bool pause) {
     if (sound->pause == pause) return;
     sound->pause = pause;
+    if (!sound->playing) return;
     if (pause) {
         ESP_ERROR_CHECK(gptimer_stop(sound->timer));
-        for (size_t i = 0; i < sound->outputsCount; i++) {
-            tsgl_sound_setOutputValue(sound->outputs[i], 0);
-        }
+        _freeOutput();
     } else {
         ESP_ERROR_CHECK(gptimer_start(sound->timer));
     }
@@ -288,6 +293,7 @@ void tsgl_sound_stop(tsgl_sound* sound) {
     ESP_ERROR_CHECK(gptimer_disable(sound->timer));
     ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
     sound->playing = false;
+    _freeOutput();
 }
 
 void tsgl_sound_free(tsgl_sound* sound) {
@@ -337,6 +343,7 @@ void IRAM_ATTR tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t valu
 }
 
 void tsgl_sound_freeOutput(tsgl_sound_output* output) {
+    tsgl_sound_setOutputValue(output, 0);
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(*output->channel));
