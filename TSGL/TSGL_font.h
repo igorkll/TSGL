@@ -41,6 +41,8 @@ typedef struct {
     tsgl_pos _minHeight;
     tsgl_pos _maxHeight;
     bool _clamp;
+    float _scaleX;
+    float _scaleY;
 } tsgl_print_settings;
 
 typedef struct {

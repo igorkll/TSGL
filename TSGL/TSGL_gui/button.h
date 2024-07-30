@@ -8,8 +8,8 @@
 typedef struct {
     tsgl_color color;
     tsgl_color pressedColor;
-    uint8_t childType;
 } tsgl_gui_buttonData;
 
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color);
-tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText);
+void tsgl_gui_button_setEmpty(tsgl_gui* button);
+void tsgl_gui_button_setText(tsgl_gui* button, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText);

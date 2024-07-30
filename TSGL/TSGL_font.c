@@ -60,12 +60,15 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
         .strlen = realsize
     };
 
+    if (sets.scaleX == 0) sets.scaleX = 1;
+    if (sets.scaleY == 0) sets.scaleY = 1;
+
     tsgl_pos standartWidth = tsgl_font_width(sets.font, 'A');
     if (sets.targetWidth != 0) {
-        sets.scaleX = ((float)sets.targetWidth) / ((float)standartWidth);
+        sets._scaleX = ((float)sets.targetWidth) / ((float)standartWidth);
     }
-    if (sets.scaleX != 0) {
-        standartWidth = (((float)standartWidth) * sets.scaleX) + 0.5;
+    if (sets._scaleX != 0) {
+        standartWidth = (((float)standartWidth) * sets._scaleX) + 0.5;
     }
 
     tsgl_pos standartHeight = tsgl_font_height(sets.font, 'A');
@@ -73,10 +76,10 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
         sets.targetHeight = sets.targetWidth;
     }
     if (sets.targetHeight != 0) {
-        sets.scaleY = ((float)sets.targetHeight) / ((float)standartHeight);
+        sets._scaleY = ((float)sets.targetHeight) / ((float)standartHeight);
     }
-    if (sets.scaleY != 0) {
-        standartHeight = (((float)standartHeight) * sets.scaleY) + 0.5;
+    if (sets._scaleY != 0) {
+        standartHeight = (((float)standartHeight) * sets._scaleY) + 0.5;
     }
 
     tsgl_pos spacing = sets.spacing > 0 ? sets.spacing : (standartWidth / 4);
@@ -125,6 +128,8 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
             ._clamp = true,
             .scaleX = sets.scaleX,
             .scaleY = sets.scaleY,
+            ._scaleX = sets._scaleX,
+            ._scaleY = sets._scaleY,
             .spacing = sets.spacing,
             .spaceSize = sets.spaceSize,
             .locationMode = sets.locationMode
@@ -193,13 +198,13 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
                 uint16_t charHeight = tsgl_font_height(sets.font, chr);
                 uint16_t scaleCharWidth;
                 uint16_t scaleCharHeight;
-                if (sets.scaleX != 0) {
-                    scaleCharWidth = (((float)charWidth) * sets.scaleX) + 0.5;
+                if (sets._scaleX != 0) {
+                    scaleCharWidth = (((float)charWidth) * sets._scaleX * sets.scaleX) + 0.5;
                 } else {
                     scaleCharWidth = charWidth;
                 }
-                if (sets.scaleY != 0) {
-                    scaleCharHeight = (((float)charHeight) * sets.scaleY) + 0.5;
+                if (sets._scaleY != 0) {
+                    scaleCharHeight = (((float)charHeight) * sets._scaleY * sets.scaleY) + 0.5;
                 } else {
                     scaleCharHeight = charHeight;
                 }
@@ -229,13 +234,13 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
 
                         tsgl_pos oix = ix;
                         tsgl_pos oiy = iy;
-                        if (sets.scaleX != 0) {
-                            oix = ((float)ix) / sets.scaleX;
+                        if (sets._scaleX != 0) {
+                            oix = ((float)ix) / sets._scaleX;
                         } else {
                             oix = ix;
                         }
-                        if (sets.scaleY != 0) {
-                            oiy = ((float)iy) / sets.scaleY;
+                        if (sets._scaleY != 0) {
+                            oiy = ((float)iy) / sets._scaleY;
                         } else {
                             oiy = iy;
                         }

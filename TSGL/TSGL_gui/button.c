@@ -36,17 +36,12 @@ static void _draw_callback(tsgl_gui* self) {
         tsgl_color_raw(tsgl_color_combine(self->animationState, data->color, data->pressedColor), self->colormode)
     );
 
-    switch (data->childType) {
-        case 1:
-            tsgl_gui* text = self->children[0];
-            text->math_x = x;
-            text->math_y = y;
-            text->math_width = width;
-            text->math_height = height;
-            break;
-        
-        default:
-            break;
+    if (self->childrenCount > 0) {
+        tsgl_gui* parent = self->children[0];
+        parent->math_x = x;
+        parent->math_y = y;
+        parent->math_width = width;
+        parent->math_height = height;
     }
 
     if (self->intData == 0 && self->animationState == 1) {
@@ -70,22 +65,26 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     return obj;
 }
 
-tsgl_gui* tsgl_gui_addButton_text(tsgl_gui* gui, tsgl_color color, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText) {
-    tsgl_gui* button = tsgl_gui_addButton(gui, color);
+void tsgl_gui_button_setEmpty(tsgl_gui* button) {
+    if (button->childrenCount > 0) {
+        tsgl_gui_free(button->children[0]);
+    }
+}
+
+void tsgl_gui_button_setText(tsgl_gui* button, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText) {
+    tsgl_gui_button_setEmpty(button);
+
     tsgl_gui* child = tsgl_gui_addText(button);
     tsgl_print_settings sets = {
         .fill = TSGL_INVALID_RAWCOLOR,
         .bg = TSGL_INVALID_RAWCOLOR,
-        .fg = tsgl_color_raw(textColor, gui->colormode),
+        .fg = tsgl_color_raw(textColor, button->colormode),
         .font = tsgl_font_defaultFont,
         .locationMode = tsgl_print_start_top,
         .multiline = true,
         .globalCentering = true,
         .targetWidth = targetWidth
     };
-
-    tsgl_gui_buttonData* data = button->data;
-    data->childType = 1;
 
     tsgl_gui_text_setParams(child, sets);
     tsgl_gui_text_setText(child, text, freeText);
