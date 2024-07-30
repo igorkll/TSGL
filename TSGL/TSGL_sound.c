@@ -27,9 +27,9 @@ static void _soundTask(void* _sound) {
     vTaskSuspend(NULL);
 
     while (true) {
-        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
+        gptimer_stop(sound->timer); //in theory, this should work in parallel with the timer, but... It doesn't work out
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
-        ESP_ERROR_CHECK(gptimer_start(sound->timer));
+        gptimer_start(sound->timer);
 
         vTaskDelay(1);
         vTaskSuspend(NULL);
