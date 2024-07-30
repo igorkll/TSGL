@@ -70,7 +70,7 @@ void tsgl_sound_setPause(tsgl_sound* sound, bool pause);
 void tsgl_sound_setLoop(tsgl_sound* sound, bool loop);
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume);
 void tsgl_sound_setPosition(tsgl_sound* sound, size_t position);
-void tsgl_sound_seek(tsgl_sound* sound, size_t offset);
+void tsgl_sound_seek(tsgl_sound* sound, int offset);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
