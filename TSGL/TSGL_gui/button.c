@@ -25,8 +25,8 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_buttonData* data = self->data;
-    tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.5);
-    float percent = 1 - (0.5 * self->animationState);
+    tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.05);
+    float percent = 1 - (0.1 * self->animationState);
 
     tsgl_pos x = self->math_x + resize;
     tsgl_pos y = self->math_y + resize;
@@ -69,7 +69,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     data->pressedColor = tsgl_color_mul(data->color, 0.9);
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
-    obj->animationSpeedUpMul = 20;
+    obj->animationSpeedUpMul = 4;
     obj->animationSpeedDownMul = 1;
     obj->data = data;
     obj->event_callback = _event_callback;

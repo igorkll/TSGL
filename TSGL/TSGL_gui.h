@@ -57,6 +57,7 @@ struct tsgl_gui {
     float animationSpeed; //the number of seconds that the animation should run
     float animationSpeedUpMul;
     float animationSpeedDownMul;
+    float oldAnimationTarget;
 
     // internal
     tsgl_display* display;
