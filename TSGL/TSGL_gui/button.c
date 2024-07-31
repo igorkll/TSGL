@@ -25,8 +25,8 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_buttonData* data = self->data;
-    tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.1);
-    float percent = 1 - (0.1 * self->animationState);
+    tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.05);
+    float percent = 1 - (0.05 * self->animationState);
 
     tsgl_pos x = self->math_x + resize;
     tsgl_pos y = self->math_y + resize;
@@ -34,7 +34,7 @@ static void _draw_callback(tsgl_gui* self) {
     tsgl_pos height = self->math_height - (resize * 2);
 
     TSGL_GUI_DRAW(self, fill, x, y, width, height,
-        tsgl_color_raw(tsgl_color_combine(self->animationState, data->color, data->pressedColor), self->colormode)
+        tsgl_color_raw(tsgl_color_combine(TSGL_MATH_CLAMP(self->animationState * 4, 0, 1), data->color, data->pressedColor), self->colormode)
     );
 
     if (self->childrenCount > 0) {
@@ -66,11 +66,11 @@ static void _draw_callback(tsgl_gui* self) {
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     tsgl_gui_buttonData* data = calloc(1, sizeof(tsgl_gui_buttonData));
     data->color = color;
-    data->pressedColor = tsgl_color_mul(data->color, 0.8);
+    data->pressedColor = tsgl_color_mul(data->color, 0.9);
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
-    obj->animationSpeedUpMul = 1.5;
-    obj->animationSpeedDownMul = 0.5;
+    obj->animationSpeedUpMul = 10;
+    obj->animationSpeedDownMul = 4;
     obj->data = data;
     obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;

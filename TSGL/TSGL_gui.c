@@ -482,7 +482,8 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsg
     if (benchmark != NULL) {
         needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime) / 1000.0 / 1000.0);
     } else {
-        needSend = _draw(root, false, 100);
+        //if the benchmark has not been transmitted, it is assumed that the rendering is running at a frequency of 10 FPS. the animation speed can float a lot
+        needSend = _draw(root, false, 0.1);
     }
     if (benchmark != NULL) tsgl_benchmark_endRendering(benchmark);
     if (needSend && root->buffered) {
@@ -493,7 +494,7 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsg
             tsgl_display_send(root->display, root->target);
         }
         if (benchmark != NULL) tsgl_benchmark_endSend(benchmark);
-    } else {
+    } else if (benchmark != NULL) {
         tsgl_benchmark_noSend(benchmark);
     }
 }
