@@ -37,7 +37,6 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool loop;
     size_t position;
 
-    bool soundTask;
     TaskHandle_t task;
     FILE* file;
     uint8_t* data;

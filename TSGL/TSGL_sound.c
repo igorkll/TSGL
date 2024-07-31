@@ -10,7 +10,7 @@
 static const char* TAG = "TSGL_sound";
 static uint32_t cp0_regs[18];
 
-static uint8_t IRAM_ATTR convertPcm(tsgl_sound* sound, void* source) {
+static uint8_t IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
     switch (sound->pcm_format) {
         case tsgl_sound_pcm_unsigned:
             return *((uint8_t*)source);
@@ -28,7 +28,6 @@ static void _soundTask(void* _sound) {
 
     while (true) {
         gptimer_stop(sound->timer); //in theory, this should work in parallel with the timer, but... It doesn't work out
-        fseek(sound->file, sound->position + sound->bufferSize, SEEK_SET);
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
         gptimer_start(sound->timer);
 
@@ -42,22 +41,23 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
 
     size_t dataOffset = sound->position % sound->bufferSize;
     
-    if (sound->file != NULL && dataOffset == 0 && sound->soundTask) {
+    if (sound->file != NULL && dataOffset == 0) {
         uint8_t* t = sound->data;
         sound->data = sound->buffer;
         sound->buffer = t;
         xTaskResumeFromISR(sound->task);
     }
 
-    uint8_t* ptr = sound->data + dataOffset;
     if (!sound->mute) {
+        uint8_t* ptr = sound->data + dataOffset;
+
         if (sound->floatAllow) {
             xthal_set_cpenable(true);
             xthal_save_cp0(cp0_regs);
 
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    TSGL_MATH_MIN(convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
+                    TSGL_MATH_MIN(_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
                 );
             }
 
@@ -66,7 +66,7 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         } else {
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
-                    convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate))
+                    _convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate))
                 );
             }
         }
@@ -128,6 +128,25 @@ static void _freeOutputs(tsgl_sound* sound) {
     free(sound->outputs);
 }
 
+static void _setPosition(tsgl_sound* sound, size_t position) {
+    sound->position = position;
+    //if (sound->position < 0) sound->position = 0;
+    if (sound->position >= sound->len) sound->position = sound->len - 1;
+
+    if (sound->file != NULL) {
+        size_t realPosition = sound->position / sound->bufferSize;
+        realPosition = realPosition * sound->bufferSize;
+        fseek(sound->file, realPosition, SEEK_SET);
+
+        if (sound->position % sound->bufferSize == 0) {
+            fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        } else {
+            fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
+        }
+    }
+}
+
+
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
     memset(sound, 0, sizeof(tsgl_sound));
     sound->file = fopen(path, "rb");
@@ -161,7 +180,6 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
             return ESP_ERR_NO_MEM;
         }
 
-        sound->soundTask = true;
         xTaskCreate(_soundTask, NULL, 2048, sound, 1, &sound->task);
     } else {
         sound->bufferSize = sound->len;
@@ -248,13 +266,19 @@ void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
 }
 
 void tsgl_sound_setPosition(tsgl_sound* sound, size_t position) {
-    sound->position = position;
-    //if (sound->position < 0) sound->position = 0;
-    if (sound->position >= sound->len) sound->position = sound->len - 1;
+    bool timerAction = sound->playing && !sound->pause;
+    if (timerAction) gptimer_stop(sound->timer);
+    _setPosition(sound, position);
+    if (timerAction) gptimer_start(sound->timer);
 }
 
 void tsgl_sound_seek(tsgl_sound* sound, int offset) {
-    tsgl_sound_setPosition(sound, sound->position + offset);
+    bool timerAction = sound->playing && !sound->pause;
+    if (timerAction) gptimer_stop(sound->timer);
+    int64_t newpos = sound->position + offset;
+    if (newpos < 0) newpos = 0;
+    _setPosition(sound, newpos);
+    if (timerAction) gptimer_start(sound->timer);
 }
 
 void tsgl_sound_play(tsgl_sound* sound) {
@@ -304,10 +328,12 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
-    if (sound->soundTask) vTaskDelete(sound->task);
     if (sound->buffer != NULL) free(sound->buffer);
     if (sound->data != NULL) free(sound->data);
-    if (sound->file != NULL) fclose(sound->file);
+    if (sound->file != NULL) {
+        vTaskDelete(sound->task);
+        fclose(sound->file);
+    }
     _freeOutputs(sound);
     if (sound->heap) free(sound);
 }
