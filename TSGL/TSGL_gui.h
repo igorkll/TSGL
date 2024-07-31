@@ -51,6 +51,8 @@ struct tsgl_gui {
     tsgl_pos tpy;
     tsgl_pos tdx;
     tsgl_pos tdy;
+    tsgl_pos tdw;
+    tsgl_pos tdh;
     uint8_t tActionType;
 
     // animation

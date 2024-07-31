@@ -175,31 +175,23 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
                         if (ly < object->resizable) { //top
                             object->tActionType = 1;
-                            object->tdx = object->offsetWidth;
-                            object->tdy = object->offsetHeight;
                         } else if (lx < object->resizable) { //left
                             object->tActionType = 2;
-                            object->tdx = object->offsetWidth;
-                            object->tdy = object->offsetHeight;
                         } else if (object->math_height - ly - 1 < object->resizable) { //bottom
                             object->tActionType = 3;
-                            object->tdx = object->offsetWidth;
-                            object->tdy = object->offsetHeight;
                         } else if (object->math_width - lx - 1 < object->resizable) { //right
                             object->tActionType = 4;
-                            object->tdx = object->offsetWidth;
-                            object->tdy = object->offsetHeight;
                         } else {
                             object->tActionType = 0;
-                            object->tdx = object->offsetX;
-                            object->tdy = object->offsetY;
                         }
                     } else {
                         object->tActionType = 0;
-                        object->tdx = object->offsetX;
-                        object->tdy = object->offsetY;
                     }
 
+                    object->tdx = object->offsetX;
+                    object->tdy = object->offsetY;
+                    object->tdw = object->offsetWidth;
+                    object->tdh = object->offsetHeight;
                     _toUpLevel(object);
                 }
                 break;
@@ -208,13 +200,26 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
+                            tsgl_pos selX = x - object->tpx;
+                            tsgl_pos selY = y - object->tpy;
+
                             switch (object->tActionType) {
                                 case 1:
-                                    object->offsetHeight = object->tdy + (y - object->tpy);
+                                    object->offsetY = object->tdy + selY;
+                                    object->offsetHeight = object->tdh + selY;
                                     break;
 
                                 case 2:
-                                    object->offsetWidth = object->tdx + (x - object->tpx);
+                                    object->offsetX = object->tdx + selX;
+                                    object->offsetWidth = object->tdw + selX;
+                                    break;
+
+                                case 3:
+                                    object->offsetHeight = object->tdh + selY;
+                                    break;
+
+                                case 4:
+                                    object->offsetWidth = object->tdw + selX;
                                     break;
                                 
                                 default:
@@ -222,11 +227,11 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                     object->old_math_y = object->math_y;
                                     object->offsetX = object->tdx + (x - object->tpx);
                                     object->offsetY = object->tdy + (y - object->tpy);
-                                    object->needMath = true;
-                                    object->needDraw = true;
                                     object->localMovent = true;
                                     break;
                             }
+                            object->needMath = true;
+                            object->needDraw = true;
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
