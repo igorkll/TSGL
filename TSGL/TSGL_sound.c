@@ -28,7 +28,7 @@ static void _soundTask(void* _sound) {
 
     while (true) {
         gptimer_stop(sound->timer); //in theory, this should work in parallel with the timer, but... It doesn't work out
-        if (sound->position == 0) {
+        if (sound->loop && sound->position + (sound->bit_rate * sound->channels) >= sound->len) {
             fseek(sound->file, 0, SEEK_SET);
         }
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
@@ -78,9 +78,7 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
     sound->position += sound->bit_rate * sound->channels;
     if (sound->position >= sound->len) {
         sound->position = 0;
-        if (sound->loop) {
-            xTaskResumeFromISR(sound->task);
-        } else {
+        if (!sound->loop) {
             if (sound->freeAfterPlay) {
                 tsgl_sound_free(sound);
             } else {
