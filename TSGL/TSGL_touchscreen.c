@@ -14,7 +14,8 @@ typedef struct {
 static uint8_t i2c_readReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
     ts_i2c* ts = (ts_i2c*)touchscreen->ts;
     uint8_t val = 0;
-    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_read_device(ts->host, ts->address, &addr, 1, &val, 1, 100 / portTICK_PERIOD_MS));
+    //ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_read_device(ts->host, ts->address, &addr, 1, &val, 1, 100 / portTICK_PERIOD_MS));
+    i2c_master_write_read_device(ts->host, ts->address, &addr, 1, &val, 1, 100 / portTICK_PERIOD_MS); //error handling is disabled because the touchscreen does not always respond
     return val;
 }
 
