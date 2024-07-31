@@ -272,7 +272,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             } else {
                 stateDelta = dt / object->animationSpeed;
             }
-            if (object->oldAnimationTarget != object->animationTarget && stateDelta < 0.1) { //gives a small boost to the animation at the very beginning so that the UI does not seem slow
+            if (object->oldAnimationTarget != object->animationTarget) { //gives a small boost to the animation at the very beginning so that the UI does not seem slow
                 stateDelta = 0.1;
             }
             if (delta > 0) {

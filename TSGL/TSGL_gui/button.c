@@ -69,7 +69,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     data->pressedColor = tsgl_color_mul(data->color, 0.9);
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
-    obj->animationSpeedUpMul = 4;
+    obj->animationSpeedUpMul = 2;
     obj->animationSpeedDownMul = 1;
     obj->data = data;
     obj->event_callback = _event_callback;
