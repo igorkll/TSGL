@@ -80,6 +80,8 @@ struct tsgl_gui {
     bool localMovent;
     tsgl_pos old_math_x;
     tsgl_pos old_math_y;
+    tsgl_pos old_math_width;
+    tsgl_pos old_math_height;
     tsgl_pos math_x;
     tsgl_pos math_y;
     tsgl_pos math_width;

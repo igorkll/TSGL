@@ -54,11 +54,11 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, fl
     return 0;
 }
 
-static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_gui* object1, tsgl_gui* object2) {
+static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_gui* object2) {
     return (x < object2->math_x + object2->math_width && 
-            x + object1->math_width > object2->math_x && 
+            x + width > object2->math_x && 
             y < object2->math_y + object2->math_height && 
-            y + object1->math_height > object2->math_y);
+            y + height > object2->math_y);
 }
 
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
@@ -107,7 +107,7 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
 
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
-        object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root, object);
+        object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root->math_width, object->root->math_height, object);
 
         forceParentsMath = true;
     }
@@ -175,12 +175,16 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
                         if (ly < object->resizable) { //top
                             object->tActionType = 1;
+                            object->needDraw = true;
                         } else if (lx < object->resizable) { //left
                             object->tActionType = 2;
+                            object->needDraw = true;
                         } else if (object->math_height - ly - 1 < object->resizable) { //bottom
                             object->tActionType = 3;
+                            object->needDraw = true;
                         } else if (object->math_width - lx - 1 < object->resizable) { //right
                             object->tActionType = 4;
+                            object->needDraw = true;
                         } else {
                             object->tActionType = 0;
                         }
@@ -203,15 +207,20 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             tsgl_pos selX = x - object->tpx;
                             tsgl_pos selY = y - object->tpy;
 
+                            object->old_math_x = object->math_x;
+                            object->old_math_y = object->math_y;
+                            object->old_math_width = object->math_width;
+                            object->old_math_height = object->math_height;
+
                             switch (object->tActionType) {
                                 case 1:
                                     object->offsetY = object->tdy + selY;
-                                    object->offsetHeight = object->tdh + selY;
+                                    object->offsetHeight = object->tdh - selY;
                                     break;
 
                                 case 2:
                                     object->offsetX = object->tdx + selX;
-                                    object->offsetWidth = object->tdw + selX;
+                                    object->offsetWidth = object->tdw - selX;
                                     break;
 
                                 case 3:
@@ -223,15 +232,13 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                     break;
                                 
                                 default:
-                                    object->old_math_x = object->math_x;
-                                    object->old_math_y = object->math_y;
-                                    object->offsetX = object->tdx + (x - object->tpx);
-                                    object->offsetY = object->tdy + (y - object->tpy);
-                                    object->localMovent = true;
+                                    object->offsetX = object->tdx + selX;
+                                    object->offsetY = object->tdy + selY;
                                     break;
                             }
                             object->needMath = true;
                             object->needDraw = true;
+                            object->localMovent = true;
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
@@ -276,7 +283,7 @@ static bool _childrenMathed(tsgl_gui* object, bool mathedReset) {
 static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index) {
     for (size_t i = index + 1; i < object->childrenCount; i++) {
         tsgl_gui* child2 = object->children[i];
-        if (child != child2 && !child2->drawLater && !child2->drawLaterLater && !child->localMovent && _checkIntersection(child->math_x, child->math_y, child, child2)) {
+        if (child != child2 && !child2->drawLater && !child2->drawLaterLater && !child->localMovent && _checkIntersection(child->math_x, child->math_y, child->math_width, child->math_height, child2)) {
             child2->drawLater = true;
             child2->needDraw = false;
             _recursionDrawLater(object, child2, i);
@@ -307,7 +314,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
     if (forceDraw) {
         if (object->localMovent && !force) {
             if (!object->parent->color.invalid) {
-                TSGL_GUI_DRAW(object, fill, object->old_math_x, object->old_math_y, object->math_width, object->math_height, object->parent->color);
+                TSGL_GUI_DRAW(object, fill, object->old_math_x, object->old_math_y, object->old_math_width, object->old_math_height, object->parent->color);
             }
         }
         object->localMovent = false;
@@ -352,6 +359,33 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         }
         object->oldAnimationTarget = object->animationTarget;
 
+        tsgl_rawcolor baseColor;
+        if (object->color.invalid) {
+            baseColor = tsgl_color_raw(TSGL_RED, object->colormode);
+        } else {
+            baseColor = object->color;
+        }
+
+        tsgl_rawcolor selectorBarColor = tsgl_color_raw(tsgl_color_combine(0.7, tsgl_color_uraw(baseColor, object->colormode), TSGL_WHITE), object->colormode);
+        printf("taction %i\n", object->tActionType);
+        switch (object->tActionType) {
+            case 1:
+                TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->resizable, selectorBarColor);
+                break;
+
+            case 2:
+                TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->resizable, object->math_height, selectorBarColor);
+                break;
+
+            case 3:
+                TSGL_GUI_DRAW(object, fill, object->math_x, (object->math_y + object->math_height) - object->resizable, object->math_width, object->resizable, selectorBarColor);
+                break;
+
+            case 4:
+                TSGL_GUI_DRAW(object, fill, (object->math_x + object->math_width) - object->resizable, object->math_y, object->resizable, object->math_height, selectorBarColor);
+                break;
+        }
+
         if (!object->color.invalid) {
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
@@ -369,7 +403,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                 child->drawLaterLater = true;
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
-                    if (child != child2 && _checkIntersection(child->old_math_x, child->old_math_y, child, child2)) {
+                    if (child != child2 && _checkIntersection(child->old_math_x, child->old_math_y, child->old_math_width, child->old_math_height, child2)) {
                         child2->drawLater = true;
                         child2->needDraw = false;
                         anyDrawLater = true;
@@ -379,7 +413,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             } else if (child->needDraw && !child->draggable) {
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
-                    if (child != child2 && _checkIntersection(child->math_x, child->math_y, child, child2)) {
+                    if (child != child2 && _checkIntersection(child->math_x, child->math_y, child->math_width, child->math_height, child2)) {
                         child2->drawLater = true;
                         child2->needDraw = false;
                         anyDrawLater = true;
