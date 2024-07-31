@@ -108,7 +108,8 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         tsgl_pos nextX = object->math_width + object->offsetWidth;
         tsgl_pos nextY = object->math_height + object->offsetHeight;
 
-        tsgl_pos overloadX = object->offsetWidth - ;
+        tsgl_pos overloadX = TSGL_MATH_MIN(0, object->minWidth - nextX);
+        tsgl_pos overloadY = TSGL_MATH_MIN(0, object->minHeight - nextY);
         object->offsetWidth -= overloadX;
         object->offsetHeight -= overloadY;
 
