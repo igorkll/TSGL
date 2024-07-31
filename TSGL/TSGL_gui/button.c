@@ -75,6 +75,7 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;
     obj->fillParentSize = true;
+    obj->animationBaseDelta = 0.5;
     return obj;
 }
 

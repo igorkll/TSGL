@@ -273,7 +273,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                 stateDelta = dt / object->animationSpeed;
             }
             if (object->oldAnimationTarget != object->animationTarget) { //gives a small boost to the animation at the very beginning so that the UI does not seem slow
-                stateDelta = 0.1;
+                stateDelta = object->animationBaseDelta;
             }
             if (delta > 0) {
                 if (object->animationSpeedUpMul != 0 && !lockMul) {
@@ -407,6 +407,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     newObject->needDraw = true;
     newObject->color = TSGL_INVALID_RAWCOLOR;
     newObject->animationSpeed = 0.25;
+    newObject->animationBaseDelta = 0.1;
     object->children[object->childrenCount - 1] = newObject;
     return newObject;
 }
