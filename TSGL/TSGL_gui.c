@@ -22,6 +22,9 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos x, tsgl_pos y
     gui->needMath = true;
     gui->needDraw = true;
 
+    gui->minWidth = width / 4;
+    gui->minHeight = height / 4;
+
     gui->x = x;
     gui->y = y;
     gui->math_x = x;
@@ -101,6 +104,13 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             object->offsetX -= localMathX;
             object->offsetY -= localMathY;
         }
+
+        tsgl_pos nextX = object->math_width + object->offsetWidth;
+        tsgl_pos nextY = object->math_height + object->offsetHeight;
+
+        tsgl_pos overloadX = object->offsetWidth - ;
+        object->offsetWidth -= overloadX;
+        object->offsetHeight -= overloadY;
 
         object->math_width += object->offsetWidth;
         object->math_height += object->offsetHeight;
@@ -254,6 +264,10 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                         object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->pressed = false;
                 }
+                if (object->tActionType > 0) {
+                    object->tActionType = 0;
+                    object->needDraw = true;
+                }
                 break;
         }
     }
@@ -359,15 +373,16 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         }
         object->oldAnimationTarget = object->animationTarget;
 
-        tsgl_rawcolor baseColor;
-        if (object->color.invalid) {
-            baseColor = tsgl_color_raw(TSGL_RED, object->colormode);
-        } else {
-            baseColor = object->color;
+        if (!object->color.invalid) {
+            TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
+        } else if (object->draw_callback != NULL) {
+            if (object->fillParentSize && object->parent != NULL && !object->parent->color.invalid) {
+                TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
+            }
+            object->draw_callback(object);
         }
 
-        tsgl_rawcolor selectorBarColor = tsgl_color_raw(tsgl_color_combine(0.7, tsgl_color_uraw(baseColor, object->colormode), TSGL_WHITE), object->colormode);
-        printf("taction %i\n", object->tActionType);
+        tsgl_rawcolor selectorBarColor = tsgl_color_raw(TSGL_RED, object->colormode);
         switch (object->tActionType) {
             case 1:
                 TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->resizable, selectorBarColor);
@@ -384,15 +399,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             case 4:
                 TSGL_GUI_DRAW(object, fill, (object->math_x + object->math_width) - object->resizable, object->math_y, object->resizable, object->math_height, selectorBarColor);
                 break;
-        }
-
-        if (!object->color.invalid) {
-            TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
-        } else if (object->draw_callback != NULL) {
-            if (object->fillParentSize && object->parent != NULL && !object->parent->color.invalid) {
-                TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
-            }
-            object->draw_callback(object);
         }
 
         anyDraw = true;
