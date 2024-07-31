@@ -27,11 +27,8 @@ static void _soundTask(void* _sound) {
     vTaskSuspend(NULL);
 
     while (true) {
-        gptimer_stop(sound->timer); //in theory, this should work in parallel with the timer, but... It doesn't work out
-        printf("pos %i\n", sound->position);
         if (sound->reload) {
             sound->reload = false;
-            printf("NEWFFF\n");
             fseek(sound->file, sound->position, SEEK_SET);
         }
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
@@ -44,19 +41,9 @@ static void _soundTask(void* _sound) {
 
 static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
     tsgl_sound* sound = user_ctx;
-    if (sound->reload) return false;
-
-    size_t dataOffset = sound->position % sound->bufferSize;
-    
-    if (sound->file != NULL && dataOffset == 0) {
-        uint8_t* t = sound->data;
-        sound->data = sound->buffer;
-        sound->buffer = t;
-        xTaskResumeFromISR(sound->task);
-    }
 
     if (!sound->mute) {
-        uint8_t* ptr = sound->data + dataOffset;
+        uint8_t* ptr = sound->buffer + sound->bufferPosition;
 
         if (sound->floatAllow) {
             xthal_set_cpenable(true);
@@ -79,18 +66,34 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         }
     }
 
-    sound->position += sound->bit_rate * sound->channels;
+    int bufOffset = sound->bit_rate * sound->channels;
+    bool readFile = false;
+
+    sound->bufferPosition += bufOffset;
+    if (sound->bufferPosition >= sound->bufferSize) {
+        readFile = true;
+    }
+
+    sound->position += bufOffset;
     if (sound->position >= sound->len) {
         sound->position = 0;
         if (sound->loop) {
             sound->reload = true;
-            xTaskResumeFromISR(sound->task);
+            readFile = true;
         } else {
             if (sound->freeAfterPlay) {
                 tsgl_sound_free(sound);
             } else {
                 tsgl_sound_stop(sound);
             }
+        }
+    }
+
+    if (readFile) {
+        sound->bufferPosition = 0;
+        if (sound->file != NULL) {
+            gptimer_stop(sound->timer);
+            xTaskResumeFromISR(sound->task);
         }
     }
 
@@ -144,15 +147,11 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
     if (sound->position >= sound->len) sound->position = sound->len - 1;
 
     if (sound->file != NULL) {
-        size_t realPosition = sound->position / sound->bufferSize;
-        realPosition = realPosition * sound->bufferSize;
-        fseek(sound->file, realPosition, SEEK_SET);
-
-        if (sound->position % sound->bufferSize == 0) {
-            fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
-        } else {
-            fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
-        }
+        sound->bufferPosition = 0;
+        fseek(sound->file, sound->position, SEEK_SET);
+        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+    } else {
+        sound->bufferPosition = sound->position;
     }
 }
 
@@ -176,16 +175,9 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
         bufferSize = (bufferSize / t) * t;
         sound->bufferSize = bufferSize;
 
-        sound->data = tsgl_malloc(bufferSize, caps);
-        if (sound->data == NULL) {
-            ESP_LOGE(TAG, "the first buffer for the sound could not be allocated: %i bytes", bufferSize);
-            memset(sound, 0, sizeof(tsgl_sound));
-            return ESP_ERR_NO_MEM;
-        }
-
         sound->buffer = tsgl_malloc(bufferSize, caps);
         if (sound->buffer == NULL) {
-            ESP_LOGE(TAG, "the second buffer for the sound could not be allocated: %i bytes", bufferSize);
+            ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %i bytes", bufferSize);
             memset(sound, 0, sizeof(tsgl_sound));
             return ESP_ERR_NO_MEM;
         }
@@ -194,14 +186,14 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
     } else {
         sound->bufferSize = sound->len;
 
-        sound->data = tsgl_malloc(sound->len, caps);
-        if (sound->data == NULL) {
+        sound->buffer = tsgl_malloc(sound->len, caps);
+        if (sound->buffer == NULL) {
             ESP_LOGE(TAG, "the full buffer for the sound could not be allocated: %i bytes", sound->len);
             memset(sound, 0, sizeof(tsgl_sound));
             return ESP_ERR_NO_MEM;
         }
 
-        fread(sound->data, sound->bit_rate, sound->bufferSize, sound->file);
+        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
         fclose(sound->file);
         sound->file = NULL;
     }
@@ -285,7 +277,7 @@ void tsgl_sound_setPosition(tsgl_sound* sound, size_t position) {
 void tsgl_sound_seek(tsgl_sound* sound, int offset) {
     bool timerAction = sound->playing && !sound->pause;
     if (timerAction) gptimer_stop(sound->timer);
-    int64_t newpos = sound->position + offset;
+    int64_t newpos = ((int64_t)sound->position) + offset;
     if (newpos < 0) newpos = 0;
     _setPosition(sound, newpos);
     if (timerAction) gptimer_start(sound->timer);
@@ -295,7 +287,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->playing) {
         ESP_LOGW(TAG, "tsgl_sound_play skipped. the track is already playing");
         return;
-    } else if (sound->data == NULL) {
+    } else if (sound->buffer == NULL) {
         ESP_LOGE(TAG, "tsgl_sound_play skipped. uninitialized audio cannot be started");
         return;
     }
@@ -339,7 +331,6 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->playing) tsgl_sound_stop(sound);
     if (sound->buffer != NULL) free(sound->buffer);
-    if (sound->data != NULL) free(sound->data);
     if (sound->file != NULL) {
         vTaskDelete(sound->task);
         fclose(sound->file);
