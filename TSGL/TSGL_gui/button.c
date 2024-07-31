@@ -26,6 +26,7 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_buttonData* data = self->data;
     tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.1);
+    float percent = 1 - (0.1 * self->animationState);
 
     tsgl_pos x = self->math_x + resize;
     tsgl_pos y = self->math_y + resize;
@@ -47,6 +48,9 @@ static void _draw_callback(tsgl_gui* self) {
     switch (data->childType) {
         case 1:
             tsgl_gui* parent = self->children[0];
+            tsgl_gui_textData* parentData = parent->data;
+            parentData->sets.scaleX = percent;
+            parentData->sets.scaleY = percent;
             break;
         
         default:
