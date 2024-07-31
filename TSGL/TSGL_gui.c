@@ -76,8 +76,8 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width, minSide, maxSide);
         object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height, minSide, maxSide);
 
-        object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
-        object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
+        //object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
+        //object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
         object->math_width += object->offsetWidth;
         object->math_height += object->offsetHeight;
 
