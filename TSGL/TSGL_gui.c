@@ -8,12 +8,12 @@
 #include <string.h>
 #include <math.h>
 
-static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_pos height) {
+static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));    
     gui->root = gui;
     gui->target = target;
     gui->buffered = buffered;
-    gui->leaky_walls = true;
+    gui->leaky_walls = false;
     gui->processing = true;
 
     gui->interactive = true;
@@ -22,8 +22,10 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos width, tsgl_p
     gui->needMath = true;
     gui->needDraw = true;
 
-    gui->math_x = 0;
-    gui->math_y = 0;
+    gui->x = x;
+    gui->y = y;
+    gui->math_x = x;
+    gui->math_y = y;
     
     gui->width = width;
     gui->height = height;
@@ -367,15 +369,27 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
 
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
-    tsgl_gui* gui = _createRoot(display, false, display->width, display->height);
+    tsgl_gui* gui = tsgl_gui_createRoot_displayZone(display, colormode, 0, 0, display->width, display->height);
+    gui->leaky_walls = true;
+    return gui;
+}
+
+tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer) {
+    tsgl_gui* gui = tsgl_gui_createRoot_bufferZone(display, framebuffer, 0, 0, framebuffer->width, framebuffer->height);
+    gui->leaky_walls = true;
+    return gui;
+}
+
+tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode colormode, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    tsgl_gui* gui = _createRoot(display, false, x, y, width, height);
     gui->colormode = colormode;
     gui->display = display;
     gui->color = display->black;
     return gui;
 }
 
-tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer) {
-    tsgl_gui* gui = _createRoot(framebuffer, true, framebuffer->width, framebuffer->height);
+tsgl_gui* tsgl_gui_createRoot_bufferZone(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    tsgl_gui* gui = _createRoot(framebuffer, true, x, y, width, height);
     gui->colormode = framebuffer->colormode;
     gui->display = display;
     gui->color = framebuffer->black;
