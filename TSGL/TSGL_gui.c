@@ -102,6 +102,9 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             object->offsetY -= localMathY;
         }
 
+        object->math_width += object->offsetWidth;
+        object->math_height += object->offsetHeight;
+
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
         object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root, object);
@@ -164,9 +167,39 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                         object->event_callback(object, x - object->math_x, y - object->math_y, event);
                     object->tpx = x;
                     object->tpy = y;
-                    object->tdx = object->offsetX;
-                    object->tdy = object->offsetY;
                     object->pressed = true;
+
+                    if (object->resizable > 0) {
+                        tsgl_pos lx = x - object->math_x;
+                        tsgl_pos ly = y - object->math_y;
+
+                        if (ly < object->resizable) { //top
+                            object->tActionType = 1;
+                            object->tdx = object->offsetWidth;
+                            object->tdy = object->offsetHeight;
+                        } else if (lx < object->resizable) { //left
+                            object->tActionType = 2;
+                            object->tdx = object->offsetWidth;
+                            object->tdy = object->offsetHeight;
+                        } else if (object->math_height - ly - 1 < object->resizable) { //bottom
+                            object->tActionType = 3;
+                            object->tdx = object->offsetWidth;
+                            object->tdy = object->offsetHeight;
+                        } else if (object->math_width - lx - 1 < object->resizable) { //right
+                            object->tActionType = 4;
+                            object->tdx = object->offsetWidth;
+                            object->tdy = object->offsetHeight;
+                        } else {
+                            object->tActionType = 0;
+                            object->tdx = object->offsetX;
+                            object->tdy = object->offsetY;
+                        }
+                    } else {
+                        object->tActionType = 0;
+                        object->tdx = object->offsetX;
+                        object->tdy = object->offsetY;
+                    }
+
                     _toUpLevel(object);
                 }
                 break;
@@ -175,13 +208,25 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                 if (object->pressed) {
                     if (x != object->tx || y != object->ty) {
                         if (object->draggable) {
-                            object->old_math_x = object->math_x;
-                            object->old_math_y = object->math_y;
-                            object->offsetX = object->tdx + (x - object->tpx);
-                            object->offsetY = object->tdy + (y - object->tpy);
-                            object->needMath = true;
-                            object->needDraw = true;
-                            object->localMovent = true;
+                            switch (object->tActionType) {
+                                case 1:
+                                    object->offsetHeight = object->tdy + (y - object->tpy);
+                                    break;
+
+                                case 2:
+                                    object->offsetWidth = object->tdx + (x - object->tpx);
+                                    break;
+                                
+                                default:
+                                    object->old_math_x = object->math_x;
+                                    object->old_math_y = object->math_y;
+                                    object->offsetX = object->tdx + (x - object->tpx);
+                                    object->offsetY = object->tdy + (y - object->tpy);
+                                    object->needMath = true;
+                                    object->needDraw = true;
+                                    object->localMovent = true;
+                                    break;
+                            }
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }

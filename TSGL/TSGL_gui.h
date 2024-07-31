@@ -32,6 +32,7 @@ struct tsgl_gui {
     bool displayable;
     bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
     bool leaky_walls; //if the value is true, the child elements with the "draggable" flag will be able to go beyond the boundaries of this element. by default, the root element has true. may cause problems if this flag is set for a non-fullscreen element
+    tsgl_pos resizable; //the size of the area at the edge of the object that can be used to resize. in order for the object to resize, this parameter must be greater than 0 and BE SURE to set the draggable flag
 
     tsgl_rawcolor color; //if you set this color, instead of rendering the object, it will be filled with a rectangle of a certain color
 
@@ -50,6 +51,7 @@ struct tsgl_gui {
     tsgl_pos tpy;
     tsgl_pos tdx;
     tsgl_pos tdy;
+    uint8_t tActionType;
 
     // animation
     float animationState;
@@ -82,6 +84,8 @@ struct tsgl_gui {
     tsgl_pos math_height;
     tsgl_pos offsetX;
     tsgl_pos offsetY;
+    tsgl_pos offsetWidth;
+    tsgl_pos offsetHeight;
 
     size_t childrenCount;
     tsgl_gui** children;
