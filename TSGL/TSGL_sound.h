@@ -56,6 +56,7 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     gptimer_handle_t timer;
     bool floatAllow;
     bool mute;
+    bool reload;
 } tsgl_sound;
 
 //the bitrate is set not in bits but in bytes
