@@ -76,6 +76,11 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width, minSide, maxSide);
         object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height, minSide, maxSide);
 
+        object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
+        object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
+        object->math_width += object->offsetWidth;
+        object->math_height += object->offsetHeight;
+
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;
         tsgl_pos maxWidth = object->parent->math_width - localMathX;
@@ -104,17 +109,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             object->offsetX -= localMathX;
             object->offsetY -= localMathY;
         }
-
-        tsgl_pos nextX = object->math_width + object->offsetWidth;
-        tsgl_pos nextY = object->math_height + object->offsetHeight;
-
-        tsgl_pos overloadX = TSGL_MATH_MIN(0, object->minWidth - nextX);
-        tsgl_pos overloadY = TSGL_MATH_MIN(0, object->minHeight - nextY);
-        object->offsetWidth -= overloadX;
-        object->offsetHeight -= overloadY;
-
-        object->math_width += object->offsetWidth;
-        object->math_height += object->offsetHeight;
 
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
