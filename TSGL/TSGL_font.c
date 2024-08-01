@@ -206,7 +206,6 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
                             checkPy = y + iy;
                             break;
                     }
-                    if (checkPy < 0) break;
                     if (screenHeight > 0 && checkPy >= screenHeight) break;
                     if (sets._clamp) {
                         if (checkPy < sets._minHeight) continue;
@@ -215,7 +214,6 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
 
                     for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
                         tsgl_pos px = x + ix + offset;
-                        if (px < 0) break;
                         if (screenWidth > 0 && px >= screenWidth) break;
                         if (sets._clamp) {
                             if (px < sets._minWidth) continue;
@@ -240,7 +238,7 @@ tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL
                                 break;
                         }
                         if (px > textArea.right) textArea.right = px;
-                        if (set != NULL) {
+                        if (set != NULL && px >= 0 && py >= 0) {
                             uint8_t value = tsgl_font_parse(sets.font, charPosition, index);
                             if (value == 255) {
                                 if (!sets.fg.invalid) set(arg, px, py, sets.fg);

@@ -34,10 +34,10 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos x, tsgl_pos y
     return gui;
 }
 
-static tsgl_pos _localMath(tsgl_gui_paramFormat format, bool side, float val, float max, float minSide, float maxSide) {
+static tsgl_pos _localMath(tsgl_gui_paramFormat format, uint8_t valType, float val, float max, float minSide, float maxSide) {
     switch (format) {
         case tsgl_gui_absolute:
-            if (side && val < 0) {
+            if (valType == 1 && val < 0) {
                 return max;
             }
             return val + 0.5;
@@ -66,12 +66,17 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
         tsgl_pos minSide = TSGL_MATH_MIN(object->parent->math_width, object->parent->math_height);
         tsgl_pos maxSide = TSGL_MATH_MAX(object->parent->math_width, object->parent->math_height);
-        tsgl_pos localMathX = _localMath(object->format_x, false, object->x, object->parent->math_width, minSide, maxSide);
-        tsgl_pos localMathY = _localMath(object->format_y, false, object->y, object->parent->math_height, minSide, maxSide);
+        tsgl_pos localMathX = _localMath(object->format_x, 0, object->x, object->parent->math_width, minSide, maxSide);
+        tsgl_pos localMathY = _localMath(object->format_y, 0, object->y, object->parent->math_height, minSide, maxSide);
         object->math_x = localMathX;
         object->math_y = localMathY;
-        object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width, minSide, maxSide);
-        object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height, minSide, maxSide);
+        object->math_width = _localMath(object->format_width, 1, object->width, object->parent->math_width, minSide, maxSide);
+        object->math_height = _localMath(object->format_height, 1, object->height, object->parent->math_height, minSide, maxSide);
+
+        object->min_width = _localMath(object->format_min_width,   2, object->min_width,  object->parent->math_width, minSide, maxSide);
+        object->min_height = _localMath(object->format_min_height, 2, object->min_height, object->parent->math_height, minSide, maxSide);
+        object->max_width = _localMath(object->format_max_width,   2, object->max_width,  object->parent->math_width, minSide, maxSide);
+        object->max_height = _localMath(object->format_max_height, 2, object->max_height, object->parent->math_height, minSide, maxSide);
 
         if (object->math_width < object->min_width) {
             object->math_width = object->min_width;
@@ -86,8 +91,10 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         }
 
         if (object->centering) {
-            object->math_x -= object->math_width / 2;
-            object->math_y -= object->math_height / 2;
+            localMathX -= object->math_width / 2;
+            localMathY -= object->math_height / 2;
+            object->math_x = localMathX;
+            object->math_y = localMathY;
         }
 
         if (object->math_x < 0) object->math_x = 0;
@@ -581,6 +588,12 @@ void tsgl_gui_free(tsgl_gui* object) {
 }
 
 
+void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    tsgl_gui_setPosFormat(object, format);
+    tsgl_gui_setScaleFormat(object, format);
+    tsgl_gui_setMinSideFormat(object, format);
+    tsgl_gui_setMaxSideFormat(object, format);
+}
 
 void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     object->format_x = format;
@@ -592,9 +605,24 @@ void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     object->format_height = format;
 }
 
-void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
-    tsgl_gui_setPosFormat(object, format);
-    tsgl_gui_setScaleFormat(object, format);
+void tsgl_gui_setMinSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_min_width = format;
+    object->format_min_height = format;
+}
+
+void tsgl_gui_setMaxSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_max_width = format;
+    object->format_max_height = format;
+}
+
+void tsgl_gui_setWidthMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_min_width = format;
+    object->format_max_width = format;
+}
+
+void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+    object->format_min_height = format;
+    object->format_max_height = format;
 }
 
 

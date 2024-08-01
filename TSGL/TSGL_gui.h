@@ -8,7 +8,7 @@
 #define TSGL_GUI_DRAW(gui, name, ...) if (gui->buffered) tsgl_framebuffer_##name(gui->target, __VA_ARGS__); else tsgl_display_##name(gui->target, __VA_ARGS__)
 
 typedef enum {
-    tsgl_gui_absolute,
+    tsgl_gui_absolute = 0,
     tsgl_gui_percent,
     tsgl_gui_percentMinSide, //uses a smaller scale even for the larger side
     tsgl_gui_percentMaxSide //uses the maximum side, including for the smaller scale
@@ -27,10 +27,10 @@ struct tsgl_gui {
     tsgl_gui_paramFormat format_y; float y;
     tsgl_gui_paramFormat format_width; float width;
     tsgl_gui_paramFormat format_height; float height;
-    tsgl_pos min_width;
-    tsgl_pos min_height;
-    tsgl_pos max_width;
-    tsgl_pos max_height;
+    tsgl_gui_paramFormat format_min_width; tsgl_pos min_width;
+    tsgl_gui_paramFormat format_min_height; tsgl_pos min_height;
+    tsgl_gui_paramFormat format_max_width; tsgl_pos max_width;
+    tsgl_gui_paramFormat format_max_height; tsgl_pos max_height;
     bool centering; //sets the position relative to the center of the object and not relative to its upper left edge
 
     // setting
@@ -67,6 +67,7 @@ struct tsgl_gui {
     float animationSpeedUpMul;
     float animationSpeedDownMul;
     float animationBaseDelta;
+
     float oldAnimationTarget;
 
     // internal
@@ -114,9 +115,13 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
 // these are just shortcuts in order to set formats in one line
+void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
-void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setMinSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setMaxSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setWidthMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType);
