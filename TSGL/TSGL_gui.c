@@ -126,6 +126,9 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             object->offsetY -= localMathY;
         }
 
+        object->math_natural_width = object->math_width;
+        object->math_natural_height = object->math_height;
+
         object->math_width += object->offsetWidth;
         object->math_height += object->offsetHeight;
 
@@ -275,25 +278,26 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             */
 
                             if (object->tActionType > 0) {
-                                tsgl_pos nextWidth = object->math_width + object->offsetWidth;
-                                if (object->offsetWidth < 0 && nextWidth < object->math_min_width) {
+                                tsgl_pos minOffsetX = object->math_min_width - object->math_natural_width;
+                                tsgl_pos maxOffsetX = object->math_max_width - object->math_natural_width;
+                                if (object->offsetWidth < minOffsetX) {
                                     object->offsetX = old_offsetX;
-                                    object->offsetWidth = 0;
+                                    object->offsetWidth = minOffsetX;
                                 }
-                                if (object->offsetWidth > 0 && object->math_max_width > 0 && nextWidth > object->math_max_width) {
+                                if (object->offsetWidth > maxOffsetX) {
                                     object->offsetX = old_offsetX;
-                                    object->offsetWidth = object->math_max_width - object->math_width;
+                                    object->offsetWidth = maxOffsetX;
                                 }
 
-                                
-                                tsgl_pos nextHeight = object->math_height + object->offsetHeight;
-                                if (object->offsetHeight < 0 && nextHeight < object->math_min_height) {
+                                tsgl_pos minOffsetY = object->math_min_height - object->math_natural_height;
+                                tsgl_pos maxOffsetY = object->math_max_height - object->math_natural_height;
+                                if (object->offsetHeight < minOffsetY) {
                                     object->offsetY = old_offsetY;
-                                    object->offsetHeight = 0;
+                                    object->offsetHeight = minOffsetY;
                                 }
-                                if (object->offsetHeight > 0 && object->math_max_height > 0 && nextHeight > object->math_max_height) {
+                                if (object->offsetHeight > maxOffsetY) {
                                     object->offsetY = old_offsetY;
-                                    object->offsetHeight = object->math_max_height - object->math_height;
+                                    object->offsetHeight = maxOffsetY;
                                 }
                             }
 

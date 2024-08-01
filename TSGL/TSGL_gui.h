@@ -92,6 +92,8 @@ struct tsgl_gui {
     tsgl_pos math_y;
     tsgl_pos math_width;
     tsgl_pos math_height;
+    tsgl_pos math_natural_width;
+    tsgl_pos math_natural_height;
     tsgl_pos math_min_width;
     tsgl_pos math_min_height;
     tsgl_pos math_max_width;
