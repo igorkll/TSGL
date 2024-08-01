@@ -92,6 +92,10 @@ struct tsgl_gui {
     tsgl_pos math_y;
     tsgl_pos math_width;
     tsgl_pos math_height;
+    tsgl_pos math_min_width;
+    tsgl_pos math_min_height;
+    tsgl_pos math_max_width;
+    tsgl_pos math_max_height;
     tsgl_pos offsetX;
     tsgl_pos offsetY;
     tsgl_pos offsetWidth;
@@ -118,8 +122,8 @@ void tsgl_gui_free(tsgl_gui* object);
 void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
-void tsgl_gui_setMinSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
-void tsgl_gui_setMaxSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setMinFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+void tsgl_gui_setMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setWidthMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 

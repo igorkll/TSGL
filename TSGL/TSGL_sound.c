@@ -225,26 +225,10 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
     if (sound->playing) {
         //ESP_ERROR_CHECK(timer_set_alarm_value(sound->timerGroup, sound->timer, APB_CLK_FREQ / 8 / sound->sample_rate / speed));
-        if (!sound->pause) {
-            gptimer_stop(sound->timer);
-        }
+        gptimer_stop(sound->timer);
         gptimer_disable(sound->timer);
         gptimer_del_timer(sound->timer);
         _initTimer(sound);
-        if (!sound->pause) {
-            ESP_ERROR_CHECK(gptimer_start(sound->timer));
-        }
-    }
-}
-
-void tsgl_sound_setPause(tsgl_sound* sound, bool pause) {
-    if (sound->pause == pause) return;
-    sound->pause = pause;
-    if (!sound->playing) return;
-    if (pause) {
-        ESP_ERROR_CHECK(gptimer_stop(sound->timer));
-        _rstOutput(sound);
-    } else {
         ESP_ERROR_CHECK(gptimer_start(sound->timer));
     }
 }
@@ -268,14 +252,14 @@ void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
 }
 
 void tsgl_sound_setPosition(tsgl_sound* sound, size_t position) {
-    bool timerAction = sound->playing && !sound->pause;
+    bool timerAction = sound->playing;
     if (timerAction) gptimer_stop(sound->timer);
     _setPosition(sound, position);
     if (timerAction) gptimer_start(sound->timer);
 }
 
 void tsgl_sound_seek(tsgl_sound* sound, int offset) {
-    bool timerAction = sound->playing && !sound->pause;
+    bool timerAction = sound->playing;
     if (timerAction) gptimer_stop(sound->timer);
     int64_t newpos = ((int64_t)sound->position) + offset;
     if (newpos < 0) newpos = 0;

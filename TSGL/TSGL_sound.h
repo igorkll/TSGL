@@ -30,8 +30,7 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
 
-    bool playing; 
-    bool pause;
+    bool playing;
     float speed;
     float volume;
     bool loop;
@@ -65,7 +64,6 @@ esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps
 esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent); //it makes a second instance of sound from already loaded data, works only with tracks fully loaded into RAM, it is necessary so that several sound effects can be run simultaneously
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
-void tsgl_sound_setPause(tsgl_sound* sound, bool pause);
 void tsgl_sound_setLoop(tsgl_sound* sound, bool loop);
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume);
 void tsgl_sound_setPosition(tsgl_sound* sound, size_t position);

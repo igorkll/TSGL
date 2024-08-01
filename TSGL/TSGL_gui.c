@@ -73,21 +73,21 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_width = _localMath(object->format_width, 1, object->width, object->parent->math_width, minSide, maxSide);
         object->math_height = _localMath(object->format_height, 1, object->height, object->parent->math_height, minSide, maxSide);
 
-        object->min_width = _localMath(object->format_min_width,   2, object->min_width,  object->parent->math_width, minSide, maxSide);
-        object->min_height = _localMath(object->format_min_height, 2, object->min_height, object->parent->math_height, minSide, maxSide);
-        object->max_width = _localMath(object->format_max_width,   2, object->max_width,  object->parent->math_width, minSide, maxSide);
-        object->max_height = _localMath(object->format_max_height, 2, object->max_height, object->parent->math_height, minSide, maxSide);
+        object->math_min_width = _localMath(object->format_min_width,   2, object->min_width,  object->parent->math_width, minSide, maxSide);
+        object->math_min_height = _localMath(object->format_min_height, 2, object->min_height, object->parent->math_height, minSide, maxSide);
+        object->math_max_width = _localMath(object->format_max_width,   2, object->max_width,  object->parent->math_width, minSide, maxSide);
+        object->math_max_height = _localMath(object->format_max_height, 2, object->max_height, object->parent->math_height, minSide, maxSide);
 
-        if (object->math_width < object->min_width) {
-            object->math_width = object->min_width;
-        } else if (object->max_width > 0 && object->math_width > object->max_width) {
-            object->math_width = object->max_width;
+        if (object->math_width < object->math_min_width) {
+            object->math_width = object->math_min_width;
+        } else if (object->math_max_width > 0 && object->math_width > object->math_max_width) {
+            object->math_width = object->math_max_width;
         }
 
-        if (object->math_height < object->min_height) {
-            object->math_height = object->min_height;
-        } else if (object->max_height > 0 && object->math_height > object->max_height) {
-            object->math_height = object->max_height;
+        if (object->math_height < object->math_min_height) {
+            object->math_height = object->math_min_height;
+        } else if (object->math_max_height > 0 && object->math_height > object->math_max_height) {
+            object->math_height = object->math_max_height;
         }
 
         if (object->centering) {
@@ -274,27 +274,32 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             object->math_height += object->offsetHeight;
                             */
 
-                            bool changedX = true;
-                            tsgl_pos nextWidth = object->math_width + object->offsetWidth;
-                            if ((object->offsetWidth < 0 && nextWidth < object->min_width) || (object->offsetWidth > 0 && object->max_width > 0 && nextWidth > object->max_width)) {
-                                object->offsetX = old_offsetX;
-                                object->offsetWidth = old_offsetWidth;
-                                changedX = false;
+                            if (object->tActionType > 0) {
+                                tsgl_pos nextWidth = object->math_width + object->offsetWidth;
+                                if (object->offsetWidth < 0 && nextWidth < object->math_min_width) {
+                                    object->offsetX = old_offsetX;
+                                    object->offsetWidth = 0;
+                                }
+                                if (object->offsetWidth > 0 && object->math_max_width > 0 && nextWidth > object->math_max_width) {
+                                    object->offsetX = old_offsetX;
+                                    object->offsetWidth = object->math_max_width - object->math_width;
+                                }
+
+                                
+                                tsgl_pos nextHeight = object->math_height + object->offsetHeight;
+                                if (object->offsetHeight < 0 && nextHeight < object->math_min_height) {
+                                    object->offsetY = old_offsetY;
+                                    object->offsetHeight = 0;
+                                }
+                                if (object->offsetHeight > 0 && object->math_max_height > 0 && nextHeight > object->math_max_height) {
+                                    object->offsetY = old_offsetY;
+                                    object->offsetHeight = object->math_max_height - object->math_height;
+                                }
                             }
 
-                            bool changedY = true;
-                            tsgl_pos nextHeight = object->math_height + object->offsetHeight;
-                            if ((object->offsetHeight < 0 && nextHeight < object->min_height) || (object->offsetHeight > 0 && object->max_height > 0 && nextHeight > object->max_height)) {
-                                object->offsetY = old_offsetY;
-                                object->offsetHeight = old_offsetHeight;
-                                changedY = false;
-                            }
-
-                            if (changedX || changedY) {
-                                object->needMath = true;
-                                object->needDraw = true;
-                                object->localMovent = true;
-                            }
+                            object->needMath = true;
+                            object->needDraw = true;
+                            object->localMovent = true;
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
@@ -591,8 +596,8 @@ void tsgl_gui_free(tsgl_gui* object) {
 void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     tsgl_gui_setPosFormat(object, format);
     tsgl_gui_setScaleFormat(object, format);
-    tsgl_gui_setMinSideFormat(object, format);
-    tsgl_gui_setMaxSideFormat(object, format);
+    tsgl_gui_setMinFormat(object, format);
+    tsgl_gui_setMaxFormat(object, format);
 }
 
 void tsgl_gui_setPosFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
@@ -605,12 +610,12 @@ void tsgl_gui_setScaleFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     object->format_height = format;
 }
 
-void tsgl_gui_setMinSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+void tsgl_gui_setMinFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     object->format_min_width = format;
     object->format_min_height = format;
 }
 
-void tsgl_gui_setMaxSideFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
+void tsgl_gui_setMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format) {
     object->format_max_width = format;
     object->format_max_height = format;
 }
