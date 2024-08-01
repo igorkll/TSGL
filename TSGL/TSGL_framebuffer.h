@@ -20,11 +20,18 @@ typedef struct {
     tsgl_rawcolor black;
     bool hardwareRotate;
     bool heap;
+    size_t changedFrom;
+    size_t changedTo;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
 tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps); //creates a framebuffer on the heap, the object is automatically deleted when tsgl_framebuffer_free is called
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
+
+// change area detector
+void tsgl_framebuffer_resetChangedArea();
+void tsgl_framebuffer_changeAreaFrom();
+void tsgl_framebuffer_changeAreaTo();
 
 // control
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
