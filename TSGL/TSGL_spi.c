@@ -1,6 +1,7 @@
 #include "TSGL.h"
 #include "TSGL_spi.h"
 #include "TSGL_display.h"
+#include "TSGL_math.h"
 
 #include <esp_system.h>
 #include <esp_err.h>
@@ -13,12 +14,18 @@
 #include <freertos/task.h>
 #include <esp_heap_caps.h>
 
+static bool useDma = false;
 static const char* TAG = "tsgl_spi";
 
 typedef struct {
     int8_t pin;
     bool state;
 } Pre_transfer_info;
+
+static void _floodCallback(void* arg, void* data, size_t size) {
+    tsgl_spi_sendData((tsgl_display*)arg, data, size);
+}
+
 
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
     int8_t miso;
@@ -57,7 +64,7 @@ esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, gpio_num_t 
         .quadhd_io_num=-1,
         .max_transfer_sz = maxlen
     };
-    return spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
+    return spi_bus_initialize(host, &buscfg, useDma ? SPI_DMA_CH_AUTO : SPI_DMA_DISABLED);
 }
 
 void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
@@ -73,7 +80,6 @@ void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
 }
 
-#define umin(a,b) (((a) < (b)) ? (a) : (b))
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size <= 0) return;
     
@@ -90,12 +96,19 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 
     spi_device_handle_t handle = *((spi_device_handle_t*)display->interface);
 
-    if (spi_device_transmit(handle, &t) != ESP_OK) {
-        size_t part = tsgl_getPartSize();
+    if (size < 1024) {
+        ESP_ERROR_CHECK(spi_device_transmit(handle, &t));
+    } else {
+        size_t part;
+        if (useDma) {
+            part = tsgl_getPartSize();
+        } else {
+            part = 16 * 4;
+        }
         size_t offset = 0;
         while (true) {
             spi_transaction_t t = {
-                .length = umin(size - offset, part) * 8,
+                .length = TSGL_MATH_MIN(size - offset, part) * 8,
                 .tx_buffer = data + offset,
                 .user = (void*)(&pre_transfer_info)
             };
@@ -105,6 +118,16 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
             if (offset >= size) {
                 break;
             }
+        }
+    }
+}
+
+void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
+    if (useDma) {
+        tsgl_sendFlood(display, _floodCallback, data, size, flood);
+    } else {
+        for (size_t i = 0; i < flood; i++) {
+            tsgl_spi_sendData(display, data, size);
         }
     }
 }

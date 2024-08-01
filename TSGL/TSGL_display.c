@@ -41,11 +41,6 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
     _doCommands(display, list.list);
 }
 
-static void _floodCallback(void* arg, void* data, size_t size) {
-    tsgl_display_sendData((tsgl_display*)arg, data, size);
-}
-
-
 
 static uint8_t initType = 0;
 static tsgl_rawcolor initColor;
@@ -231,7 +226,7 @@ void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t comman
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_sendFlood((void*)display, _floodCallback, data, size, flood);
+            tsgl_spi_sendFlood(display, data, size, flood);
             break;
     }
 }
