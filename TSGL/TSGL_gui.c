@@ -212,6 +212,11 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             object->old_math_width = object->math_width;
                             object->old_math_height = object->math_height;
 
+                            tsgl_pos old_offsetX = object->offsetX;
+                            tsgl_pos old_offsetY = object->offsetY;
+                            tsgl_pos old_offsetWidth = object->offsetWidth;
+                            tsgl_pos old_offsetHeight = object->offsetHeight;
+
                             switch (object->tActionType) {
                                 case 1:
                                     object->offsetY = object->tdy + selY;
@@ -243,15 +248,18 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             object->math_height += object->offsetHeight;
 
                             bool changedX = true;
-                            bool changedY = true;
-                            if (object->old_math_width < object->math_width && object->math_width + object->offsetWidth < object->minWidth) {
-                                object->math_x = object->old_math_x;
-                                object->math_width = object->old_math_width;
+                            tsgl_pos nextWidth = object->math_width + object->offsetWidth;
+                            if (object->offsetWidth < 0 && nextWidth < object->minWidth) {
+                                object->offsetX = old_offsetX;
+                                object->offsetWidth = old_offsetWidth;
                                 changedX = false;
                             }
-                            if (object->old_math_height < object->math_height && object->math_height + object->offsetHeight < object->minHeight) {
-                                object->math_y = object->old_math_y;
-                                object->math_height = object->old_math_height;
+
+                            bool changedY = true;
+                            tsgl_pos nextHeight = object->math_height + object->offsetHeight;
+                            if (object->offsetHeight < 0 && nextHeight < object->minHeight) {
+                                object->offsetY = old_offsetY;
+                                object->offsetHeight = old_offsetHeight;
                                 changedY = false;
                             }
 
