@@ -22,20 +22,23 @@ typedef enum {
 
 typedef struct tsgl_gui tsgl_gui;
 struct tsgl_gui {
-    // settings
+    // position
     tsgl_gui_paramFormat format_x; float x;
     tsgl_gui_paramFormat format_y; float y;
     tsgl_gui_paramFormat format_width; float width;
     tsgl_gui_paramFormat format_height; float height;
+    tsgl_pos min_width;
+    tsgl_pos min_height;
+    tsgl_pos max_width;
+    tsgl_pos max_height;
+    bool centering;
 
+    // setting
     bool interactive;
     bool displayable;
     bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
     bool leaky_walls; //if the value is true, the child elements with the "draggable" flag will be able to go beyond the boundaries of this element. by default, the root element has true. may cause problems if this flag is set for a non-fullscreen element
     tsgl_pos resizable; //the size of the area at the edge of the object that can be used to resize. in order for the object to resize, this parameter must be greater than 0 and BE SURE to set the draggable flag
-    tsgl_pos minWidth;
-    tsgl_pos minHeight;
-
     tsgl_rawcolor color; //if you set this color, instead of rendering the object, it will be filled with a rectangle of a certain color
 
     // callbacks
