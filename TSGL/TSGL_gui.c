@@ -105,6 +105,9 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
             object->offsetY -= localMathY;
         }
 
+        object->math_width += object->offsetWidth;
+        object->math_height += object->offsetHeight;
+
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
         object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root->math_width, object->root->math_height, object);
@@ -242,10 +245,12 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                     break;
                             }
 
+                            /*
                             object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
                             object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
                             object->math_width += object->offsetWidth;
                             object->math_height += object->offsetHeight;
+                            */
 
                             bool changedX = true;
                             tsgl_pos nextWidth = object->math_width + object->offsetWidth;
