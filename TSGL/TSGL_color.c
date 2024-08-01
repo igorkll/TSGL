@@ -365,5 +365,23 @@ tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
 }
 
 bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize) {
-    return memcmp(color1.arr, color2.arr, (size_t)(colorsize + 0.5)) == 0;
+    if (colorsize == (int)colorsize) {
+        return memcmp(color1.arr, color2.arr, colorsize) == 0;
+    } else {
+        uint8_t byteIndex = 0;
+        uint8_t bitsCount = colorsize * 8;
+        while (bitsCount >= 8) {
+            if (color1.arr[byteIndex] != color2.arr[byteIndex]) {
+                return false;
+            }
+            bitsCount -= 8;
+            byteIndex++;
+        }
+        for (size_t i = 0; i < bitsCount; i++) {
+            if (((color1.arr[byteIndex] >> i) & 1) != ((color2.arr[byteIndex] >> i) & 1)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

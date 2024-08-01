@@ -14,7 +14,7 @@
 #include <freertos/task.h>
 #include <esp_heap_caps.h>
 
-static bool useDma = false;
+static bool useDma = true;
 static const char* TAG = "tsgl_spi";
 
 typedef struct {
@@ -88,7 +88,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .state = true
     };
 
-    spi_transaction_t t = {
+    spi_transaction_t transaction = {
         .length = size * 8,
         .tx_buffer = data,
         .user = (void*)(&pre_transfer_info)
@@ -96,9 +96,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 
     spi_device_handle_t handle = *((spi_device_handle_t*)display->interface);
 
-    if (size < 1024) {
-        ESP_ERROR_CHECK(spi_device_transmit(handle, &t));
-    } else {
+    if (spi_device_transmit(handle, &transaction) != ESP_OK) {
         size_t part;
         if (useDma) {
             part = tsgl_getPartSize();
@@ -107,13 +105,13 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         }
         size_t offset = 0;
         while (true) {
-            spi_transaction_t t = {
+            spi_transaction_t partTransaction = {
                 .length = TSGL_MATH_MIN(size - offset, part) * 8,
                 .tx_buffer = data + offset,
                 .user = (void*)(&pre_transfer_info)
             };
 
-            ESP_ERROR_CHECK(spi_device_transmit(handle, &t));
+            ESP_ERROR_CHECK(spi_device_transmit(handle, &partTransaction));
             offset += part;
             if (offset >= size) {
                 break;
