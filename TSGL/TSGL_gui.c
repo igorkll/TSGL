@@ -242,12 +242,20 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             object->math_width += object->offsetWidth;
                             object->math_height += object->offsetHeight;
 
-                            if (object->math_width + object->offsetWidth < object->minWidth || object->math_height + object->offsetHeight < object->minHeight) {
+                            bool changedX = true;
+                            bool changedY = true;
+                            if (object->old_math_width < object->math_width && object->math_width + object->offsetWidth < object->minWidth) {
                                 object->math_x = object->old_math_x;
-                                object->math_y = object->old_math_y;
                                 object->math_width = object->old_math_width;
+                                changedX = false;
+                            }
+                            if (object->old_math_height < object->math_height && object->math_height + object->offsetHeight < object->minHeight) {
+                                object->math_y = object->old_math_y;
                                 object->math_height = object->old_math_height;
-                            } else {
+                                changedY = false;
+                            }
+
+                            if (changedX || changedY) {
                                 object->needMath = true;
                                 object->needDraw = true;
                                 object->localMovent = true;
