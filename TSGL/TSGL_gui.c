@@ -76,11 +76,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         object->math_width = _localMath(object->format_width, true, object->width, object->parent->math_width, minSide, maxSide);
         object->math_height = _localMath(object->format_height, true, object->height, object->parent->math_height, minSide, maxSide);
 
-        //object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
-        //object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
-        object->math_width += object->offsetWidth;
-        object->math_height += object->offsetHeight;
-
         if (object->math_x < 0) object->math_x = 0;
         if (object->math_y < 0) object->math_y = 0;
         tsgl_pos maxWidth = object->parent->math_width - localMathX;
@@ -241,9 +236,22 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                     object->offsetY = object->tdy + selY;
                                     break;
                             }
-                            object->needMath = true;
-                            object->needDraw = true;
-                            object->localMovent = true;
+
+                            object->offsetWidth += TSGL_MATH_MAX(0, object->minWidth - (object->math_width + object->offsetWidth));
+                            object->offsetHeight += TSGL_MATH_MAX(0, object->minHeight - (object->math_height + object->offsetHeight));
+                            object->math_width += object->offsetWidth;
+                            object->math_height += object->offsetHeight;
+
+                            if (object->math_width + object->offsetWidth < object->minWidth || object->math_height + object->offsetHeight < object->minHeight) {
+                                object->math_x = object->old_math_x;
+                                object->math_y = object->old_math_y;
+                                object->math_width = object->old_math_width;
+                                object->math_height = object->old_math_height;
+                            } else {
+                                object->needMath = true;
+                                object->needDraw = true;
+                                object->localMovent = true;
+                            }
                         } else if (object->event_callback != NULL) {
                             object->event_callback(object, x - object->math_x, y - object->math_y, event);
                         }
