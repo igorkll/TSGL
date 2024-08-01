@@ -31,7 +31,7 @@ struct tsgl_gui {
     tsgl_pos min_height;
     tsgl_pos max_width;
     tsgl_pos max_height;
-    bool centering;
+    bool centering; //sets the position relative to the center of the object and not relative to its upper left edge
 
     // setting
     bool interactive;

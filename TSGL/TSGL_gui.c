@@ -75,14 +75,19 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
 
         if (object->math_width < object->min_width) {
             object->math_width = object->min_width;
-        } else if (object->math_width > object->max_width) {
+        } else if (object->max_width > 0 && object->math_width > object->max_width) {
             object->math_width = object->max_width;
         }
 
         if (object->math_height < object->min_height) {
             object->math_height = object->min_height;
-        } else if (object->math_height > object->max_height) {
+        } else if (object->max_height > 0 && object->math_height > object->max_height) {
             object->math_height = object->max_height;
+        }
+
+        if (object->centering) {
+            object->math_x -= object->math_width / 2;
+            object->math_y -= object->math_height / 2;
         }
 
         if (object->math_x < 0) object->math_x = 0;
@@ -119,11 +124,6 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
 
         object->math_x += object->offsetX + forceOffsetX;
         object->math_y += object->offsetY + forceOffsetY;
-
-        if (object->centering) {
-            object->math_x -= object->math_width / 2;
-            object->math_y -= object->math_height / 2;
-        }
 
         object->processing = _checkIntersection(object->root->math_x, object->root->math_y, object->root->math_width, object->root->math_height, object);
 
@@ -269,7 +269,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
                             bool changedX = true;
                             tsgl_pos nextWidth = object->math_width + object->offsetWidth;
-                            if ((object->offsetWidth < 0 && nextWidth < object->min_width) || (object->offsetWidth > 0 && nextWidth < object->max_width)) {
+                            if ((object->offsetWidth < 0 && nextWidth < object->min_width) || (object->offsetWidth > 0 && object->max_width > 0 && nextWidth > object->max_width)) {
                                 object->offsetX = old_offsetX;
                                 object->offsetWidth = old_offsetWidth;
                                 changedX = false;
@@ -277,7 +277,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
                             bool changedY = true;
                             tsgl_pos nextHeight = object->math_height + object->offsetHeight;
-                            if ((object->offsetHeight < 0 && nextHeight < object->min_height) || (object->offsetHeight > 0 && nextHeight > object->max_height)) {
+                            if ((object->offsetHeight < 0 && nextHeight < object->min_height) || (object->offsetHeight > 0 && object->max_height > 0 && nextHeight > object->max_height)) {
                                 object->offsetY = old_offsetY;
                                 object->offsetHeight = old_offsetHeight;
                                 changedY = false;
