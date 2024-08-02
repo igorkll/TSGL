@@ -225,7 +225,11 @@ void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_spi_sendCommand(display, command);
+            if (interfaceData->lcd != NULL) {
+                esp_lcd_panel_io_tx_param(interfaceData->lcd, command, NULL, 0);
+            } else {
+                tsgl_spi_sendCommand(display, command);
+            }
             break;
     }
 }
@@ -233,7 +237,11 @@ void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
 void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_spi_sendData(display, data, size);
+            if (interfaceData->lcd != NULL) {
+                esp_lcd_panel_io_tx_color(interfaceData->lcd, -1, data, size);
+            } else {
+                tsgl_spi_sendData(display, data, size);
+            }
             break;
     }
 }
@@ -277,6 +285,9 @@ void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
             tsgl_display_interfaceData_spi* interfaceData = display->interface;
+            if (interfaceData->lcd != NULL) {
+                esp_lcd_panel_io_del(interfaceData->lcd);
+            }
             spi_bus_remove_device(interfaceData->handle);
             break;
     }
