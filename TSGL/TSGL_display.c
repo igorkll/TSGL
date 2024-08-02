@@ -42,8 +42,6 @@ static void _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
 }
 
 static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size <= 0) return;
-    
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
     spi_pretransfer_info pre_transfer_info = {
@@ -183,7 +181,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
             .spi_mode = 0,
-            .trans_queue_depth = 10,
+            .trans_queue_depth = 32,
         };
 
         interfaceData->lcd = malloc(sizeof(esp_lcd_panel_io_handle_t));
@@ -198,7 +196,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
             .clock_speed_hz = freq,
             .mode = 0,
             .spics_io_num = cs,
-            .queue_size = 7,
+            .queue_size = 1,
             .pre_cb = _spi_pre_transfer_callback
         };
 
@@ -352,16 +350,12 @@ void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t comma
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi : {
-            tsgl_display_interfaceData_spi* interfaceData = display->interface;
-            tsgl_sendFlood(display, _spi_floodCallback, data, size, flood);
+            tsgl_sendFlood(0, display, _spi_floodCallback, data, size, flood);
             break;
         }
 
         case tsgl_display_interface_lcd : {
-            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
-            for (size_t i = 0; i < flood; i++) {
-                esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);
-            }
+            tsgl_sendFlood(1024 * 8, display, _lcd_floodCallback, data, size, flood);
             break;
         }
     }
