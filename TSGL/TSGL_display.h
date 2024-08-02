@@ -68,6 +68,7 @@ void tsgl_display_setBacklight(tsgl_display* display, uint8_t value); //changes 
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command);
 void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t command, const uint8_t arg);
+void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t command, const uint8_t* args, size_t argsCount);
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);
 
 // ---------------- control
