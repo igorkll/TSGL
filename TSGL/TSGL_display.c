@@ -50,7 +50,7 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
     if (interfaceData->lcd != NULL) {
         //esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);    
-        size_t part = tsgl_getPartSize();
+        size_t part = 1024 * 8;
         size_t offset = 0;
         while (true) {
             esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part));
