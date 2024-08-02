@@ -22,70 +22,55 @@ static const char* TAG = "TSGL_display";
 typedef struct {
     gpio_num_t pin;
     bool state;
-} rawspi_pretransfer_info;
+} spi_pretransfer_info;
 
 static void _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
-    if (interfaceData->lcd != NULL) {
-        esp_lcd_panel_io_tx_param(*interfaceData->lcd, cmd, NULL, 0);
-    } else {
-        rawspi_pretransfer_info pre_transfer_info = {
-            .pin = interfaceData->dc,
-            .state = false
-        };
 
-        spi_transaction_t t = {
-            .length = 8,
-            .tx_buffer = &cmd,
-            .user = (void*)(&pre_transfer_info)
-        };
+    spi_pretransfer_info pre_transfer_info = {
+        .pin = interfaceData->dc,
+        .state = false
+    };
 
-        ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &t));
-    }
+    spi_transaction_t t = {
+        .length = 8,
+        .tx_buffer = &cmd,
+        .user = (void*)(&pre_transfer_info)
+    };
+
+    ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &t));
 }
 
 static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size <= 0) return;
     
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
-    if (interfaceData->lcd != NULL) {
-        //esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);    
-        size_t part = 1024 * 8;
+
+    spi_pretransfer_info pre_transfer_info = {
+        .pin = interfaceData->dc,
+        .state = true
+    };
+
+    spi_transaction_t transaction = {
+        .length = size * 8,
+        .tx_buffer = data,
+        .user = (void*)(&pre_transfer_info)
+    };
+
+    if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
+        size_t part = tsgl_getPartSize();
         size_t offset = 0;
         while (true) {
-            esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part));
+            spi_transaction_t partTransaction = {
+                .length = TSGL_MATH_MIN(size - offset, part) * 8,
+                .tx_buffer = data + offset,
+                .user = (void*)(&pre_transfer_info)
+            };
+
+            ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &partTransaction));
             offset += part;
             if (offset >= size) {
                 break;
-            }
-        }
-    } else {
-        rawspi_pretransfer_info pre_transfer_info = {
-            .pin = interfaceData->dc,
-            .state = true
-        };
-
-        spi_transaction_t transaction = {
-            .length = size * 8,
-            .tx_buffer = data,
-            .user = (void*)(&pre_transfer_info)
-        };
-
-        if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
-            size_t part = tsgl_getPartSize();
-            size_t offset = 0;
-            while (true) {
-                spi_transaction_t partTransaction = {
-                    .length = TSGL_MATH_MIN(size - offset, part) * 8,
-                    .tx_buffer = data + offset,
-                    .user = (void*)(&pre_transfer_info)
-                };
-
-                ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &partTransaction));
-                offset += part;
-                if (offset >= size) {
-                    break;
-                }
             }
         }
     }
@@ -111,13 +96,18 @@ static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
     _doCommands(display, list.list);
 }
 
-static void _rawspi_pre_transfer_callback(spi_transaction_t* t) {
-    rawspi_pretransfer_info* pre_transfer_info = (rawspi_pretransfer_info*)t->user;
-    gpio_set_level(pre_transfer_info->pin, pre_transfer_info->state);
+static void _spi_pre_transfer_callback(spi_transaction_t* t) {
+    spi_pretransfer_info* pretransfer_info = (spi_pretransfer_info*)t->user;
+    gpio_set_level(pretransfer_info->pin, pretransfer_info->state);
 }
 
 static void _spi_floodCallback(void* arg, void* data, size_t size) {
     _spi_sendData((tsgl_display*)arg, data, size);
+}
+
+static void _lcd_floodCallback(void* arg, void* data, size_t size) {
+    tsgl_display_interfaceData_lcd* interfaceData = ((tsgl_display*)arg)->interface;
+    esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);
 }
 
 
@@ -180,14 +170,13 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
 
-    tsgl_display_interfaceData_spi* interfaceData = malloc(sizeof(tsgl_display_interfaceData_spi));
-    display->interfaceType = tsgl_display_interface_spi;
-    display->interface = interfaceData;
-    interfaceData->dc = dc;
-    interfaceData->lcd = NULL;
-
     esp_err_t result;
     if (true) {
+        tsgl_display_interfaceData_lcd* interfaceData = malloc(sizeof(tsgl_display_interfaceData_lcd));
+        display->interfaceType = tsgl_display_interface_lcd;
+        display->interface = interfaceData;
+        interfaceData->dc = dc;
+
         esp_lcd_panel_io_spi_config_t io_config = {
             .dc_gpio_num = dc,
             .cs_gpio_num = cs,
@@ -201,12 +190,17 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         interfaceData->lcd = malloc(sizeof(esp_lcd_panel_io_handle_t));
         result = esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spihost, &io_config, interfaceData->lcd);
     } else {
+        tsgl_display_interfaceData_spi* interfaceData = malloc(sizeof(tsgl_display_interfaceData_spi));
+        display->interfaceType = tsgl_display_interface_spi;
+        display->interface = interfaceData;
+        interfaceData->dc = dc;
+
         spi_device_interface_config_t devcfg = {
             .clock_speed_hz = freq,
             .mode = 0,
             .spics_io_num = cs,
             .queue_size = 7,
-            .pre_cb = _rawspi_pre_transfer_callback
+            .pre_cb = _spi_pre_transfer_callback
         };
 
         interfaceData->spi = malloc(sizeof(spi_device_handle_t));
@@ -307,6 +301,11 @@ void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command) {
         case tsgl_display_interface_spi:
             _spi_sendCommand(display, command);
             break;
+
+        case tsgl_display_interface_lcd:
+            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
+            esp_lcd_panel_io_tx_param(*interfaceData->lcd, command, NULL, 0);
+            break;
     }
 }
 
@@ -314,6 +313,19 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
             _spi_sendData(display, data, size);
+            break;
+
+        case tsgl_display_interface_lcd:
+            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
+            size_t part = 1024 * 8;
+            size_t offset = 0;
+            while (true) {
+                esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part));
+                offset += part;
+                if (offset >= size) {
+                    break;
+                }
+            }
             break;
     }
 }
@@ -325,30 +337,34 @@ void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t comman
 void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t command, const uint8_t* args, size_t argsCount) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_display_interfaceData_spi* interfaceData = display->interface;
-            if (interfaceData->lcd != NULL) {
-                esp_lcd_panel_io_tx_param(*interfaceData->lcd, command, args, argsCount);
-                return;
+            tsgl_display_sendCommand(display, command);
+            if (argsCount > 0) {
+                tsgl_display_sendData(display, args, argsCount);
             }
-    }
+            break;
 
-    tsgl_display_sendCommand(display, command);
-    if (argsCount > 0) {
-        tsgl_display_sendData(display, args, argsCount);
+        case tsgl_display_interface_lcd:
+            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
+            esp_lcd_panel_io_tx_param(*interfaceData->lcd, command, args, argsCount);
+            break;
     }
 }
 
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
     switch (display->interfaceType) {
-        case tsgl_display_interface_spi:
+        case tsgl_display_interface_spi : {
             tsgl_display_interfaceData_spi* interfaceData = display->interface;
-            if (interfaceData->lcd != NULL) {
-                printf("TOPFLOOD\n");
-                tsgl_sendFlood(display, _spi_floodCallback, data, size, flood);
-            } else {
-                tsgl_sendFlood(display, _spi_floodCallback, data, size, flood);
+            tsgl_sendFlood(display, _spi_floodCallback, data, size, flood);
+            break;
+        }
+
+        case tsgl_display_interface_lcd : {
+            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
+            for (size_t i = 0; i < flood; i++) {
+                esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);
             }
             break;
+        }
     }
 }
 
@@ -376,17 +392,19 @@ void tsgl_display_setInvert(tsgl_display* display, bool state) {
 
 void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
-        case tsgl_display_interface_spi:
+        case tsgl_display_interface_spi : {
             tsgl_display_interfaceData_spi* interfaceData = display->interface;
-            if (interfaceData->lcd != NULL) {
-                esp_lcd_panel_io_del(*interfaceData->lcd);
-                free(interfaceData->lcd);
-            }
-            if (interfaceData->spi != NULL) {
-                spi_bus_remove_device(*interfaceData->spi);
-                free(interfaceData->spi);
-            }
+            spi_bus_remove_device(*interfaceData->spi);
+            free(interfaceData->spi);
             break;
+        }
+
+        case tsgl_display_interface_spi : {
+            tsgl_display_interfaceData_lcd* interfaceData = display->interface;
+            esp_lcd_panel_io_del(*interfaceData->lcd);
+            free(interfaceData->lcd);
+            break;
+        }
     }
 
     if (display->backlight != NULL) {

@@ -10,14 +10,18 @@
 #include <esp_lcd_panel_io.h>
 
 typedef enum {
-    tsgl_display_interface_spi
+    tsgl_display_interface_spi,
+    tsgl_display_interface_lcd
 } tsgl_display_interfaceType;
 
 typedef struct {
     spi_device_handle_t* spi;
-    esp_lcd_panel_io_handle_t* lcd;
     int8_t dc;
 } tsgl_display_interfaceData_spi;
+
+typedef struct {
+    esp_lcd_panel_io_handle_t* lcd;
+} tsgl_display_interfaceData_lcd;
 
 typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;
