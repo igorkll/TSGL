@@ -99,13 +99,14 @@ static void _spi_pre_transfer_callback(spi_transaction_t* t) {
     gpio_set_level(pretransfer_info->pin, pretransfer_info->state);
 }
 
-static void _spi_floodCallback(void* arg, void* data, size_t size) {
+static bool _spi_floodCallback(void* arg, void* data, size_t size) {
     _spi_sendData((tsgl_display*)arg, data, size);
+    return true;
 }
 
-static void _lcd_floodCallback(void* arg, void* data, size_t size) {
+static bool _lcd_floodCallback(void* arg, void* data, size_t size) {
     tsgl_display_interfaceData_lcd* interfaceData = ((tsgl_display*)arg)->interface;
-    esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size);
+    return esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size) == ESP_OK;
 }
 
 
@@ -317,7 +318,11 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
             size_t part = 1024 * 16;
             size_t offset = 0;
             while (true) {
-                esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part));
+                if (esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part)) != ESP_OK) {
+                    part /= 2;
+                    if (part == 0) break;
+                    continue;
+                }
                 offset += part;
                 if (offset >= size) {
                     break;
@@ -355,7 +360,7 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
         }
 
         case tsgl_display_interface_lcd : {
-            tsgl_sendFlood(1024 * 64, display, _lcd_floodCallback, data, size, flood);
+            tsgl_sendFlood(0, display, _lcd_floodCallback, data, size, flood);
             break;
         }
     }

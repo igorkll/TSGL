@@ -13,7 +13,7 @@ size_t tsgl_getPartSize() {
     return info.largest_free_block;
 }
 
-void tsgl_sendFlood(size_t maxPart, void* arg, void(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood) {
+void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood) {
     if (size <= 0 || flood <= 0) return;
     size_t part = (tsgl_getPartSize() / size) * size;
     if (maxPart != 0 && part > maxPart) part = maxPart;
@@ -25,7 +25,10 @@ void tsgl_sendFlood(size_t maxPart, void* arg, void(*send)(void* arg, void* part
         memcpy(floodPart + i, data, size);
     }
     while (true) {
-        send(arg, floodPart, TSGL_MATH_MIN(bytesCount - offset, part));
+        if (!send(arg, floodPart, TSGL_MATH_MIN(bytesCount - offset, part))) {
+            part /= 2;
+            continue;
+        }
         offset += part;
         if (offset >= bytesCount) {
             break;
