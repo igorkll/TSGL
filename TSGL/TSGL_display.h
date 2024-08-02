@@ -7,6 +7,7 @@
 #include <driver/gpio.h>
 #include <esp_err.h>
 #include <esp_lcd_io_spi.h>
+#include <esp_lcd_panel_io.h>
 
 typedef enum {
     tsgl_display_interface_spi

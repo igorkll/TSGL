@@ -132,7 +132,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
             .spi_mode = 0,
             .trans_queue_depth = 10,
         };
-        esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spihost, io_config, &interfaceData->lcd);
+        esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spihost, &io_config, &interfaceData->lcd);
 
         // configuration of non-SPI pins
         gpio_config_t io_conf = {};
