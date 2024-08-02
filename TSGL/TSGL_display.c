@@ -310,17 +310,7 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
 }
 
 void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t command, const uint8_t arg) {
-    switch (display->interfaceType) {
-        case tsgl_display_interface_spi:
-            tsgl_display_interfaceData_spi* interfaceData = display->interface;
-            if (interfaceData->lcd != NULL) {
-                esp_lcd_panel_io_tx_param(*interfaceData->lcd, command, &arg, 1);
-                return;
-            }
-    }
-
-    tsgl_display_sendCommand(display, command);
-    tsgl_display_sendData(display, &arg, 1);
+    tsgl_display_sendCommandWithArgs(display, command, &arg, 1);
 }
 
 void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t command, const uint8_t* args, size_t argsCount) {
