@@ -175,7 +175,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         tsgl_display_interfaceData_lcd* interfaceData = malloc(sizeof(tsgl_display_interfaceData_lcd));
         display->interfaceType = tsgl_display_interface_lcd;
         display->interface = interfaceData;
-        interfaceData->dc = dc;
 
         esp_lcd_panel_io_spi_config_t io_config = {
             .dc_gpio_num = dc,
@@ -399,7 +398,7 @@ void tsgl_display_free(tsgl_display* display) {
             break;
         }
 
-        case tsgl_display_interface_spi : {
+        case tsgl_display_interface_lcd : {
             tsgl_display_interfaceData_lcd* interfaceData = display->interface;
             esp_lcd_panel_io_del(*interfaceData->lcd);
             free(interfaceData->lcd);
