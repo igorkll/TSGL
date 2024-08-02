@@ -113,6 +113,12 @@ static void _rawspi_floodCallback(void* arg, void* data, size_t size) {
     _rawspi_sendData((tsgl_display*)arg, data, size);
 }
 
+static void _spi_floodCallback(void* arg, void* data, size_t size) {
+    tsgl_display* display = arg;
+    tsgl_display_interfaceData_spi* interfaceData = display->interface;
+    esp_lcd_panel_io_tx_param(*interfaceData->lcd, -1, data, size);
+}
+
 
 
 static uint8_t initType = 0;
@@ -334,7 +340,12 @@ void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t comman
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            tsgl_sendFlood(display, _rawspi_floodCallback, data, size, flood);
+            tsgl_display_interfaceData_spi* interfaceData = display->interface;
+            if (interfaceData->lcd != NULL) {
+                tsgl_sendFlood(display, _spi_floodCallback, data, size, flood);
+            } else {
+                tsgl_sendFlood(display, _rawspi_floodCallback, data, size, flood);
+            }
             break;
     }
 }
