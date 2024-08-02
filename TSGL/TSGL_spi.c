@@ -16,16 +16,6 @@
 
 static const char* TAG = "tsgl_spi";
 
-typedef struct {
-    int8_t pin;
-    bool state;
-} Pre_transfer_info;
-
-static void _floodCallback(void* arg, void* data, size_t size) {
-    tsgl_spi_sendData((tsgl_display*)arg, data, size);
-}
-
-
 esp_err_t tsgl_spi_init(size_t maxlen, spi_host_device_t host) {
     int8_t miso;
     int8_t mosi;
@@ -64,65 +54,4 @@ esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, gpio_num_t 
         .max_transfer_sz = maxlen
     };
     return spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
-}
-
-void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
-    tsgl_display_interfaceData_spi* interfaceData = display->interface;
-
-    Pre_transfer_info pre_transfer_info = {
-        .pin = interfaceData->dc,
-        .state = false
-    };
-
-    spi_transaction_t t = {
-        .length = 8,
-        .tx_buffer = &cmd,
-        .user = (void*)(&pre_transfer_info)
-    };
-
-    ESP_ERROR_CHECK(spi_device_transmit(interfaceData->handle, &t));
-}
-
-void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
-    if (size <= 0) return;
-    
-    tsgl_display_interfaceData_spi* interfaceData = display->interface;
-
-    Pre_transfer_info pre_transfer_info = {
-        .pin = interfaceData->dc,
-        .state = true
-    };
-
-    spi_transaction_t transaction = {
-        .length = size * 8,
-        .tx_buffer = data,
-        .user = (void*)(&pre_transfer_info)
-    };
-
-    if (spi_device_transmit(interfaceData->handle, &transaction) != ESP_OK) {
-        size_t part = tsgl_getPartSize();
-        size_t offset = 0;
-        while (true) {
-            spi_transaction_t partTransaction = {
-                .length = TSGL_MATH_MIN(size - offset, part) * 8,
-                .tx_buffer = data + offset,
-                .user = (void*)(&pre_transfer_info)
-            };
-
-            ESP_ERROR_CHECK(spi_device_transmit(interfaceData->handle, &partTransaction));
-            offset += part;
-            if (offset >= size) {
-                break;
-            }
-        }
-    }
-}
-
-void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
-    tsgl_sendFlood(display, _floodCallback, data, size, flood);
-}
-
-void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {
-    Pre_transfer_info* pre_transfer_info = (Pre_transfer_info*)t->user;
-    gpio_set_level(pre_transfer_info->pin, pre_transfer_info->state);
 }
