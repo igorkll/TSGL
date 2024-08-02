@@ -181,7 +181,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
             .spi_mode = 0,
-            .trans_queue_depth = 32,
+            .trans_queue_depth = 256,
         };
 
         interfaceData->lcd = malloc(sizeof(esp_lcd_panel_io_handle_t));
@@ -314,7 +314,7 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
 
         case tsgl_display_interface_lcd:
             tsgl_display_interfaceData_lcd* interfaceData = display->interface;
-            size_t part = 1024 * 8;
+            size_t part = 1024 * 16;
             size_t offset = 0;
             while (true) {
                 esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part));
@@ -355,7 +355,7 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
         }
 
         case tsgl_display_interface_lcd : {
-            tsgl_sendFlood(1024 * 8, display, _lcd_floodCallback, data, size, flood);
+            tsgl_sendFlood(1024 * 64, display, _lcd_floodCallback, data, size, flood);
             break;
         }
     }
