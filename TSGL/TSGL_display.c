@@ -20,10 +20,16 @@
 static const char* TAG = "TSGL_display";
 
 static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
-    tsgl_display_sendCommand(display, command.cmd);
-    if (command.datalen > 0) {
-        tsgl_display_sendData(display, command.data, command.datalen);
+    tsgl_display_interfaceData_spi* interfaceData = display->interface;
+    if (interfaceData->lcd != NULL) {
+        esp_lcd_panel_io_tx_param(interfaceData->lcd, command.cmd, command.data, command.datalen);
+    } else {
+        tsgl_display_sendCommand(display, command.cmd);
+        if (command.datalen > 0) {
+            tsgl_display_sendData(display, command.data, command.datalen);
+        }
     }
+    
     if (command.delay > 0) {
         vTaskDelay(command.delay / portTICK_PERIOD_MS);
     } else if (command.delay < 0) {
@@ -95,7 +101,6 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->defaultWidth = settings.width;
     display->defaultHeight = settings.height;
     display->rotation = 0;
-    display->dc = dc;
     display->driver = settings.driver;
     display->colormode = settings.driver->colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
@@ -109,11 +114,26 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         .pre_cb = tsgl_spi_pre_transfer_callback
     };
 
+    tsgl_display_interfaceData_spi* interfaceData = malloc(sizeof(tsgl_display_interfaceData_spi));
     display->interfaceType = tsgl_display_interface_spi;
-    display->interface = malloc(sizeof(spi_device_handle_t));
+    display->interface = interfaceData;
+    interfaceData->dc = dc;
+    interfaceData->lcd = NULL;
 
-    esp_err_t result = spi_bus_add_device(spihost, &devcfg, (spi_device_handle_t*)display->interface);
+    esp_err_t result = spi_bus_add_device(spihost, &devcfg, &interfaceData->handle);
     if (result == ESP_OK) {
+        // init lcd handle (in fact, tgsl drivers will be used, and not those provided by esp-idf)
+        esp_lcd_panel_io_spi_config_t io_config = {
+            .dc_gpio_num = dc,
+            .cs_gpio_num = cs,
+            .pclk_hz = freq,
+            .lcd_cmd_bits = 8,
+            .lcd_param_bits = 8,
+            .spi_mode = 0,
+            .trans_queue_depth = 10,
+        };
+        esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spihost, io_config, &interfaceData->lcd);
+
         // configuration of non-SPI pins
         gpio_config_t io_conf = {};
         if (dc >= 0) io_conf.pin_bit_mask |= 1ULL << dc;
@@ -256,7 +276,8 @@ void tsgl_display_setInvert(tsgl_display* display, bool state) {
 void tsgl_display_free(tsgl_display* display) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi:
-            spi_bus_remove_device(*((spi_device_handle_t*)display->interface));
+            tsgl_display_interfaceData_spi* interfaceData = display->interface;
+            spi_bus_remove_device(interfaceData->handle);
             break;
     }
 

@@ -14,7 +14,6 @@
 #include <freertos/task.h>
 #include <esp_heap_caps.h>
 
-static bool useDma = true;
 static const char* TAG = "tsgl_spi";
 
 typedef struct {
@@ -64,27 +63,33 @@ esp_err_t tsgl_spi_initManual(size_t maxlen, spi_host_device_t host, gpio_num_t 
         .quadhd_io_num=-1,
         .max_transfer_sz = maxlen
     };
-    return spi_bus_initialize(host, &buscfg, useDma ? SPI_DMA_CH_AUTO : SPI_DMA_DISABLED);
+    return spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
 }
 
 void tsgl_spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
+    tsgl_display_interfaceData_spi* interfaceData = display->interface;
+
     Pre_transfer_info pre_transfer_info = {
-        .pin = display->dc,
+        .pin = interfaceData->dc,
         .state = false
     };
+
     spi_transaction_t t = {
         .length = 8,
         .tx_buffer = &cmd,
         .user = (void*)(&pre_transfer_info)
     };
-    ESP_ERROR_CHECK(spi_device_transmit(*((spi_device_handle_t*)display->interface), &t));
+
+    ESP_ERROR_CHECK(spi_device_transmit(interfaceData->handle, &t));
 }
 
 void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     if (size <= 0) return;
     
+    tsgl_display_interfaceData_spi* interfaceData = display->interface;
+
     Pre_transfer_info pre_transfer_info = {
-        .pin = display->dc,
+        .pin = interfaceData->dc,
         .state = true
     };
 
@@ -94,15 +99,8 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
         .user = (void*)(&pre_transfer_info)
     };
 
-    spi_device_handle_t handle = *((spi_device_handle_t*)display->interface);
-
-    if (spi_device_transmit(handle, &transaction) != ESP_OK) {
-        size_t part;
-        if (useDma) {
-            part = tsgl_getPartSize();
-        } else {
-            part = 16 * 4;
-        }
+    if (spi_device_transmit(interfaceData->handle, &transaction) != ESP_OK) {
+        size_t part = tsgl_getPartSize();
         size_t offset = 0;
         while (true) {
             spi_transaction_t partTransaction = {
@@ -111,7 +109,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
                 .user = (void*)(&pre_transfer_info)
             };
 
-            ESP_ERROR_CHECK(spi_device_transmit(handle, &partTransaction));
+            ESP_ERROR_CHECK(spi_device_transmit(interfaceData->handle, &partTransaction));
             offset += part;
             if (offset >= size) {
                 break;
@@ -121,13 +119,7 @@ void tsgl_spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) 
 }
 
 void tsgl_spi_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
-    if (useDma) {
-        tsgl_sendFlood(display, _floodCallback, data, size, flood);
-    } else {
-        for (size_t i = 0; i < flood; i++) {
-            tsgl_spi_sendData(display, data, size);
-        }
-    }
+    tsgl_sendFlood(display, _floodCallback, data, size, flood);
 }
 
 void tsgl_spi_pre_transfer_callback(spi_transaction_t* t) {

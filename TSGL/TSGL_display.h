@@ -6,10 +6,17 @@
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <esp_err.h>
+#include <esp_lcd_io_spi.h>
 
 typedef enum {
     tsgl_display_interface_spi
 } tsgl_display_interfaceType;
+
+typedef struct {
+    spi_device_handle_t handle;
+    esp_lcd_panel_io_handle_t lcd;
+    int8_t dc;
+} tsgl_display_interfaceData_spi;
 
 typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;
@@ -35,7 +42,6 @@ typedef struct { //please DO NOT write anything in the fields of the structure
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
     void* interface;
-    int8_t dc;
 } tsgl_display;
 
 // ---------------- pre-initialization
