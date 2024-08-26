@@ -291,8 +291,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                 if (object->offsetWidth < minOffsetX) {
                                     object->offsetX = old_offsetX;
                                     object->offsetWidth = minOffsetX;
-                                }
-                                if (object->offsetWidth > maxOffsetX) {
+                                } else if (object->offsetWidth > maxOffsetX) {
                                     object->offsetX = old_offsetX;
                                     object->offsetWidth = maxOffsetX;
                                 }
@@ -302,8 +301,7 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                                 if (object->offsetHeight < minOffsetY) {
                                     object->offsetY = old_offsetY;
                                     object->offsetHeight = minOffsetY;
-                                }
-                                if (object->offsetHeight > maxOffsetY) {
+                                } else if (object->offsetHeight > maxOffsetY) {
                                     object->offsetY = old_offsetY;
                                     object->offsetHeight = maxOffsetY;
                                 }
