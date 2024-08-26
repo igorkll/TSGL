@@ -11,7 +11,9 @@ typedef enum {
     tsgl_gui_absolute = 0,
     tsgl_gui_percent,
     tsgl_gui_percentMinSide, //uses a smaller scale even for the larger side
-    tsgl_gui_percentMaxSide //uses the maximum side, including for the smaller scale
+    tsgl_gui_percentMaxSide, //uses the maximum side, including for the smaller scale
+    tsgl_gui_percentWidth,
+    tsgl_gui_percentheight
 } tsgl_gui_paramFormat;
 
 typedef enum {

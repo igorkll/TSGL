@@ -34,7 +34,7 @@ static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos x, tsgl_pos y
     return gui;
 }
 
-static tsgl_pos _localMath(tsgl_gui_paramFormat format, uint8_t valType, float val, float max, float minSide, float maxSide) {
+static tsgl_pos _localMath(tsgl_gui_paramFormat format, uint8_t valType, float val, float max, tsgl_pos minSide, tsgl_pos maxSide, tsgl_pos width, tsgl_pos height) {
     switch (format) {
         case tsgl_gui_absolute:
             if (valType == 1 && val < 0) {
@@ -50,6 +50,12 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, uint8_t valType, float v
 
         case tsgl_gui_percentMaxSide:
             return val * maxSide;
+
+        case tsgl_gui_percentWidth:
+            return val * width;
+
+        case tsgl_gui_percentheight:
+            return val * height;
     }
     return 0;
 }
@@ -64,19 +70,21 @@ static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos 
 static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY, bool force) {
     bool forceParentsMath = force;
     if (object->parent != NULL && (object->needMath || forceParentsMath)) {
-        tsgl_pos minSide = TSGL_MATH_MIN(object->parent->math_width, object->parent->math_height);
-        tsgl_pos maxSide = TSGL_MATH_MAX(object->parent->math_width, object->parent->math_height);
-        tsgl_pos localMathX = _localMath(object->format_x, 0, object->x, object->parent->math_width, minSide, maxSide);
-        tsgl_pos localMathY = _localMath(object->format_y, 0, object->y, object->parent->math_height, minSide, maxSide);
+        tsgl_pos mWidth = object->parent->math_width;
+        tsgl_pos mHeight = object->parent->math_height;
+        tsgl_pos minSide = TSGL_MATH_MIN(mWidth, mHeight);
+        tsgl_pos maxSide = TSGL_MATH_MAX(mWidth, mHeight);
+        tsgl_pos localMathX = _localMath(object->format_x, 0, object->x, object->parent->math_width, minSide, maxSide, mWidth, mHeight);
+        tsgl_pos localMathY = _localMath(object->format_y, 0, object->y, object->parent->math_height, minSide, maxSide, mWidth, mHeight);
         object->math_x = localMathX;
         object->math_y = localMathY;
-        object->math_width = _localMath(object->format_width, 1, object->width, object->parent->math_width, minSide, maxSide);
-        object->math_height = _localMath(object->format_height, 1, object->height, object->parent->math_height, minSide, maxSide);
+        object->math_width = _localMath(object->format_width, 1, object->width, object->parent->math_width, minSide, maxSide, mWidth, mHeight);
+        object->math_height = _localMath(object->format_height, 1, object->height, object->parent->math_height, minSide, maxSide, mWidth, mHeight);
 
-        object->math_min_width = _localMath(object->format_min_width,   2, object->min_width,  object->parent->math_width, minSide, maxSide);
-        object->math_min_height = _localMath(object->format_min_height, 2, object->min_height, object->parent->math_height, minSide, maxSide);
-        object->math_max_width = _localMath(object->format_max_width,   2, object->max_width,  object->parent->math_width, minSide, maxSide);
-        object->math_max_height = _localMath(object->format_max_height, 2, object->max_height, object->parent->math_height, minSide, maxSide);
+        object->math_min_width = _localMath(object->format_min_width,   2, object->min_width,  object->parent->math_width, minSide, maxSide, mWidth, mHeight);
+        object->math_min_height = _localMath(object->format_min_height, 2, object->min_height, object->parent->math_height, minSide, maxSide, mWidth, mHeight);
+        object->math_max_width = _localMath(object->format_max_width,   2, object->max_width,  object->parent->math_width, minSide, maxSide, mWidth, mHeight);
+        object->math_max_height = _localMath(object->format_max_height, 2, object->max_height, object->parent->math_height, minSide, maxSide, mWidth, mHeight);
 
         if (object->math_width < object->math_min_width) {
             object->math_width = object->math_min_width;
