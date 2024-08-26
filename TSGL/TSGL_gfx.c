@@ -101,20 +101,25 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
         return;
     }
 
-    tsgl_pos spriteWidth;
-    tsgl_pos spriteHeight;
+    tsgl_pos realSpriteWidth;
+    tsgl_pos realSpriteHeight;
     switch (sprite->rotation) {
         case 1:
         case 3:
-            spriteWidth = sprite->sprite->defaultHeight;
-            spriteHeight = sprite->sprite->defaultWidth;
+            realSpriteWidth = sprite->sprite->defaultHeight;
+            realSpriteHeight = sprite->sprite->defaultWidth;
             break;
 
         default:
-            spriteWidth = sprite->sprite->defaultWidth;
-            spriteHeight = sprite->sprite->defaultHeight;
+            realSpriteWidth = sprite->sprite->defaultWidth;
+            realSpriteHeight = sprite->sprite->defaultHeight;
             break;
     }
+
+    tsgl_pos spriteWidth = realSpriteWidth;
+    if (sprite->resizeWidth != 0) spriteWidth = sprite->resizeWidth;
+    tsgl_pos spriteHeight = realSpriteHeight;
+    if (sprite->resizeHeight != 0) spriteHeight = sprite->resizeHeight;
 
     tsgl_pos startX = 0;
     tsgl_pos startY = 0;
@@ -142,7 +147,7 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     }
 }
 
-tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text) {
+tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos screenWidth, tsgl_pos screenHeight) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
         .strlen = realsize

@@ -547,7 +547,7 @@ void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, display->width, display->height, sets, text);
+    return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, sets, text, display->width, display->height);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
