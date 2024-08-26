@@ -58,19 +58,22 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
     if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
         size_t part = tsgl_getPartSize();
         size_t offset = 0;
+        uint8_t* buffer = malloc(part);
         while (true) {
+            size_t len = TSGL_MATH_MIN(size - offset, part);
             spi_transaction_t partTransaction = {
-                .length = TSGL_MATH_MIN(size - offset, part) * 8,
-                .tx_buffer = data + offset,
+                .length = len * 8,
+                .tx_buffer = buffer,
                 .user = (void*)(&pre_transfer_info)
             };
-
+            memcpy(buffer, data + offset, len);
             ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &partTransaction));
             offset += part;
             if (offset >= size) {
                 break;
             }
         }
+        free(buffer);
     }
 }
 
@@ -170,7 +173,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
 
     esp_err_t result;
-    if (true) {
+    if (false) {
         tsgl_display_interfaceData_lcd* interfaceData = malloc(sizeof(tsgl_display_interfaceData_lcd));
         display->interfaceType = tsgl_display_interface_lcd;
         display->interface = interfaceData;
@@ -182,7 +185,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
             .spi_mode = 0,
-            .trans_queue_depth = 256,
+            .trans_queue_depth = 16,
         };
 
         interfaceData->lcd = malloc(sizeof(esp_lcd_panel_io_handle_t));
@@ -315,7 +318,7 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
 
         case tsgl_display_interface_lcd:
             tsgl_display_interfaceData_lcd* interfaceData = display->interface;
-            size_t part = 1024 * 16;
+            size_t part = 512;
             size_t offset = 0;
             while (true) {
                 if (esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part)) != ESP_OK) {
@@ -544,7 +547,7 @@ void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos w
 }
 
 tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    return tsgl_font_rasterize(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, display->width, display->height, sets, text);
+    return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, display->width, display->height, sets, text);
 }
 
 void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {

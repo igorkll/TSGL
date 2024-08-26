@@ -10,7 +10,10 @@ const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
 size_t tsgl_getPartSize() {
     multi_heap_info_t info;
     heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.largest_free_block;
+    if (info.largest_free_block != info.minimum_free_bytes) {
+        return info.largest_free_block;
+    }
+    return info.largest_free_block / 2;
 }
 
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood) {

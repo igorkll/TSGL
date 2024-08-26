@@ -109,3 +109,14 @@ void tsgl_gui_button_setText(tsgl_gui* button, tsgl_color textColor, tsgl_pos ta
     tsgl_gui_text_setParams(child, sets);
     tsgl_gui_text_setText(child, text, freeText);
 }
+
+void tsgl_gui_button_setRawText(tsgl_gui* button, tsgl_print_settings sets, const char* text, bool freeText) {
+    tsgl_gui_button_setEmpty(button);
+
+    tsgl_gui* child = tsgl_gui_addText(button);
+    tsgl_gui_buttonData* data = button->data;
+    data->childType = 1;
+
+    tsgl_gui_text_setParams(child, sets);
+    tsgl_gui_text_setText(child, text, freeText);
+}

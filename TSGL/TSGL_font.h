@@ -61,6 +61,4 @@ uint16_t tsgl_font_width(const void* font, char chr);
 uint16_t tsgl_font_height(const void* font, char chr);
 uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index);
 size_t tsgl_font_len(const char* str);
-
-tsgl_print_textArea tsgl_font_rasterize(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text);
 tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text); // this function allows you to calculate in advance in which area the text will be drawn
