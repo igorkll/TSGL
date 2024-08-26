@@ -245,7 +245,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
 
         tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
-            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x, currentY, screenWidth, screenHeight, newSets, text + i);
+            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x, currentY, newSets, text + i, screenWidth, screenHeight);
             if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
             if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
             if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;

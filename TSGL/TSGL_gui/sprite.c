@@ -2,7 +2,10 @@
 
 static void _draw_callback(tsgl_gui* self) {
     tsgl_gui_spriteData* data = self->data;
-    
+    if (data->autoscale) {
+        data->sprite->resizeWidth = self->math_width;
+        data->sprite->resizeHeight = self->math_height;
+    }
     TSGL_GUI_DRAW(self, push, self->math_x, self->math_y, data->sprite);
 }
 

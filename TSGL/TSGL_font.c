@@ -55,5 +55,5 @@ size_t tsgl_font_len(const char* str) { //custom strlen
 }
 
 tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_pos screenWidth, tsgl_pos screenHeight, tsgl_print_settings sets, const char* text) {
-    return tsgl_gfx_text(NULL, NULL, NULL, x, y, screenWidth, screenHeight, sets, text);
+    return tsgl_gfx_text(NULL, NULL, NULL, x, y, sets, text, screenWidth, screenHeight);
 }
