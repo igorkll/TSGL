@@ -22,8 +22,8 @@ typedef struct {
     bool heap;
 
     bool changed;
-    size_t changedFrom;
-    size_t changedTo;
+    int32_t changedFrom;
+    int32_t changedTo;
     tsgl_pos changedUp;
     tsgl_pos changedDown;
     tsgl_pos changedLeft;
@@ -37,9 +37,7 @@ void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 // change area detector
 void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_allChangedArea(tsgl_framebuffer* framebuffer);
-void tsgl_framebuffer_setChangedArea(tsgl_framebuffer* framebuffer, size_t index);
-void tsgl_framebuffer_fillChangedArea(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
-
+void tsgl_framebuffer_setChangedArea(tsgl_framebuffer* framebuffer, int32_t index);
 
 // control
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
