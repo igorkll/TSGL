@@ -59,6 +59,7 @@ typedef struct {
     tsgl_driver_command init[64];
     tsgl_driver_storage storage;
     tsgl_driver_list (*enable) (const tsgl_driver_storage* storage, bool state);
+    tsgl_driver_list (*pointer) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y);
     tsgl_driver_list (*select) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
     tsgl_driver_list (*rotate) (const tsgl_driver_storage* storage, uint8_t rotation);
     tsgl_driver_list (*invert) (const tsgl_driver_storage* storage, bool invert);

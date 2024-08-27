@@ -12,6 +12,8 @@
 #include <math.h>
 
 static const char* TAG = "TSGL_framebuffer";
+#define _NEG_HUGE -2147483648 
+#define _HUGE 2147483647
 
 static tsgl_pos _customRotateX(tsgl_framebuffer* framebuffer, uint8_t rotation, tsgl_pos x, tsgl_pos y) {
     switch (rotation) {
@@ -150,6 +152,28 @@ tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width,
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
     free(framebuffer->buffer);
     if (framebuffer->heap) free(framebuffer);
+}
+
+void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer) {
+    framebuffer->changed = false;
+    framebuffer->changedFrom = _HUGE;
+    framebuffer->changedTo = _NEG_HUGE;
+}
+
+void tsgl_framebuffer_allChangedArea(tsgl_framebuffer* framebuffer) {
+    framebuffer->changed = true;
+    framebuffer->changedFrom = 0;
+    framebuffer->changedTo = framebuffer->buffersize - 1;
+}
+
+void tsgl_framebuffer_setChangedArea(tsgl_framebuffer* framebuffer, size_t index) {
+    framebuffer->changed = true;
+    if (index < framebuffer->changedFrom) framebuffer->changedFrom = index;
+    if (index > framebuffer->changedTo) framebuffer->changedTo = index;
+}
+
+void tsgl_framebuffer_fillChangedArea(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    tsgl_framebuffer_setChangedArea(framebuffer);
 }
 
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
@@ -319,6 +343,7 @@ tsgl_print_textArea tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, tsgl_po
 }
 
 void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
+    tsgl_framebuffer_allChangedArea(framebuffer);
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:

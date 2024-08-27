@@ -107,6 +107,7 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
 
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
 
+void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y);
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 void tsgl_display_selectAll(tsgl_display* display);
 void tsgl_display_selectIfNeed(tsgl_display* display); //calls selectAll if is a driver said that the display resets the area after each command. it should be called after calls tsgl_display_sendCommand for compatibility with such displays

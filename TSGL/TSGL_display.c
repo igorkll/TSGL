@@ -113,6 +113,23 @@ static bool _lcd_floodCallback(void* arg, void* data, size_t size) {
     return esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size) == ESP_OK;
 }
 
+static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    if (display->driver->select != NULL) {
+        _doCommandList(display,
+            display->driver->select(&display->storage,
+                display->offsetX + x,
+                display->offsetY + y,
+                (display->offsetX + x + width) - 1,
+                (display->offsetY + y + height) - 1
+            )
+        );
+    }
+}
+
+static void _selectAll(tsgl_display* display) {
+    _select(display, 0, 0, display->width, display->height);
+}
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
@@ -238,7 +255,22 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
         //printf("r:%i\n", rotation);
         _doCommandList(display, display->driver->rotate(&display->storage, rotation));
     }
-    tsgl_display_selectAll(display);
+    _selectAll(display);
+}
+
+void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
+    if (display->driver->pointer != NULL) {
+        _doCommandList(display,
+            display->driver->pointer(&display->storage,
+                display->offsetX + x,
+                display->offsetY + y
+            )
+        );
+    } else if (display->driver->select != NULL) {
+        _select(display, x, y, display->width - x, display->height - y);
+    } else {
+        ESP_LOGE(TAG, "your display does not support tsgl_display_pointer");
+    }
 }
 
 void tsgl_display_selectAll(tsgl_display* display) {
@@ -247,18 +279,15 @@ void tsgl_display_selectAll(tsgl_display* display) {
 
 void tsgl_display_selectIfNeed(tsgl_display* display) {
     if (display->driver->selectAreaAfterCommand) {
-        tsgl_display_selectAll(display);
+        _selectAll(display);
     }
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     if (display->driver->select != NULL) {
-        _doCommandList(display,
-            display->driver->select(&display->storage,
-            display->offsetX + x,
-            display->offsetY + y, (display->offsetX + x + width) - 1,
-            (display->offsetY + y + height) - 1)
-        );
+        _select(display, x, y, width, height);
+    } else {
+        ESP_LOGE(TAG, "your display does not support tsgl_display_select");
     }
 }
 
@@ -335,7 +364,10 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
 }
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
-    tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+    if (framebuffer->changed) {
+        tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+        tsgl_framebuffer_resetChangedArea(framebuffer);
+    }
 }
 
 void tsgl_display_setEnable(tsgl_display* display, bool state) {
@@ -457,7 +489,7 @@ void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprit
 }
 
 void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
-    tsgl_display_select(display, x, y, 1, 1);
+    tsgl_display_pointer(display, x, y);
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:

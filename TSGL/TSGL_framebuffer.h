@@ -20,9 +20,14 @@ typedef struct {
     tsgl_rawcolor black;
     bool hardwareRotate;
     bool heap;
-    
+
+    bool changed;
     size_t changedFrom;
     size_t changedTo;
+    tsgl_pos changedUp;
+    tsgl_pos changedDown;
+    tsgl_pos changedLeft;
+    tsgl_pos changedRight;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
@@ -30,8 +35,11 @@ tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width,
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 
 // change area detector
-void tsgl_framebuffer_resetChangedArea();
-void tsgl_framebuffer_updateChangedArea(size_t index);
+void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer);
+void tsgl_framebuffer_allChangedArea(tsgl_framebuffer* framebuffer);
+void tsgl_framebuffer_setChangedArea(tsgl_framebuffer* framebuffer, size_t index);
+void tsgl_framebuffer_fillChangedArea(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
+
 
 // control
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
