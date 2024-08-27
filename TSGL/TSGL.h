@@ -65,43 +65,7 @@ typedef struct {
     tsgl_driver_list (*backlight) (const tsgl_driver_storage* storage, uint8_t value);
 } tsgl_driver;
 
-#include "TSGL_color.h"
-
-typedef enum {
-    tsgl_display_init_none = 0,
-    tsgl_display_init_color,
-    tsgl_display_init_framebuffer
-} tsgl_display_init;
-
-typedef struct {
-    const tsgl_driver* driver;
-    bool invertBacklight;
-    bool invert;
-    bool swapRGB;
-    bool flipX;
-    bool flipY;
-    bool flipXY;
-    tsgl_pos width;
-    tsgl_pos height;
-    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
-    tsgl_pos offsetY;
-
-    // the first state after initialization
-    tsgl_display_init init_state;
-    tsgl_rawcolor init_color;
-
-    const uint8_t* init_framebuffer_ptr;
-    size_t init_framebuffer_size;
-    uint8_t init_framebuffer_rotation;
-
-    bool backlight_init;
-    gpio_num_t backlight_pin;
-    uint8_t backlight_value;
-} tsgl_display_settings;
-
 // ----------------
-
-#include "TSGL_math.h"
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)

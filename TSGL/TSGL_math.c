@@ -1,6 +1,4 @@
 #include "TSGL_math.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
 float math_fmap(float value, float low, float high, float low_2, float high_2) {
     float relative_value = (value - low) / (high - low);

@@ -3,9 +3,10 @@
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_spi.h"
-#include "TSGL_gfx.h"
 #include "TSGL_ledc.h"
 #include "TSGL_font.h"
+#include "TSGL_math.h"
+#include "TSGL_gfx.h"
 
 #include <esp_system.h>
 #include <esp_err.h>

@@ -20,6 +20,7 @@ typedef struct {
     tsgl_rawcolor black;
     bool hardwareRotate;
     bool heap;
+    
     size_t changedFrom;
     size_t changedTo;
 } tsgl_framebuffer;

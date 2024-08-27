@@ -11,7 +11,7 @@ static void _draw_callback(tsgl_gui* self) {
 
 static void _free_callback(tsgl_gui* self) {
     tsgl_gui_textData* data = self->data;
-    if (data->freeText) free(data->text);
+    if (data->freeText) free((void*)data->text);
 }
 
 tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
@@ -35,7 +35,7 @@ tsgl_gui* tsgl_gui_addText(tsgl_gui* gui) {
 
 void tsgl_gui_text_setText(tsgl_gui* self, const char* text, bool freeText) {
     tsgl_gui_textData* data = self->data;
-    if (data->freeText) free(data->text);
+    if (data->freeText) free((void*)data->text);
     data->freeText = freeText;
     data->text = text;
 }

@@ -4,6 +4,7 @@
 #include "TSGL_benchmark.h"
 #include "TSGL_display.h"
 #include "TSGL_gui.h"
+#include "TSGL_math.h"
 #include <esp_random.h>
 #include <string.h>
 #include <math.h>
@@ -247,11 +248,6 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                             object->old_math_y = object->math_y;
                             object->old_math_width = object->math_width;
                             object->old_math_height = object->math_height;
-
-                            tsgl_pos old_offsetX = object->offsetX;
-                            tsgl_pos old_offsetY = object->offsetY;
-                            tsgl_pos old_offsetWidth = object->offsetWidth;
-                            tsgl_pos old_offsetHeight = object->offsetHeight;
 
                             tsgl_pos minOffsetWidth = object->math_min_width - object->math_natural_width;
                             tsgl_pos maxOffsetWidth = object->math_max_width - object->math_natural_width;

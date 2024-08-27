@@ -3,6 +3,7 @@
 #include "TSGL_color.h"
 #include "TSGL_framebuffer.h"
 #include "TSGL_font.h"
+#include "TSGL_math.h"
 #include <ESP_LOG.h>
 #include <string.h>
 
@@ -129,6 +130,8 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     tsgl_pos maxSpriteHeight = screenHeight - y;
     tsgl_pos spriteMaxPointX = spriteWidth - 1;
     tsgl_pos spriteMaxPointY = spriteHeight - 1;
+    tsgl_pos spriteRealMaxPointX = realSpriteWidth - 1;
+    tsgl_pos spriteRealMaxPointY = realSpriteHeight - 1;
     if (spriteWidth > maxSpriteWidth) spriteWidth = maxSpriteWidth;
     if (spriteHeight > maxSpriteHeight) spriteHeight = maxSpriteHeight;
     for (tsgl_pos posX = startX; posX < spriteWidth; posX++) {
@@ -136,8 +139,8 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
         for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
             tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation,
-                sprite->flixX ? (spriteMaxPointX - posX) : posX,
-                sprite->flixY ? (spriteMaxPointY - posY) : posY
+                tsgl_math_imap(sprite->flixX ? (spriteMaxPointX - posX) : posX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
+                tsgl_math_imap(sprite->flixY ? (spriteMaxPointY - posY) : posY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
             );
 
             if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize)) {
