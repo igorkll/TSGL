@@ -3,6 +3,8 @@
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <string.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 static const char* TAG = "TSGL";
 const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
@@ -51,4 +53,8 @@ void* tsgl_malloc(size_t size, int64_t caps) {
         }
         return buffer;
     }
+}
+
+void tsgl_delay(size_t time) {
+    vTaskDelay(time / portTICK_PERIOD_MS);
 }

@@ -215,8 +215,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     } else {
         tsgl_display_free(display);
     }
-    initType = 0;
-    initBlPin = -1;
+
     return result;
 }
 

@@ -14,12 +14,6 @@ typedef enum {
     tsgl_display_interface_lcd
 } tsgl_display_interfaceType;
 
-typedef enum {
-    tsgl_display_init_none = 0,
-    tsgl_display_init_color,
-    tsgl_display_init_framebuffer
-} tsgl_display_init;
-
 typedef struct {
     spi_device_handle_t* spi;
     int8_t dc;
@@ -28,32 +22,6 @@ typedef struct {
 typedef struct {
     esp_lcd_panel_io_handle_t* lcd;
 } tsgl_display_interfaceData_lcd;
-
-typedef struct {
-    const tsgl_driver* driver;
-    bool invertBacklight;
-    bool invert;
-    bool swapRGB;
-    bool flipX;
-    bool flipY;
-    bool flipXY;
-    tsgl_pos width;
-    tsgl_pos height;
-    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
-    tsgl_pos offsetY;
-
-    // the first state after initialization
-    tsgl_display_init init_state;
-    tsgl_rawcolor init_color;
-
-    const uint8_t* init_framebuffer_ptr;
-    size_t init_framebuffer_size;
-    uint8_t init_framebuffer_rotation;
-
-    bool backlight_init;
-    gpio_num_t backlight_pin;
-    uint8_t backlight_value;
-} tsgl_display_settings;
 
 typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;

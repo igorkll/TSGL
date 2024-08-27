@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <driver/gpio.h>
 
 typedef int16_t tsgl_pos;
 #define TSGL_POS_MIN -32768
@@ -29,6 +30,7 @@ typedef enum {
 size_t tsgl_getPartSize();
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
 void* tsgl_malloc(size_t size, int64_t caps);
+void tsgl_delay(size_t time);
 
 // ---------------- driver
 
@@ -62,6 +64,40 @@ typedef struct {
     tsgl_driver_list (*invert) (const tsgl_driver_storage* storage, bool invert);
     tsgl_driver_list (*backlight) (const tsgl_driver_storage* storage, uint8_t value);
 } tsgl_driver;
+
+#include "TSGL_color.h"
+
+typedef enum {
+    tsgl_display_init_none = 0,
+    tsgl_display_init_color,
+    tsgl_display_init_framebuffer
+} tsgl_display_init;
+
+typedef struct {
+    const tsgl_driver* driver;
+    bool invertBacklight;
+    bool invert;
+    bool swapRGB;
+    bool flipX;
+    bool flipY;
+    bool flipXY;
+    tsgl_pos width;
+    tsgl_pos height;
+    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
+    tsgl_pos offsetY;
+
+    // the first state after initialization
+    tsgl_display_init init_state;
+    tsgl_rawcolor init_color;
+
+    const uint8_t* init_framebuffer_ptr;
+    size_t init_framebuffer_size;
+    uint8_t init_framebuffer_rotation;
+
+    bool backlight_init;
+    gpio_num_t backlight_pin;
+    uint8_t backlight_value;
+} tsgl_display_settings;
 
 // ----------------
 

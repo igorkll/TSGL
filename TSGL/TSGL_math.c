@@ -12,10 +12,6 @@ int math_imap(int value, int low, int high, int low_2, int high_2) {
     return (int)(math_fmap(value, low, high, low_2, high_2) + 0.5);
 }
 
-size_t tsgl_math_getMaxSendSize(const tsgl_settings settings) {
+size_t tsgl_math_maxSendSize(const tsgl_display_settings settings) {
     return settings.width * settings.height * tsgl_colormodeSizes[settings.driver->colormode];
-}
-
-void tsgl_math_delay(size_t time) {
-    vTaskDelay(time / portTICK_PERIOD_MS);
 }
