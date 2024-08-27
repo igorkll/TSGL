@@ -138,9 +138,11 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
         tsgl_pos setPosX = posX + x;
         for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
+            tsgl_pos getPosX = sprite->flixX ? (spriteMaxPointX - posX) : posX;
+            tsgl_pos getPosY = sprite->flixY ? (spriteMaxPointY - posY) : posY;
             tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation,
-                tsgl_math_imap(sprite->flixX ? (spriteMaxPointX - posX) : posX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
-                tsgl_math_imap(sprite->flixY ? (spriteMaxPointY - posY) : posY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
+                sprite->resizeWidth == 0 ? getPosX : tsgl_math_imap(getPosX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
+                sprite->resizeHeight == 0 ? getPosY : tsgl_math_imap(getPosY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
             );
 
             if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize)) {
