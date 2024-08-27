@@ -278,70 +278,64 @@ void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
 }
 
 void tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    size_t index;
+    tsgl_pos right = (x + width) - 1;
+    tsgl_pos down = (y + height) - 1;
+
     switch (framebuffer->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
+            tsgl_framebuffer_setChangedArea(framebuffer, _getRawBufferIndex(framebuffer, x, y));
+            tsgl_framebuffer_setChangedArea(framebuffer, _getRawBufferIndex(framebuffer, right, down));
             for (tsgl_pos ix = x; ix < x + width; ix++) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    index = _getRawBufferIndex(framebuffer, ix, iy);
-                    tsgl_framebuffer_setChangedArea(framebuffer, index);
-                    tsgl_color_444write(index, framebuffer->buffer, color);
+                    tsgl_color_444write(_getRawBufferIndex(framebuffer, ix, iy), framebuffer->buffer, color);
                 }
             }
             break;
 
         case tsgl_monochrome:
+            tsgl_framebuffer_setChangedArea(framebuffer, _getRawHorBufferIndex(framebuffer, x, y));
+            tsgl_framebuffer_setChangedArea(framebuffer, _getRawHorBufferIndex(framebuffer, right, down));
             for (tsgl_pos ix = x; ix < x + width; ix++) {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
-                    index = _getRawHorBufferIndex(framebuffer, ix, iy);
-                    tsgl_framebuffer_setChangedArea(framebuffer, index);
-                    tsgl_color_monoWrite(index, _getHorOffset(framebuffer, ix, iy), framebuffer->buffer, color);
+                    tsgl_color_monoWrite(_getRawHorBufferIndex(framebuffer, ix, iy), _getHorOffset(framebuffer, ix, iy), framebuffer->buffer, color);
                 }
             }
             break;
         
         default:
+            tsgl_framebuffer_setChangedArea(framebuffer, _getBufferIndex(framebuffer, x, y));
+            tsgl_framebuffer_setChangedArea(framebuffer, _getBufferIndex(framebuffer, right, down));
             if (_isDenseColor(color, framebuffer->colorsize)) {
                 switch (framebuffer->realRotation) {
                     case 1:
                         for (tsgl_pos ix = x; ix < x + width; ix++) {
-                            index = _getBufferIndex(framebuffer, ix, y + (height - 1));
-                            tsgl_framebuffer_setChangedArea(framebuffer, index);
-                            memset(framebuffer->buffer + index, color.arr[0], height * framebuffer->colorsize);
+                            memset(framebuffer->buffer + _getBufferIndex(framebuffer, ix, y + (height - 1)), color.arr[0], height * framebuffer->colorsize);
                         }
                         break;
 
                     case 2:
                         for (tsgl_pos iy = y; iy < y + height; iy++) {
-                            index = _getBufferIndex(framebuffer, x + (width - 1), iy);
-                            tsgl_framebuffer_setChangedArea(framebuffer, index);
-                            memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                            memset(framebuffer->buffer + _getBufferIndex(framebuffer, x + (width - 1), iy), color.arr[0], width * framebuffer->colorsize);
                         }
                         break;
 
                     case 3:
                         for (tsgl_pos ix = x; ix < x + width; ix++) {
-                            index = _getBufferIndex(framebuffer, ix, y);
-                            tsgl_framebuffer_setChangedArea(framebuffer, index);
-                            memset(framebuffer->buffer + index, color.arr[0], height * framebuffer->colorsize);
+                            memset(framebuffer->buffer + _getBufferIndex(framebuffer, ix, y), color.arr[0], height * framebuffer->colorsize);
                         }
                         break;
                     
                     default:
                         for (tsgl_pos iy = y; iy < y + height; iy++) {
-                            index = _getBufferIndex(framebuffer, x, iy);
-                            tsgl_framebuffer_setChangedArea(framebuffer, index);
-                            memset(framebuffer->buffer + index, color.arr[0], width * framebuffer->colorsize);
+                            memset(framebuffer->buffer + _getBufferIndex(framebuffer, x, iy), color.arr[0], width * framebuffer->colorsize);
                         }
                         break;
                 }
             } else {
                 for (tsgl_pos iy = y; iy < y + height; iy++) {
                     for (tsgl_pos ix = x; ix < x + width; ix++) {
-                        index = _getBufferIndex(framebuffer, ix, iy);
-                        tsgl_framebuffer_setChangedArea(framebuffer, index);
-                        memcpy(framebuffer->buffer + index, color.arr, framebuffer->colorsize);
+                        memcpy(framebuffer->buffer + _getBufferIndex(framebuffer, ix, iy), color.arr, framebuffer->colorsize);
                     }
                 }
             }
