@@ -1,5 +1,5 @@
 # TSGL
-* graphics library for ESP32 family controllers.
+* extended graphics library for the ESP 32 family controller.
 * this library is written entirely in "C".
 * designed exclusively for use with ESP-IDF.
 * the esp-idf version i use is 5.3.
