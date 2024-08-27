@@ -63,22 +63,6 @@ typedef struct {
     tsgl_driver_list (*backlight) (const tsgl_driver_storage* storage, uint8_t value);
 } tsgl_driver;
 
-// ---------------- settings
-
-typedef struct {
-    const tsgl_driver* driver;
-    bool invertBacklight;
-    bool invert;
-    bool swapRGB;
-    bool flipX;
-    bool flipY;
-    bool flipXY;
-    tsgl_pos width;
-    tsgl_pos height;
-    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
-    tsgl_pos offsetY;
-} tsgl_settings;
-
 // ----------------
 
 #include "TSGL_math.h"

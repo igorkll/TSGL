@@ -14,6 +14,12 @@ typedef enum {
     tsgl_display_interface_lcd
 } tsgl_display_interfaceType;
 
+typedef enum {
+    tsgl_display_init_none = 0,
+    tsgl_display_init_color,
+    tsgl_display_init_framebuffer
+} tsgl_display_init;
+
 typedef struct {
     spi_device_handle_t* spi;
     int8_t dc;
@@ -22,6 +28,32 @@ typedef struct {
 typedef struct {
     esp_lcd_panel_io_handle_t* lcd;
 } tsgl_display_interfaceData_lcd;
+
+typedef struct {
+    const tsgl_driver* driver;
+    bool invertBacklight;
+    bool invert;
+    bool swapRGB;
+    bool flipX;
+    bool flipY;
+    bool flipXY;
+    tsgl_pos width;
+    tsgl_pos height;
+    tsgl_pos offsetX; //on many displays, the visible area does not start from the beginning
+    tsgl_pos offsetY;
+
+    // the first state after initialization
+    tsgl_display_init init_state;
+    tsgl_rawcolor init_color;
+
+    const uint8_t* init_framebuffer_ptr;
+    size_t init_framebuffer_size;
+    uint8_t init_framebuffer_rotation;
+
+    bool backlight_init;
+    gpio_num_t backlight_pin;
+    uint8_t backlight_value;
+} tsgl_display_settings;
 
 typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;
@@ -49,22 +81,15 @@ typedef struct { //please DO NOT write anything in the fields of the structure
     void* interface;
 } tsgl_display;
 
-// ---------------- pre-initialization
-//these functions must be called before initializing the display, they act on initializing one display
-void tsgl_display_pushInitColor(tsgl_rawcolor color); //sets the default fill for the next initialized display
-void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation); //sets the framebuffer that will be used to fill the next initialized display
-void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation);
-void tsgl_display_pushBacklight(gpio_num_t pin, uint8_t defaultValue); //call this method before initializing the display to adjust the backlight before initializing it
-
 // ---------------- initializing the display
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst);
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst);
 void tsgl_display_free(tsgl_display* display);
 
 // ---------------- backlight
 //on some displays, brightness control works without this, but on others you need to use a separate pin.
 //it is better to initialize the backlight BEFORE initializing the screen so that the initialization process is not visible,
-//but calling this method before initialization will cause tsgl_display_setBacklight to malfunction.
-//so use the tsgl_display_pushBacklight method instead before initializing the display
+//but calling tsgl_display_attachBacklight before initialization display will cause tsgl_display_setBacklight to malfunction.
+//therefore, to initialize the backlight, before initializing the screen, add the backlight pin and the standard state in the display initialization settings and raise the appropriate flag
 esp_err_t tsgl_display_attachBacklight(tsgl_display* display, gpio_num_t pin, uint8_t defaultValue);
 void tsgl_display_setBacklight(tsgl_display* display, uint8_t value); //changes the display backlight states using the appropriate registers specified in the driver. if the Q method is called, it uses hardware backlight control instead of registers
 

@@ -112,49 +112,14 @@ static bool _lcd_floodCallback(void* arg, void* data, size_t size) {
     return esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size) == ESP_OK;
 }
 
-
-
-static uint8_t initType = 0;
-static tsgl_rawcolor initColor;
-static const uint8_t* initFramebuffer;
-static size_t initFramebufferSize;
-static uint8_t initRotation;
-static gpio_num_t initBlPin = -1;
-static gpio_num_t initBlDefaultValue = -1;
-
-void tsgl_display_pushInitColor(tsgl_rawcolor color) {
-    initColor = color;
-    initRotation = 0;
-    initType = 1;
-}
-
-void tsgl_display_pushInitFramebuffer(tsgl_framebuffer* framebuffer, uint8_t rotation) {
-    initFramebuffer = framebuffer->buffer;
-    initFramebufferSize = framebuffer->buffersize;
-    initRotation = rotation;
-    initType = 2;
-}
-
-void tsgl_display_pushInitRawFramebuffer(const uint8_t* framebuffer, size_t size, uint8_t rotation) {
-    initFramebuffer = framebuffer;
-    initFramebufferSize = size;
-    initRotation = rotation;
-    initType = 2;
-}
-
-void tsgl_display_pushBacklight(gpio_num_t pin, uint8_t defaultValue) {
-    initBlPin = pin;
-    initBlDefaultValue = defaultValue;
-}
-
-
-esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
+esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
 
     display->invertBacklight = settings.invertBacklight;
-    if (initBlPin >= 0)
-        tsgl_display_attachBacklight(display, initBlPin, initBlDefaultValue);
+    if (settings.backlight_init)
+        tsgl_display_attachBacklight(display, settings.backlight_pin, settings.backlight_value);
+
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
@@ -227,14 +192,14 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_settings settings, 
         // init display
         _doCommands(display, settings.driver->init);
         tsgl_display_setInvert(display, false);
-        tsgl_display_rotate(display, initRotation);
-        switch (initType) {
-            case 1:
-                tsgl_display_clear(display, initColor);
+        tsgl_display_rotate(display, settings.init_framebuffer_rotation);
+        switch (settings.init_state) {
+            case tsgl_display_init_color:
+                tsgl_display_clear(display, settings.init_color);
                 break;
 
-            case 2:
-                tsgl_display_sendData(display, initFramebuffer, initFramebufferSize);
+            case tsgl_display_init_framebuffer:
+                tsgl_display_sendData(display, settings.init_framebuffer_ptr, settings.init_framebuffer_size);
                 break;
             
             default:
