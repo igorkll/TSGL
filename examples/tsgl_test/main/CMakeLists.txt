@@ -1,5 +1,5 @@
 file(GLOB_RECURSE FILES "*.c")
-file(GLOB_RECURSE LIBFILES "../../../gfxTSGL/*.c") #this method of connecting the library is not completely correct, but it is suitable for an example
+file(GLOB_RECURSE LIBFILES "../../../TSGL/*.c") #this method of connecting the library is not completely correct, but it is suitable for an example
 
 idf_component_register(
     SRCS
@@ -8,5 +8,5 @@ idf_component_register(
         
     INCLUDE_DIRS
         "."
-        "../../../gfxTSGL"
+        "../../../TSGL"
 )

@@ -1,25 +1,36 @@
 extern crate native_windows_gui as nwg;
 use nwg::NativeUi;
 use nwg::Event as Event;
+use nfd::Response;
+use std::path::*;
 
 use std::rc::*;
 use std::cell::*;
 use std::ops::*;
 
+use crate::font;
+
 #[derive(Default)]
 pub struct TSGLTool {
     window: nwg::Window,
-    name_edit: nwg::TextInput,
-    hello_button: nwg::Button
+    convert_font: nwg::Button
 }
 
 impl TSGLTool {
-    fn say_hello(&self) {
-        nwg::modal_info_message(&self.window, "Hello", &format!("Hello {}", self.name_edit.text()));
+    fn load_font(&self) {
+        //nwg::modal_info_message(&self.window, "Hello", &format!("Hello {}", self.name_edit.text()));
+        let result = nfd::open_file_dialog(None, None).unwrap();
+
+        match result {
+            Response::Okay(path) => {
+                font::process_font(&Path::new(&path), 50, 80.0);
+            },
+            Response::Cancel => println!("User canceled"),
+            _ => ()
+        }
     }
-    
-    fn say_goodbye(&self) {
-        nwg::modal_info_message(&self.window, "Goodbye", &format!("Goodbye {}", self.name_edit.text()));
+
+    fn exit(&self) {
         nwg::stop_thread_dispatch();
     }
 }
@@ -38,20 +49,12 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             .title("TSGL Tool")
             .build(&mut data.window)?;
 
-        nwg::TextInput::builder()
-            .size((280, 35))
-            .position((10, 10))
-            .text("Heisenberg")
-            .parent(&data.window)
-            .focus(true)
-            .build(&mut data.name_edit)?;
-
         nwg::Button::builder()
             .size((280, 70))
             .position((10, 50))
-            .text("Say my name")
+            .text("convert font")
             .parent(&data.window)
-            .build(&mut data.hello_button)?;
+            .build(&mut data.convert_font)?;
 
         // Wrap-up
         let ui = TSGLToolUi {
@@ -65,12 +68,12 @@ impl nwg::NativeUi<TSGLToolUi> for TSGLTool {
             if let Some(ui) = evt_ui.upgrade() {
                 match evt {
                     Event::OnButtonClick => 
-                        if &handle == &ui.hello_button {
-                            TSGLTool::say_hello(&ui);
+                        if &handle == &ui.convert_font {
+                            TSGLTool::load_font(&ui);
                         },
                     Event::OnWindowClose => 
                         if &handle == &ui.window {
-                            TSGLTool::say_goodbye(&ui);
+                            TSGLTool::exit(&ui);
                         },
                     _ => {}
                 }
