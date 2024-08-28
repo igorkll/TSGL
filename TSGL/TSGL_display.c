@@ -382,6 +382,9 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
             if (framebuffer->width != display->width || framebuffer->height != display->height) {
                 ESP_LOGE(TAG, "you have incompleteSending enabled, and the framebuffer size does not match the screen size. THIS WILL 100%% RESULT IN UB");
             }
+            if (framebuffer->realRotation != 0) {
+                ESP_LOGE(TAG, "you have incompleteSending enabled, and a software buffer rotation was used. THIS WILL 100%% RESULT IN UB");
+            }
 
             //printf("%i %i %i %i\n", framebuffer->changedLeft, framebuffer->changedUp, (framebuffer->changedRight - framebuffer->changedLeft) + 1, (framebuffer->changedDown - framebuffer->changedUp) + 1);
             //printf("zone: %li %li\n", framebuffer->changedFrom, (framebuffer->changedTo - framebuffer->changedFrom) + 1);
@@ -392,7 +395,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
             //tsgl_display_flatPointer(display, framebuffer->changedFrom);
             //tsgl_display_sendData(display, framebuffer->buffer + framebuffer->changedFrom, (framebuffer->changedTo - framebuffer->changedFrom) + 1);
 
-            if (framebuffer->changedLeft == 0 && framebuffer->changedUp == 0 && framebuffer->changedRight == (framebuffer->defaultWidth - 1) && framebuffer->changedDown == (framebuffer->defaultHeight - 1)) {
+            if (framebuffer->changedLeft == 0 && framebuffer->changedUp == 0 && framebuffer->changedRight == (framebuffer->width - 1) && framebuffer->changedDown == (framebuffer->height - 1)) {
                 tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
             } else {
                 tsgl_pos xLine = (framebuffer->changedRight - framebuffer->changedLeft) + 1;
