@@ -19,6 +19,7 @@ typedef struct {
     tsgl_colormode colormode;
     tsgl_rawcolor black;
     bool hardwareRotate;
+    bool softwareRotate;
     bool heap;
 
     bool changed;

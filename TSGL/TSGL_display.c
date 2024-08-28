@@ -212,7 +212,10 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
         // init display
         _doCommands(display, settings.driver->init);
         tsgl_display_setInvert(display, false);
-        tsgl_display_rotate(display, settings.init_framebuffer_rotation);
+        if (display->driver->rotate != NULL) {
+            tsgl_display_rotate(display, settings.init_framebuffer_rotation);
+        }
+        
         switch (settings.init_state) {
             case tsgl_display_init_color:
                 tsgl_display_clear(display, settings.init_color);
@@ -231,7 +234,12 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
         if (settings.driver->enable != NULL) {
             _doCommandList(display, settings.driver->enable(&display->storage, true));
         }
-        tsgl_display_rotate(display, 0);
+
+        if (display->driver->rotate != NULL) {
+            tsgl_display_rotate(display, 0);
+        } else {
+            _selectAll(display);
+        }
     } else {
         tsgl_display_free(display);
     }
@@ -240,24 +248,25 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
 }
 
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
-    display->rotation = rotation % 4;
-    switch (display->rotation) {
-        case 0:
-        case 2:
-            display->width = display->defaultWidth;
-            display->height = display->defaultHeight;
-            break;
-        case 1:
-        case 3:
-            display->width = display->defaultHeight;
-            display->height = display->defaultWidth;
-            break;
-    }
     if (display->driver->rotate != NULL) {
-        //printf("r:%i\n", rotation);
+        display->rotation = rotation % 4;
+        switch (display->rotation) {
+            case 0:
+            case 2:
+                display->width = display->defaultWidth;
+                display->height = display->defaultHeight;
+                break;
+            case 1:
+            case 3:
+                display->width = display->defaultHeight;
+                display->height = display->defaultWidth;
+                break;
+        }
         _doCommandList(display, display->driver->rotate(&display->storage, rotation));
+        _selectAll(display);
+    } else {
+        ESP_LOGE(TAG, "your display does not support tsgl_display_rotate");
     }
-    _selectAll(display);
 }
 
 void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
@@ -380,7 +389,10 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     if (framebuffer->changed) {
         if (display->incompleteSending) {
             if (framebuffer->width != display->width || framebuffer->height != display->height) {
-                ESP_LOGW(TAG, "you have incompleteSending enabled, and the framebuffer size does not match the screen size. THIS WILL 100%% RESULT IN UB");
+                ESP_LOGW(TAG, "you have incompleteSending enabled, and the framebuffer size does not match the screen size. MAY LEAD TO UB");
+            }
+            if (framebuffer->softwareRotate) {
+                ESP_LOGW(TAG, "you have incompleteSending enabled, and a software buffer rotation was used. MAY LEAD TO UB");
             }
 
             //printf("%i %i %i %i\n", framebuffer->changedLeft, framebuffer->changedUp, (framebuffer->changedRight - framebuffer->changedLeft) + 1, (framebuffer->changedDown - framebuffer->changedUp) + 1);

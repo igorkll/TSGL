@@ -225,7 +225,7 @@ void tsgl_framebuffer_updateChangedAreaIndex(tsgl_framebuffer* framebuffer, int3
     if (index > framebuffer->changedTo) framebuffer->changedTo = index;
 }
 
-void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) { //it is necessary to "rotate" the position in order to neutralize the program rotation of the buffer
+void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
     if (x < framebuffer->changedLeft) framebuffer->changedLeft = x;
     if (x > framebuffer->changedRight) framebuffer->changedRight = x;
     if (y < framebuffer->changedUp) framebuffer->changedUp = y;
@@ -237,6 +237,7 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->realRotation = framebuffer->rotation;
     framebuffer->rotationWidth = framebuffer->defaultWidth;
     framebuffer->hardwareRotate = false;
+    framebuffer->softwareRotate = framebuffer->rotation != 0;
 }
 
 void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
@@ -256,6 +257,7 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
     framebuffer->realRotation = 0;
     framebuffer->rotationWidth = framebuffer->width;
     framebuffer->hardwareRotate = true;
+    framebuffer->softwareRotate = false;
 }
 
 
