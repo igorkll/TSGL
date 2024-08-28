@@ -3,12 +3,17 @@
 
 static const char* TAG = "TSGL_keyboard";
 
-static bool _rawRead(bind_state* bindState) {
+typedef struct {
+    bool highLevel;
+    gpio_num_t pin;
+} _bind_pin;
+
+static bool _rawRead(tsgl_keyboard_bind* bindState) {
     bool state = false;
     if (bindState != NULL) {
         switch (bindState->bindType) {
             case 0:
-                bind_pin* bind = bindState->bind;
+                _bind_pin* bind = bindState->bind;
                 state = gpio_get_level(bind->pin);
                 if (!bind->highLevel) state = !state;
                 break;
@@ -41,7 +46,7 @@ void tsgl_keyboard_init(tsgl_keyboard* keyboard) {
     memset(keyboard, 0, sizeof(tsgl_keyboard));
 }
 
-void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, bool highLevel, gpio_num_t pin) {
+tsgl_keyboard_bind* tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, bool highLevel, gpio_num_t pin) {
     gpio_config_t io_conf = {0};
     io_conf.pin_bit_mask |= 1ULL << pin;
     io_conf.mode = GPIO_MODE_INPUT;
@@ -54,11 +59,11 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
     }
     gpio_config(&io_conf);
 
-    bind_pin* bindPin = calloc(1, sizeof(bind_pin));
+    _bind_pin* bindPin = calloc(1, sizeof(_bind_pin));
     bindPin->pin = pin;
     bindPin->highLevel = highLevel;
 
-    bind_state* bindState = calloc(1, sizeof(bind_state));
+    tsgl_keyboard_bind* bindState = calloc(1, sizeof(tsgl_keyboard_bind));
     bindState->bind = bindPin;
     bindState->bindType = 0;
     bindState->buttonID = buttonID;
@@ -70,11 +75,27 @@ void tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int buttonID, bool pull, 
         keyboard->binds = realloc(keyboard->binds, keyboard->bindsCount * sizeof(size_t));
     }
     keyboard->binds[keyboard->bindsCount - 1] = bindState;
+
+    return bindState;
 }
 
-bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
+bool tsgl_keyboard_unbindButton(tsgl_keyboard* keyboard, int buttonID) {
     for (size_t i = 0; i < keyboard->bindsCount; i++) {
-        bind_state* bindState = keyboard->binds[i];
+        tsgl_keyboard_bind* bindState = keyboard->binds[i];
+        if (bindState->buttonID == buttonID) {
+            keyboard->binds[i] = keyboard->binds[keyboard->bindsCount - 1];
+            keyboard->bindsCount--;
+            keyboard->binds = realloc(keyboard->binds, keyboard->bindsCount * sizeof(size_t));
+            return true;
+        }
+    }
+    ESP_LOGE(TAG, "failed to find button to unbind: %i", buttonID);
+    return false;
+}
+
+tsgl_keyboard_bind* tsgl_keyboard_findButton(tsgl_keyboard* keyboard, int buttonID) {
+    for (size_t i = 0; i < keyboard->bindsCount; i++) {
+        tsgl_keyboard_bind* bindState = keyboard->binds[i];
         if (bindState->buttonID == buttonID) {
             return bindState;
         }
@@ -84,14 +105,14 @@ bind_state* tsgl_keyboard_find(tsgl_keyboard* keyboard, int buttonID) {
 }
 
 void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {
         bindState->object = object;
     }
 }
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     return _rawRead(bindState);
 }
 
@@ -102,7 +123,7 @@ void tsgl_keyboard_readAll(tsgl_keyboard* keyboard) {
 }
 
 bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {
         return bindState->state;
     }
@@ -110,7 +131,7 @@ bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
 }
 
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {
         return bindState->whenPressed;
     }
@@ -118,7 +139,7 @@ bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID) {
 }
 
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID) {
-    bind_state* bindState = tsgl_keyboard_find(keyboard, buttonID);
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {
         return bindState->whenReleasing;
     }
@@ -127,7 +148,7 @@ bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID) {
 
 void tsgl_keyboard_free(tsgl_keyboard* keyboard) {
     for (size_t i = 0; i < keyboard->bindsCount; i++) {
-        bind_state* bindState = keyboard->binds[i];
+        tsgl_keyboard_bind* bindState = keyboard->binds[i];
         free(bindState->bind);
         free(bindState);
     }
