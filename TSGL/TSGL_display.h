@@ -75,6 +75,8 @@ typedef struct { //please DO NOT write anything in the fields of the structure
     tsgl_ledc* backlight;
 
     //bool softwareInvert; //it can cause severe lags, it is used to invert colors to displays that do not support this hardware
+    bool incompleteSending;
+    tsgl_framebuffer* checkbuffer;
 
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
@@ -101,6 +103,8 @@ void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t comma
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);
 
 // ---------------- control
+
+void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_framebuffer* checkbuffer); //it is enabled by default, but the framebuffer for diff comparison is not enabled. if you enable this, then when calling send or its asynchronous versions, select and/or pointer will be lost and only the modified square or linear fragment will be sent
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer. the problem is that it is OFTEN slower than just using tsgl_display_send

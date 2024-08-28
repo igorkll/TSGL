@@ -154,6 +154,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     display->colormode = settings.driver->colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
+    display->incompleteSending = true;
 
     esp_err_t result;
     if (false) {
@@ -361,6 +362,11 @@ void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t s
             break;
         }
     }
+}
+
+void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_framebuffer* checkbuffer) {
+    display->incompleteSending = enable;
+    display->checkbuffer = checkbuffer;
 }
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
