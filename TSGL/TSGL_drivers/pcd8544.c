@@ -1,4 +1,4 @@
-#include "../TSGL.h"
+#include "pcd8544.h"
 
 static tsgl_driver_list _invert(const tsgl_driver_storage* storage, bool invert) {
     if (invert) {

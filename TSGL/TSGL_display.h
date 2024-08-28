@@ -97,29 +97,37 @@ void tsgl_display_setBacklight(tsgl_display* display, uint8_t value); //changes 
 
 // ---------------- low level methods (it is not recommended to use)
 void tsgl_display_sendCommand(tsgl_display* display, const uint8_t command);
-void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_display_sendCommandWithArg(tsgl_display* display, const uint8_t command, const uint8_t arg);
 void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t command, const uint8_t* args, size_t argsCount);
+void tsgl_display_endCommands(tsgl_display* display); //call this after calling tsgl_display_sendCommand. with a chain of commands, you will call once after all the commands
+
+void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t size);
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood);
 
 // ---------------- control
 
-void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_framebuffer* checkbuffer); //it is enabled by default, but the framebuffer for diff comparison is not enabled. if you enable this, then when calling send or its asynchronous versions, select and/or pointer will be lost and only the modified square or linear fragment will be sent
+//may be enabled by default on some displays, but the framebuffer for diff comparison is not enabled. if you enable this, then when calling send or its asynchronous versions, select and/or pointer will be lost and only the modified square or linear fragment will be sent
+//turn it off if your framebuffer should not take up the entire screen, but for example should have only a few lines of the screen or fill a certain area selected through select
+void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_framebuffer* checkbuffer);
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer. the problem is that it is OFTEN slower than just using tsgl_display_send
 
-void tsgl_display_rotate(tsgl_display* display, uint8_t rotation); //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
+//it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
+//resets select and pointer and highlights the entire screen
+void tsgl_display_rotate(tsgl_display* display, uint8_t rotation);
 
+//the pointer indicates where to start drawing from. note that on some screens it can only select a position multiple of 8 on one of the planes
 void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y);
+void tsgl_display_flatPointer(tsgl_display* display, size_t index);
+
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 void tsgl_display_selectAll(tsgl_display* display);
-void tsgl_display_selectIfNeed(tsgl_display* display); //calls selectAll if is a driver said that the display resets the area after each command. it should be called after calls tsgl_display_sendCommand for compatibility with such displays
 
 void tsgl_display_setEnable(tsgl_display* display, bool state); //the display is on by default. however, if you have backlight control enabled, then to activate it, you need to call this method during initialization
 void tsgl_display_setInvert(tsgl_display* display, bool state);
 
-// ---------------- graphic (these methods reset the selected area)
+// ---------------- graphic (these methods reset the selected area. and they don't work in a dedicated area)
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite);
 void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);

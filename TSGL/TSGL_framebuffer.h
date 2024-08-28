@@ -37,7 +37,8 @@ void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 // change area detector
 void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_allChangedArea(tsgl_framebuffer* framebuffer);
-void tsgl_framebuffer_setChangedArea(tsgl_framebuffer* framebuffer, int32_t index);
+void tsgl_framebuffer_updateChangedAreaIndex(tsgl_framebuffer* framebuffer, int32_t index);
+void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y);
 
 // control
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself

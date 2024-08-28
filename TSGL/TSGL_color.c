@@ -321,49 +321,6 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     return TSGL_BLACK;
 }
 
-void tsgl_color_monoWrite(size_t index, uint8_t offset, uint8_t* buffer, tsgl_rawcolor color) {
-    if (color.arr[0]) {
-        buffer[index] |= 1 << offset;
-    } else {
-        buffer[index] &= ~(1 << offset);
-    }
-}
-
-void tsgl_color_444write(size_t rawindex, uint8_t* buffer, tsgl_rawcolor color) {
-    size_t index = rawindex * 1.5;
-    if ((rawindex & 1) == 0) {
-        buffer[index] = color.arr[0];
-        buffer[index+1] = (color.arr[1] & 0b11110000) | (buffer[index+1] & 0b1111);
-    } else {
-        buffer[index] = (color.arr[1] & 0b00001111) | (buffer[index] & 0b11110000);
-        buffer[index+1] = color.arr[2];
-    }
-}
-
-tsgl_rawcolor tsgl_color_444read(size_t rawindex, uint8_t* buffer) {
-    size_t index = rawindex * 1.5;
-    uint8_t v0 = 0;
-    uint8_t v1 = 0;
-    uint8_t v2 = 0;
-    if ((rawindex & 1) == 0) {
-        v0 = buffer[index] >> 4;
-        v1 = buffer[index] & 0b1111;
-        v2 = buffer[index+1] >> 4;
-    } else {
-        v0 = buffer[index] & 0b1111;
-        v1 = buffer[index+1] >> 4;
-        v2 = buffer[index+1] & 0b1111;
-    }
-    tsgl_rawcolor result = {
-        .arr = {
-            (v0 << 4) | v1,
-            (v2 << 4) | v0,
-            (v1 << 4) | v2
-        }
-    };
-    return result;
-}
-
 bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize) {
     if (colorsize == (int)colorsize) {
         return memcmp(color1.arr, color2.arr, colorsize) == 0;

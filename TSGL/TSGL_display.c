@@ -154,7 +154,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     display->colormode = settings.driver->colormode;
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
-    display->incompleteSending = true;
+    display->incompleteSending = settings.driver->incompleteSending;
 
     esp_err_t result;
     if (false) {
@@ -267,21 +267,18 @@ void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
                 display->offsetY + y
             )
         );
-    } else if (display->driver->select != NULL) {
-        _select(display, x, y, display->width - x, display->height - y);
+        tsgl_display_endCommands(display);
     } else {
         ESP_LOGE(TAG, "your display does not support tsgl_display_pointer");
     }
 }
 
-void tsgl_display_selectAll(tsgl_display* display) {
-    tsgl_display_select(display, 0, 0, display->width, display->height);
+void tsgl_display_flatPointer(tsgl_display* display, size_t index) {
+    tsgl_display_pointer(display, index % display->width, index / display->width);
 }
 
-void tsgl_display_selectIfNeed(tsgl_display* display) {
-    if (display->driver->selectAreaAfterCommand) {
-        _selectAll(display);
-    }
+void tsgl_display_selectAll(tsgl_display* display) {
+    tsgl_display_select(display, 0, 0, display->width, display->height);
 }
 
 void tsgl_display_select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
@@ -350,6 +347,12 @@ void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t comma
     }
 }
 
+void tsgl_display_endCommands(tsgl_display* display) {
+    if (display->driver->selectAreaAfterCommand) {
+        _selectAll(display);
+    }
+}
+
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {
     switch (display->interfaceType) {
         case tsgl_display_interface_spi : {
@@ -371,7 +374,18 @@ void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_fra
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     if (framebuffer->changed) {
-        tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+        if (display->incompleteSending) {
+            //printf("%i %i %i %i\n", framebuffer->changedLeft, framebuffer->changedUp, (framebuffer->changedRight - framebuffer->changedLeft) + 1, (framebuffer->changedDown - framebuffer->changedUp) + 1);
+            //printf("zone: %li %li\n", framebuffer->changedFrom, (framebuffer->changedTo - framebuffer->changedFrom) + 1);
+            
+            //tsgl_display_select(display, framebuffer->changedLeft, framebuffer->changedUp, (framebuffer->changedRight - framebuffer->changedLeft) + 1, (framebuffer->changedDown - framebuffer->changedUp) + 1);
+            //tsgl_display_sendData(display, framebuffer->buffer + framebuffer->changedFrom, (framebuffer->changedTo - framebuffer->changedFrom) + 1);
+
+            tsgl_display_flatPointer(display, framebuffer->changedFrom);
+            tsgl_display_sendData(display, framebuffer->buffer + framebuffer->changedFrom, (framebuffer->changedTo - framebuffer->changedFrom) + 1);
+        } else {
+            tsgl_display_sendData(display, framebuffer->buffer, framebuffer->buffersize);
+        }
         tsgl_framebuffer_resetChangedArea(framebuffer);
     }
 }
@@ -381,7 +395,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
     if (display->driver->enable) {
         _doCommandList(display, display->driver->enable(&display->storage, state));
         if (state) {
-            tsgl_display_selectIfNeed(display);
+            tsgl_display_endCommands(display);
         }
     }
 }
@@ -389,7 +403,7 @@ void tsgl_display_setEnable(tsgl_display* display, bool state) {
 void tsgl_display_setInvert(tsgl_display* display, bool state) {
     if (display->driver->invert != NULL) {
         _doCommandList(display, display->driver->invert(&display->storage, state ^ display->baseInvert));
-        tsgl_display_selectIfNeed(display);
+        tsgl_display_endCommands(display);
     }
     display->invert = state;
 }
@@ -438,7 +452,7 @@ void tsgl_display_setBacklight(tsgl_display* display, uint8_t value) {
         } else {
             _doCommandList(display, display->driver->backlight(&display->storage, value));
         }
-        tsgl_display_selectIfNeed(display);
+        tsgl_display_endCommands(display);
     }
 }
 

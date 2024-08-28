@@ -55,6 +55,7 @@ typedef struct {
 
 typedef struct {
     bool selectAreaAfterCommand;
+    bool incompleteSending;
     tsgl_colormode colormode;
     tsgl_driver_command init[64];
     tsgl_driver_storage storage;

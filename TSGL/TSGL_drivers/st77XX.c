@@ -1,4 +1,4 @@
-#include "../TSGL.h"
+#include "st77xx.h"
 #include "../TSGL_ledc.h"
 
 #define _ROTATION_0 0
@@ -141,7 +141,8 @@ static tsgl_driver_list _backlight(const tsgl_driver_storage* storage, uint8_t v
 .rotate = _rotate, \
 .invert = _invert, \
 .backlight = _backlight, \
-.selectAreaAfterCommand = true
+.selectAreaAfterCommand = true, \
+.incompleteSending = true
 
 
 
