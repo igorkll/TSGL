@@ -7,6 +7,9 @@
 #include <driver/gpio.h>
 
 typedef int16_t tsgl_pos;
+typedef struct tsgl_sprite tsgl_sprite;
+typedef struct tsgl_display tsgl_display;
+
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767
 
@@ -51,6 +54,7 @@ typedef struct {
     bool flipX;
     bool flipY;
     bool flipXY;
+    tsgl_display* display;
 } tsgl_driver_storage;
 
 typedef struct {
@@ -61,6 +65,7 @@ typedef struct {
     tsgl_driver_storage storage;
     tsgl_driver_list (*enable) (const tsgl_driver_storage* storage, bool state);
     tsgl_driver_list (*pointer) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y);
+    tsgl_driver_list (*flatPointer) (const tsgl_driver_storage* storage, size_t index);
     tsgl_driver_list (*select) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2);
     tsgl_driver_list (*rotate) (const tsgl_driver_storage* storage, uint8_t rotation);
     tsgl_driver_list (*invert) (const tsgl_driver_storage* storage, bool invert);
@@ -71,5 +76,3 @@ typedef struct {
 
 #define TSGL_SET_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color)
 #define TSGL_FILL_REFERENCE(name) void(*name)(void* arg, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color)
-
-typedef struct tsgl_sprite tsgl_sprite;

@@ -55,7 +55,7 @@ typedef struct {
     uint8_t backlight_value;
 } tsgl_display_settings;
 
-typedef struct { //please DO NOT write anything in the fields of the structure
+struct tsgl_display { //please DO NOT write anything in the fields of the structure
     tsgl_driver_storage storage;
     tsgl_pos width;
     tsgl_pos height;
@@ -81,7 +81,7 @@ typedef struct { //please DO NOT write anything in the fields of the structure
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
     void* interface;
-} tsgl_display;
+};
 
 // ---------------- initializing the display
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst);

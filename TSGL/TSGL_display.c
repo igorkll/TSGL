@@ -133,15 +133,16 @@ static void _selectAll(tsgl_display* display) {
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
-
-    display->invertBacklight = settings.invertBacklight;
-    if (settings.backlight_init)
-        tsgl_display_attachBacklight(display, settings.backlight_pin, settings.backlight_value);
-
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;
     display->storage.flipXY = settings.flipXY;
+    display->storage.display = display;
+
+    display->invertBacklight = settings.invertBacklight;
+    if (settings.backlight_init)
+        tsgl_display_attachBacklight(display, settings.backlight_pin, settings.backlight_value);
+        
     display->baseInvert = settings.invert;
     display->offsetX = settings.offsetX;
     display->offsetY = settings.offsetY;
@@ -260,21 +261,25 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
 }
 
 void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
+    x = display->offsetX + x;
+    y = display->offsetY + y;
     if (display->driver->pointer != NULL) {
         _doCommandList(display,
-            display->driver->pointer(&display->storage,
-                display->offsetX + x,
-                display->offsetY + y
-            )
+            display->driver->pointer(&display->storage, x, y)
         );
-        tsgl_display_endCommands(display);
+    } else if (display->driver->flatPointer != NULL) {
+        tsgl_display_flatPointer(display, x + (y * display->width));
     } else {
         ESP_LOGE(TAG, "your display does not support tsgl_display_pointer");
     }
 }
 
 void tsgl_display_flatPointer(tsgl_display* display, size_t index) {
-    tsgl_display_pointer(display, index % display->width, index / display->width);
+    if (display->driver->flatPointer != NULL) {
+        _doCommandList(display,display->driver->flatPointer(&display->storage, index));
+    } else {
+        tsgl_display_pointer(display, index % display->width, index / display->width);
+    }
 }
 
 void tsgl_display_selectAll(tsgl_display* display) {
