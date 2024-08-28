@@ -60,9 +60,12 @@ typedef struct {
 typedef struct {
     bool selectAreaAfterCommand;
     bool incompleteSending;
+    int16_t resetHighTime;
+    int16_t resetLowTime;
     tsgl_colormode colormode;
     tsgl_driver_command init[64];
     tsgl_driver_storage storage;
+    tsgl_driver_list (*endCommands) (const tsgl_driver_storage* storage);
     tsgl_driver_list (*enable) (const tsgl_driver_storage* storage, bool state);
     tsgl_driver_list (*pointer) (const tsgl_driver_storage* storage, tsgl_pos x, tsgl_pos y);
     tsgl_driver_list (*flatPointer) (const tsgl_driver_storage* storage, size_t index);

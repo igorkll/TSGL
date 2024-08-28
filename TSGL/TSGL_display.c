@@ -142,7 +142,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     display->invertBacklight = settings.invertBacklight;
     if (settings.backlight_init)
         tsgl_display_attachBacklight(display, settings.backlight_pin, settings.backlight_value);
-        
+
     display->baseInvert = settings.invert;
     display->offsetX = settings.offsetX;
     display->offsetY = settings.offsetY;
@@ -204,9 +204,9 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
         // reset display
         if (rst >= 0) {
             gpio_set_level(rst, false);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            if (settings.driver->resetHighTime >= 0) tsgl_delay(settings.driver->resetHighTime != 0 ? settings.driver->resetHighTime : 50);
             gpio_set_level(rst, true);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            if (settings.driver->resetLowTime >= 0) tsgl_delay(settings.driver->resetLowTime != 0 ? settings.driver->resetLowTime : 50);
         }
 
         // init display
@@ -353,9 +353,8 @@ void tsgl_display_sendCommandWithArgs(tsgl_display* display, const uint8_t comma
 }
 
 void tsgl_display_endCommands(tsgl_display* display) {
-    if (display->driver->selectAreaAfterCommand) {
-        _selectAll(display);
-    }
+    if (display->driver->selectAreaAfterCommand) _selectAll(display);
+    if (display->driver->endCommands != NULL) _doCommandList(display, display->driver->endCommands(&display->storage));
 }
 
 void tsgl_display_sendFlood(tsgl_display* display, const uint8_t* data, size_t size, size_t flood) {

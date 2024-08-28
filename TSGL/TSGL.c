@@ -56,5 +56,7 @@ void* tsgl_malloc(size_t size, int64_t caps) {
 }
 
 void tsgl_delay(size_t time) {
-    vTaskDelay(time / portTICK_PERIOD_MS);
+    size_t ticks = time / portTICK_PERIOD_MS;
+    if (ticks <= 0) ticks = 1;
+    vTaskDelay(ticks);
 }
