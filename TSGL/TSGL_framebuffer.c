@@ -225,7 +225,7 @@ void tsgl_framebuffer_updateChangedAreaIndex(tsgl_framebuffer* framebuffer, int3
     if (index > framebuffer->changedTo) framebuffer->changedTo = index;
 }
 
-void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) { //it is necessary to "rotate" the position in order to neutralize the program rotation of the buffer
     if (x < framebuffer->changedLeft) framebuffer->changedLeft = x;
     if (x > framebuffer->changedRight) framebuffer->changedRight = x;
     if (y < framebuffer->changedUp) framebuffer->changedUp = y;
