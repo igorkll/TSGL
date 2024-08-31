@@ -149,12 +149,14 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         forceParentsMath = true;
     }
 
-    if (object->math_callback != NULL) {
-        object->math_callback(object);
-    }
+    if (object->needMath || forceParentsMath) {
+        if (object->math_callback != NULL) {
+            object->math_callback(object);
+        }
 
-    object->needMath = false;
-    object->validDraw = false;
+        object->needMath = false;
+        object->validDraw = false;
+    }
 
     if (object->processing) {
         if (object->children != NULL) {
