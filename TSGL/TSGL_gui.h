@@ -47,6 +47,7 @@ struct tsgl_gui {
     void* (*user_callback)(tsgl_gui* self, int arg0, void* arg1, void* userArg);
     void (*event_callback)(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event);
     void (*draw_callback)(tsgl_gui* self);
+    void (*fast_draw_callback)(tsgl_gui* self);
     void (*free_callback)(tsgl_gui* self);
     void* userArg;
 
@@ -81,6 +82,7 @@ struct tsgl_gui {
     bool fillParentSize;
     bool needMath;
     bool needDraw;
+    bool validDraw;
     bool drawLater;
     bool drawLaterLater;
 

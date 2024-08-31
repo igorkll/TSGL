@@ -149,6 +149,7 @@ static void _math(tsgl_gui* object, tsgl_pos forceOffsetX, tsgl_pos forceOffsetY
         forceParentsMath = true;
     }
     object->needMath = false;
+    object->validDraw = false;
 
     if (object->processing) {
         if (object->children != NULL) {
@@ -415,7 +416,12 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             if (object->fillParentSize && object->parent != NULL && !object->parent->color.invalid) {
                 TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
             }
-            object->draw_callback(object);
+            if (object->fast_draw_callback != NULL && object->validDraw) {
+                object->fast_draw_callback(object);
+            } else {
+                object->draw_callback(object);
+                object->validDraw = true;
+            }
         }
 
         tsgl_rawcolor selectorBarColor = tsgl_color_raw(TSGL_RED, object->colormode);
