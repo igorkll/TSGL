@@ -256,46 +256,24 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
                             switch (object->tActionType) {
                                 case 1 : {
-                                    tsgl_pos minSel = object->offsetHeight - maxOffsetHeight;
-                                    tsgl_pos maxSel = object->offsetHeight - minOffsetHeight;
-                                    if (selY > maxSel) {
-                                        selY = maxSel;
-                                    } else if (selY < minSel) {
-                                        selY = minSel;
-                                    }
-                                    object->offsetY = object->tdy + selY;
-                                    object->offsetHeight = object->tdh - selY;
+                                    tsgl_pos new = TSGL_MATH_CLAMP(object->tdh - selY, minOffsetHeight, maxOffsetHeight);
+                                    object->offsetY = object->tdy + (object->tdh - new);
+                                    object->offsetHeight = new;
                                     break;
                                 }
 
                                 case 2:
-                                    tsgl_pos minSel = object->offsetWidth - maxOffsetWidth;
-                                    tsgl_pos maxSel = object->offsetWidth - minOffsetWidth;
-                                    if (selX > maxSel) {
-                                        selX = maxSel;
-                                    } else if (selX < minSel) {
-                                        selX = minSel;
-                                    }
-                                    object->offsetX = object->tdx + selX;
-                                    object->offsetWidth = object->tdw - selX;
+                                    tsgl_pos new = TSGL_MATH_CLAMP(object->tdw - selX, minOffsetWidth, maxOffsetWidth);
+                                    object->offsetX = object->tdx + (object->tdw - new);
+                                    object->offsetWidth = new;
                                     break;
 
                                 case 3:
-                                    object->offsetHeight = object->tdh + selY;
-                                    if (object->offsetHeight < minOffsetHeight) {
-                                        object->offsetHeight = minOffsetHeight;
-                                    } else if (object->offsetHeight > maxOffsetHeight) {
-                                        object->offsetHeight = maxOffsetHeight;
-                                    }
+                                    object->offsetHeight = TSGL_MATH_CLAMP(object->tdh + selY, minOffsetHeight, maxOffsetHeight);
                                     break;
 
                                 case 4:
-                                    object->offsetWidth = object->tdw + selX;
-                                    if (object->offsetWidth < minOffsetWidth) {
-                                        object->offsetWidth = minOffsetWidth;
-                                    } else if (object->offsetWidth > maxOffsetWidth) {
-                                        object->offsetWidth = maxOffsetWidth;
-                                    }
+                                    object->offsetWidth = TSGL_MATH_CLAMP(object->tdw + selX, minOffsetWidth, maxOffsetWidth);
                                     break;
                                 
                                 default:
