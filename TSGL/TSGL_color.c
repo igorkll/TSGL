@@ -175,31 +175,25 @@ tsgl_color tsgl_color_fromHex(uint32_t color) {
 tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode) {
     if (color.invalid) return TSGL_INVALID_RAWCOLOR;
     tsgl_rawcolor rawcolor = {0};
+    uint16_t* access16 = (uint16_t*)(rawcolor.arr);
     switch (colormode) {
         case tsgl_rgb565_le : {
-            uint16_t color565 = tsgl_color_to565(color);
-            rawcolor.arr[0] = color565 % 256;
-            rawcolor.arr[1] = color565 >> 8;
+            *access16 = ((color.r >> 3) << 11) | ((color.g >> 2) << 5) | (color.b >> 3);
             break;
         }
 
         case tsgl_bgr565_le : {
-            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            rawcolor.arr[0] = color565 % 256;
-            rawcolor.arr[1] = color565 >> 8;
+            *access16 = ((color.b >> 3) << 11) | ((color.g >> 2) << 5) | (color.r >> 3);
             break;
         }
 
         case tsgl_rgb565_be : {
-            rawcolor.arr[0] = ((color.r >> 3) << 3) | (color.g >> 5);
-            rawcolor.arr[1] = ((color.g >> 2) << 5) | (color.b >> 3);
+            *access16 = ((color.r >> 3) << 3) | (color.g >> 5) | ((color.g >> 2) << 13) | ((color.b >> 3) << 8);
             break;
         }
 
         case tsgl_bgr565_be : {
-            uint16_t color565 = tsgl_color_to565(tsgl_color_pack(color.b, color.g, color.r));
-            rawcolor.arr[0] = color565 >> 8;
-            rawcolor.arr[1] = color565 % 256;
+            *access16 = ((color.b >> 3) << 3) | (color.g >> 5) | ((color.g >> 2) << 13) | ((color.r >> 3) << 8);
             break;
         }
 
