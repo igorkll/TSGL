@@ -45,6 +45,7 @@ struct tsgl_gui {
 
     // callbacks
     void* (*user_callback)(tsgl_gui* self, int arg0, void* arg1, void* userArg);
+    void (*math_callback)(tsgl_gui* self);
     void (*event_callback)(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event);
     void (*draw_callback)(tsgl_gui* self);
     void (*fast_draw_callback)(tsgl_gui* self);
