@@ -387,7 +387,7 @@ void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_fra
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     if (framebuffer->changed) {
-        if (display->incompleteSending) {
+        if (display->incompleteSending && false) {
             if (framebuffer->width != display->width || framebuffer->height != display->height) {
                 ESP_LOGW(TAG, "you have incompleteSending enabled, and the framebuffer size does not match the screen size. MAY LEAD TO UB");
             }
