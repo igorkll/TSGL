@@ -48,7 +48,9 @@ static void _fast_draw_callback(tsgl_gui* self) {
     TSGL_GUI_DRAW(self, set, self->math_x + data->oldPointerPosX, self->math_y + data->oldPointerPosY, tsgl_color_raw(
         tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY, 0, self->math_height - 1, 255, 0)),
     self->colormode));
-    TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, (self->math_y + oldpos) - 2, self->math_width - data->baseWidth, 5 - abs(data->oldHuePointerPos - oldpos), tsgl_color_raw(TSGL_WHITE, self->colormode));
+    TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, (self->math_y + oldpos) - 2, self->math_width - data->baseWidth, 5 - abs(data->oldHuePointerPos - oldpos), tsgl_color_raw(
+        tsgl_color_hsv(tsgl_math_imap(oldpos, 0, self->math_height - 1, 0, 255), data->saturation, data->value),
+    self->colormode));
 
     TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, (self->math_y + pos) - 2, self->math_width - data->baseWidth, 5 - abs(data->huePointerPos - pos), tsgl_color_raw(TSGL_WHITE, self->colormode));
     TSGL_GUI_DRAW(self, set, self->math_x + data->pointerPosX, self->math_y + data->pointerPosY, tsgl_color_raw(TSGL_WHITE, self->colormode));
