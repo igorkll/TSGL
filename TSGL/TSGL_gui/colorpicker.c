@@ -7,9 +7,6 @@ static void _math_callback(tsgl_gui* self) {
     if (data->baseWidth >= self->math_width) {
         data->baseWidth /= 1.2;
     }
-    if (data->pointerPosX < 0) {
-        data->pointerPosX = data->baseWidth - 1;
-    }
 }
 
 static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
@@ -85,27 +82,48 @@ static void _fast_draw_callback(tsgl_gui* self) {
     _drawStuff(self, false, data->svUpdateFlag);
     data->svUpdateFlag = false;
 
-    tsgl_pos oldpos = TSGL_MATH_CLAMP(data->oldHuePointerPos, 0, self->math_height - 5);
-    tsgl_pos pos = TSGL_MATH_CLAMP(data->huePointerPos, 0, self->math_height - 5);
-    for (tsgl_pos iy = oldpos; iy < oldpos + 5; iy++) {
+    tsgl_rawcolor selectorColor = tsgl_color_raw(TSGL_WHITE, self->colormode);
+    tsgl_rawcolor selectorBgColor = self->display->black;
+
+    TSGL_GUI_DRAW(self, setViewport, self->math_x + data->baseWidth, self->math_y, self->math_width - data->baseWidth, self->math_height - 1);
+    for (tsgl_pos iy = data->oldHuePointerPos - 2; iy <= data->oldHuePointerPos + 2; iy++) {
         TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, self->math_y + iy, self->math_width - data->baseWidth, 1, tsgl_color_raw(
             tsgl_color_hsv(tsgl_math_imap(iy, 0, self->math_height - 1, 0, 255), 255, 255),
         self->colormode));
     }
-    for (size_t i = -30; i <= 30; i++) {
-        TSGL_GUI_DRAW(self, set, self->math_x + data->pointerPosX + i, self->math_y + data->pointerPosY + i, tsgl_color_raw(
-            tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY, 0, self->math_height - 1, 255, 0)),
-        self->colormode));
-        TSGL_GUI_DRAW(self, set, self->math_x + data->pointerPosX + i, self->math_y + data->pointerPosY + -i, tsgl_color_raw(
-            tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY, 0, self->math_height - 1, 255, 0)),
-        self->colormode));
+    tsgl_pos x, y, sx, sy = self->math_x + data->baseWidth, (self->math_y + data->huePointerPos) - 2, self->math_width - data->baseWidth, 5;
+    TSGL_GUI_DRAW(self, fill, x, y, sx, sy, selectorColor);
+    TSGL_GUI_DRAW(self, rect, x, y, sx, sy, selectorBgColor, 1);
+
+    TSGL_GUI_DRAW(self, setViewport, self->math_x, self->math_y, data->baseWidth, self->math_height - 1);
+    for (tsgl_pos i = -15; i <= 15; i++) {
+        for (tsgl_pos ix = -1; ix <= 1; ix++) {
+            for (tsgl_pos iy = -1; iy <= 1; iy++) {
+                tsgl_pos x = self->math_x + data->oldPointerPosX + i + ix;
+                tsgl_pos y = self->math_y + data->oldPointerPosY + iy;
+                TSGL_GUI_DRAW(self, set, x, y + i, tsgl_color_raw(
+                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + i, 0, self->math_height - 1, 255, 0)),
+                self->colormode));
+                TSGL_GUI_DRAW(self, set, x, y + -i, tsgl_color_raw(
+                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + -i, 0, self->math_height - 1, 255, 0)),
+                self->colormode));
+            }
+        }
+    }
+    for (tsgl_pos i = -15; i <= 15; i++) {
+        tsgl_pos x = self->math_x + data->pointerPosX + i;
+        tsgl_pos y = self->math_y + data->pointerPosY;
+        TSGL_GUI_DRAW(self, fill, x - 1, (y + i) - 1, 3, 3, selectorBgColor);
+        TSGL_GUI_DRAW(self, fill, x - 1, (y + -i) - 1, 3, 3, selectorBgColor);
+    }
+    for (tsgl_pos i = -15; i <= 15; i++) {
+        tsgl_pos x = self->math_x + data->pointerPosX + i;
+        tsgl_pos y = self->math_y + data->pointerPosY;
+        TSGL_GUI_DRAW(self, set, x, y + i, selectorColor);
+        TSGL_GUI_DRAW(self, set, x, y + -i, selectorColor);
     }
 
-    TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, self->math_y + pos, self->math_width - data->baseWidth, 5, tsgl_color_raw(TSGL_WHITE, self->colormode));
-    for (size_t i = -30; i <= 30; i++) {
-        TSGL_GUI_DRAW(self, set, self->math_x + data->pointerPosX + i, self->math_y + data->pointerPosY + i, tsgl_color_raw(TSGL_WHITE, self->colormode));
-        TSGL_GUI_DRAW(self, set, self->math_x + data->pointerPosX + i, self->math_y + data->pointerPosY + -i, tsgl_color_raw(TSGL_WHITE, self->colormode));
-    }
+    TSGL_GUI_DRAW_NO_ARGS(self, clrViewport);
 }
 
 static void _draw_callback(tsgl_gui* self) {
@@ -122,7 +140,6 @@ tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui) {
     data->hue = 0;
     data->saturation = 255;
     data->value = 255;
-    data->pointerPosX = -1;
     data->color = TSGL_RED;
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
@@ -131,6 +148,13 @@ tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui) {
     obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;
     obj->fast_draw_callback = _fast_draw_callback;
+
+    data->baseWidth = TSGL_MATH_MIN(obj->math_width, obj->math_height);
+    if (data->baseWidth >= obj->math_width) {
+        data->baseWidth /= 1.2;
+    }
+    data->pointerPosX = data->baseWidth - 1;
+
     return obj;
 }
 

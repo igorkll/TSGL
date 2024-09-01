@@ -534,6 +534,14 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
     xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
 }
 
+void tsgl_display_clrViewport(tsgl_display* display) {
+
+}
+
+void tsgl_display_setViewport(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+
+}
+
 // graphic
 
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {

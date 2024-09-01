@@ -113,8 +113,12 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer. the problem is that it is OFTEN slower than just using tsgl_display_send
 
+void tsgl_display_clrViewport(tsgl_display* display);
+void tsgl_display_setViewport(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
+
 //it is not recommended to use this method when working with framebuffer (or use with tsgl_framebuffer_hardwareRotate)
 //resets select and pointer and highlights the entire screen
+//these method reset the viewport!
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation);
 
 //the pointer indicates where to start drawing from. note that on some screens it can only select a position multiple of 8 on one of the planes
@@ -127,7 +131,7 @@ void tsgl_display_selectAll(tsgl_display* display);
 void tsgl_display_setEnable(tsgl_display* display, bool state); //the display is on by default. however, if you have backlight control enabled, then to activate it, you need to call this method during initialization
 void tsgl_display_setInvert(tsgl_display* display, bool state);
 
-// ---------------- graphic (these methods reset the selected area. and they don't work in a dedicated area)
+// ---------------- graphic (these methods reset the selected area. and they don't work in a dedicated area, if you need to limit the rendering, use setViewport)
 void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite);
 void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
 void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color);
