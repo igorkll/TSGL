@@ -17,6 +17,7 @@ typedef struct {
     tsgl_pos oldHuePointerPos;
     uint8_t selectedZone;
     bool svUpdateFlag;
+    tsgl_color color;
 } tsgl_gui_colorpickerData;
 
 tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui);
