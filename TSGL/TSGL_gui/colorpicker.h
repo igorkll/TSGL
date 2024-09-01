@@ -21,4 +21,4 @@ typedef struct {
 } tsgl_gui_colorpickerData;
 
 tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui);
-tsgl_color tsgl_gui_colorpicker_getColor(tsgl_gui* colorpicker);
+tsgl_color tsgl_gui_colorpicker_getColor(tsgl_gui* self);

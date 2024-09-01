@@ -50,7 +50,6 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 
         case tsgl_gui_drop:
             data->selectedZone = 0;
-            tsgl_gui_colorpickerData* data = self->data;
             data->color = tsgl_color_hsv(data->hue, data->saturation, data->value);
             if (self->user_callback) {
                 self->user_callback(self, 0, &data->color, self->userArg);
@@ -119,7 +118,7 @@ tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui) {
     data->saturation = 255;
     data->value = 255;
     data->pointerPosX = -1;
-    data->color = TSGL_RED,
+    data->color = TSGL_RED;
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
     obj->data = data;
@@ -130,7 +129,7 @@ tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui) {
     return obj;
 }
 
-tsgl_color tsgl_gui_colorpicker_getColor(tsgl_gui* colorpicker) {
+tsgl_color tsgl_gui_colorpicker_getColor(tsgl_gui* self) {
     tsgl_gui_colorpickerData* data = self->data;
     return data->color;
 }
