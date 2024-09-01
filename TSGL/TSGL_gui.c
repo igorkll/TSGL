@@ -344,6 +344,7 @@ static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index)
         if (child != child2 && !child2->drawLater && !child2->drawLaterLater && !child->localMovent && _checkIntersection(child->math_x, child->math_y, child->math_width, child->math_height, child2)) {
             child2->drawLater = true;
             child2->needDraw = false;
+            child2->validDraw = false;
             _recursionDrawLater(object, child2, i);
         }
     }
@@ -461,6 +462,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                     if (child != child2 && _checkIntersection(child->old_math_x, child->old_math_y, child->old_math_width, child->old_math_height, child2)) {
                         child2->drawLater = true;
                         child2->needDraw = false;
+                        child2->validDraw = false;
                         anyDrawLater = true;
                         _recursionDrawLater(object, child2, i);
                     }
@@ -471,6 +473,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                     if (child != child2 && _checkIntersection(child->math_x, child->math_y, child->math_width, child->math_height, child2)) {
                         child2->drawLater = true;
                         child2->needDraw = false;
+                        child2->validDraw = false;
                         anyDrawLater = true;
                     }
                 }
