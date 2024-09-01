@@ -16,11 +16,12 @@ void tsgl_gfx_rect(void* arg, TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y,
     fill(arg, (x + width) - stroke, y + 1, stroke, height - 2, color);
 }
 
-void tsgl_gfx_line(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke, tsgl_pos screenWidth, tsgl_pos screenHeight) {
-    if (x1 < 0) x1 = 0; else if (x1 >= screenWidth) x1 = screenWidth - 1;
-    if (y1 < 0) y1 = 0; else if (y1 >= screenHeight) y1 = screenHeight - 1;
-    if (x2 < 0) x2 = 0; else if (x2 >= screenWidth) x2 = screenWidth - 1;
-    if (y2 < 0) y2 = 0; else if (y2 >= screenHeight) y2 = screenHeight - 1;
+void tsgl_gfx_line(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+    if (x1 < minX) x1 = minX; else if (x1 >= maxX) x1 = maxX - 1;
+    if (y1 < minY) y1 = minY; else if (y1 >= maxY) y1 = maxY - 1;
+    if (x2 < minX) x2 = minX; else if (x2 >= maxX) x2 = maxX - 1;
+    if (y2 < minY) y2 = minY; else if (y2 >= maxY) y2 = maxY - 1;
+
     tsgl_pos strokeD = stroke / 2;
     tsgl_pos fx = (x1 > x2 ? x2 : x1) - (stroke / 2);
     tsgl_pos fy = (y1 > y2 ? y2 : y1) - (stroke / 2);
@@ -94,7 +95,7 @@ void tsgl_gfx_line(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill)
     }
 }
 
-void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos screenWidth, tsgl_pos screenHeight) {
+void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     sprite->rotation = ((uint8_t)(-sprite->rotation)) % (uint8_t)4;
 
     if (sprite->sprite->hardwareRotate) {
@@ -124,10 +125,10 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
 
     tsgl_pos startX = 0;
     tsgl_pos startY = 0;
-    if (x < 0) startX = -x;
-    if (y < 0) startY = -y;
-    tsgl_pos maxSpriteWidth = screenWidth - x;
-    tsgl_pos maxSpriteHeight = screenHeight - y;
+    if (x < minX) startX = minX - x;
+    if (y < minY) startY = minY - y;
+    tsgl_pos maxSpriteWidth = maxX - x;
+    tsgl_pos maxSpriteHeight = maxY - y;
     tsgl_pos spriteMaxPointX = spriteWidth - 1;
     tsgl_pos spriteMaxPointY = spriteHeight - 1;
     tsgl_pos spriteRealMaxPointX = realSpriteWidth - 1;
@@ -152,7 +153,7 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     }
 }
 
-tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos screenWidth, tsgl_pos screenHeight) {
+tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
         .strlen = realsize
@@ -182,7 +183,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     if (spacing <= 0) spacing = 1;
 
     if (!sets.fill.invalid && fill != NULL) {
-        tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, screenWidth, screenHeight, sets, text);
+        tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, sets, text);
         fill(arg, textArea.left, textArea.top, textArea.width, textArea.height, sets.fill);
     }
 
@@ -209,7 +210,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                     break;
             }
 
-            tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, screenWidth, screenHeight, lSets, text);
+            tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, lSets, text);
             if (sets.width > 0) x = (x + (sets.width / 2)) - (textArea.width / 2);
             if (sets.height > 0) y = (y + (sets.height / 2)) - (textArea.height / 2);
         }
@@ -250,7 +251,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
 
         tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
-            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x, currentY, newSets, text + i, screenWidth, screenHeight);
+            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x, currentY, newSets, text + i, minX, minY, maxX, maxY);
             if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
             if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
             if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;
@@ -304,7 +305,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                             checkPy = y + iy;
                             break;
                     }
-                    if (screenHeight > 0 && checkPy >= screenHeight) break;
+                    if (checkPy >= maxY) break;
                     if (sets._clamp) {
                         if (checkPy < sets._minHeight) continue;
                         if (checkPy > sets._maxHeight) break;
@@ -312,7 +313,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
 
                     for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
                         tsgl_pos px = x + ix + offset;
-                        if (screenWidth > 0 && px >= screenWidth) break;
+                        if (px >= maxX) break;
                         if (sets._clamp) {
                             if (px < sets._minWidth) continue;
                             if (px > sets._maxWidth) break;
