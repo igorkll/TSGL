@@ -7,12 +7,16 @@ static void _math_callback(tsgl_gui* self) {
     if (data->baseWidth >= self->math_width) {
         data->baseWidth /= 1.2;
     }
+    if (data->pointerPosX < 0) {
+        data->pointerPosX = data->baseWidth - 1;
+    }
 }
 
 static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_event event) {
     tsgl_gui_colorpickerData* data = self->data;
 
     switch (event) {
+        // fall through
         case tsgl_gui_click:
             if (x >= data->baseWidth) {
                 data->selectedZone = 1;
@@ -84,7 +88,7 @@ static void _fast_draw_callback(tsgl_gui* self) {
     tsgl_pos pos = TSGL_MATH_CLAMP(data->huePointerPos, 0, self->math_height - 5);
     for (tsgl_pos iy = oldpos; iy < oldpos + 5; iy++) {
         TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, self->math_y + iy, self->math_width - data->baseWidth, 1, tsgl_color_raw(
-            tsgl_color_hsv(tsgl_math_imap(iy, 0, self->math_height - 1, 0, 255), data->saturation, data->value),
+            tsgl_color_hsv(tsgl_math_imap(iy, 0, self->math_height - 1, 0, 255), 255, 255),
         self->colormode));
     }
 
@@ -110,6 +114,7 @@ tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui) {
     data->hue = 0;
     data->saturation = 255;
     data->value = 255;
+    data->pointerPosX = -1;
 
     tsgl_gui* obj = tsgl_gui_addObject(gui);
     obj->data = data;

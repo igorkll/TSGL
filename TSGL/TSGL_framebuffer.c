@@ -97,7 +97,7 @@ inline static size_t _rotateGetBufferIndex(tsgl_framebuffer* framebuffer, uint8_
 }
 
 inline static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return x >= 0 && y >= 0 && x < framebuffer->width && y < framebuffer->height;
+    return x >= framebuffer->viewport_minX && y >= framebuffer->viewport_minY && x <= framebuffer->viewport_maxX && y <= framebuffer->viewport_maxY;
 }
 
 inline static bool _isDenseColor(tsgl_rawcolor color, uint8_t colorsize) {
@@ -174,6 +174,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
     framebuffer->buffer = tsgl_malloc(framebuffer->buffersize, caps);
     tsgl_framebuffer_resetChangedArea(framebuffer);
+    tsgl_framebuffer_clrViewport(framebuffer);
     if (framebuffer->buffer == NULL) {
         ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
         return ESP_FAIL;
@@ -232,7 +233,18 @@ inline void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, 
     if (y > framebuffer->changedDown) framebuffer->changedDown = y;
 }
 
-void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+inline void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer) {
+    tsgl_framebuffer_setViewport(framebuffer, 0, 0, framebuffer->width, framebuffer->height);
+}
+
+inline void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    framebuffer->viewport_minX = x;
+    framebuffer->viewport_minY = y;
+    framebuffer->viewport_maxX = (x + width) - 1;
+    framebuffer->viewport_maxY = (y + height) - 1;
+}
+
+inline void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     tsgl_framebuffer_hardwareRotate(framebuffer, rotation);
     framebuffer->realRotation = framebuffer->rotation;
     framebuffer->rotationWidth = framebuffer->defaultWidth;
@@ -240,7 +252,7 @@ void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->softwareRotate = framebuffer->rotation != 0;
 }
 
-void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
+inline void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
     framebuffer->rotation = rotation % 4;
     switch (framebuffer->rotation) {
         case 0:
@@ -258,6 +270,7 @@ void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rota
     framebuffer->rotationWidth = framebuffer->width;
     framebuffer->hardwareRotate = true;
     framebuffer->softwareRotate = false;
+    tsgl_framebuffer_clrViewport(framebuffer);
 }
 
 
@@ -327,15 +340,15 @@ inline void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl
 }
 
 inline void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    if (x < 0) {
-        width = width + x;
-        x = 0;
+    if (x < framebuffer->viewport_minX) {
+        width = width - (framebuffer->viewport_minX - x);
+        x = framebuffer->viewport_minX;
     }
-    if (y < 0) {
-        height = height + y;
-        y = 0;
+    if (y < framebuffer->viewport_minY) {
+        height = height - (framebuffer->viewport_minY - y);
+        y = framebuffer->viewport_minY;
     }
-    if (width + x > framebuffer->width) width = framebuffer->width - x;
+    if (width + x > framebuffer->viewport_maxX) width = framebuffer->width - x;
     if (height + y > framebuffer->height) height = framebuffer->height - y;
     if (width <= 0 || height <= 0) return;
     if (x == 0 && y == 0 && width == framebuffer->width && height == framebuffer->height) {

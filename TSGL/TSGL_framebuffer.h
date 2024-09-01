@@ -29,19 +29,26 @@ typedef struct {
     tsgl_pos changedDown;
     tsgl_pos changedLeft;
     tsgl_pos changedRight;
+
+    tsgl_pos viewport_minX;
+    tsgl_pos viewport_minY;
+    tsgl_pos viewport_maxX;
+    tsgl_pos viewport_maxY;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
 tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps); //creates a framebuffer on the heap, the object is automatically deleted when tsgl_framebuffer_free is called
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 
-// change area detector
+// changed area detector
 void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_allChangedArea(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_updateChangedAreaIndex(tsgl_framebuffer* framebuffer, int32_t index);
 void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y);
 
 // control
+void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer);
+void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //rotates the indexing of the framebuffer and not the framebuffer itself
 void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8_t rotation); //it is assumed that this method will be used together with screen rotation via the tsgl_display_rotate method
 
