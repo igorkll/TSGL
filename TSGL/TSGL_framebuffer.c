@@ -444,7 +444,8 @@ inline void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor 
             framebuffer->viewport_minX,
             framebuffer->viewport_minY,
             framebuffer->viewport_maxX - framebuffer->viewport_minX,
-            framebuffer->viewport_maxY - framebuffer->viewport_minY
+            framebuffer->viewport_maxY - framebuffer->viewport_minY,
+            color
         );
         return;
     }
