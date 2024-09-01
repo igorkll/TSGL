@@ -184,19 +184,8 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     }
 }
 
-tsgl_framebuffer* tsgl_framebuffer_new(tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
-    tsgl_framebuffer* framebuffer = malloc(sizeof(tsgl_framebuffer));
-    if (tsgl_framebuffer_init(framebuffer, colormode, width, height, caps) != ESP_OK) {
-        free(framebuffer);
-        return NULL;
-    }
-    framebuffer->heap = true;
-    return framebuffer;
-}
-
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {
     free(framebuffer->buffer);
-    if (framebuffer->heap) free(framebuffer);
 }
 
 inline void tsgl_framebuffer_resetChangedArea(tsgl_framebuffer* framebuffer) {
