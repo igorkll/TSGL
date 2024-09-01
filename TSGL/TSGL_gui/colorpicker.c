@@ -91,7 +91,10 @@ static void _fast_draw_callback(tsgl_gui* self) {
             tsgl_color_hsv(tsgl_math_imap(iy, 0, self->math_height - 1, 0, 255), 255, 255),
         self->colormode));
     }
-    tsgl_pos x, y, sx, sy = self->math_x + data->baseWidth, (self->math_y + data->huePointerPos) - 2, self->math_width - data->baseWidth, 5;
+    tsgl_pos x = self->math_x + data->baseWidth;
+    tsgl_pos y = (self->math_y + data->huePointerPos) - 2;
+    tsgl_pos sx = self->math_width - data->baseWidth;
+    tsgl_pos sy = 5;
     TSGL_GUI_DRAW(self, fill, x, y, sx, sy, selectorColor);
     TSGL_GUI_DRAW(self, rect, x, y, sx, sy, selectorBgColor, 1);
 
@@ -102,10 +105,10 @@ static void _fast_draw_callback(tsgl_gui* self) {
                 tsgl_pos x = self->math_x + data->oldPointerPosX + i + ix;
                 tsgl_pos y = self->math_y + data->oldPointerPosY + iy;
                 TSGL_GUI_DRAW(self, set, x, y + i, tsgl_color_raw(
-                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + i, 0, self->math_height - 1, 255, 0)),
+                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i + ix, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + i + iy, 0, self->math_height - 1, 255, 0)),
                 self->colormode));
                 TSGL_GUI_DRAW(self, set, x, y + -i, tsgl_color_raw(
-                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + -i, 0, self->math_height - 1, 255, 0)),
+                    tsgl_color_hsv(data->hue, tsgl_math_imap(data->oldPointerPosX + i + ix, 0, data->baseWidth - 1, 0, 255), tsgl_math_imap(data->oldPointerPosY + -i + iy, 0, self->math_height - 1, 255, 0)),
                 self->colormode));
             }
         }
