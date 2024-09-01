@@ -30,6 +30,7 @@ typedef struct {
     tsgl_pos changedLeft;
     tsgl_pos changedRight;
 
+    bool viewport;
     tsgl_pos viewport_minX;
     tsgl_pos viewport_minY;
     tsgl_pos viewport_maxX;

@@ -97,7 +97,7 @@ inline static size_t _rotateGetBufferIndex(tsgl_framebuffer* framebuffer, uint8_
 }
 
 inline static bool _pointInFrame(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
-    return x >= framebuffer->viewport_minX && y >= framebuffer->viewport_minY && x <= framebuffer->viewport_maxX && y <= framebuffer->viewport_maxY;
+    return x >= framebuffer->viewport_minX && y >= framebuffer->viewport_minY && x < framebuffer->viewport_maxX && y < framebuffer->viewport_maxY;
 }
 
 inline static bool _isDenseColor(tsgl_rawcolor color, uint8_t colorsize) {
@@ -235,13 +235,15 @@ inline void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, 
 
 inline void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer) {
     tsgl_framebuffer_setViewport(framebuffer, 0, 0, framebuffer->width, framebuffer->height);
+    framebuffer->viewport = false;
 }
 
 inline void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+    framebuffer->viewport = x != 0 || y != 0 || width != framebuffer->width || width != framebuffer->height;
     framebuffer->viewport_minX = x;
     framebuffer->viewport_minY = y;
-    framebuffer->viewport_maxX = (x + width) - 1;
-    framebuffer->viewport_maxY = (y + height) - 1;
+    framebuffer->viewport_maxX = x + width;
+    framebuffer->viewport_maxY = y + height;
 }
 
 inline void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
@@ -348,8 +350,8 @@ inline void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsg
         height = height - (framebuffer->viewport_minY - y);
         y = framebuffer->viewport_minY;
     }
-    if (width + x > framebuffer->viewport_maxX) width = framebuffer->width - x;
-    if (height + y > framebuffer->height) height = framebuffer->height - y;
+    if (width + x > framebuffer->viewport_maxX) width = framebuffer->viewport_maxX - x;
+    if (height + y > framebuffer->viewport_maxY) height = framebuffer->viewport_maxY - y;
     if (width <= 0 || height <= 0) return;
     if (x == 0 && y == 0 && width == framebuffer->width && height == framebuffer->height) {
         tsgl_framebuffer_clear(framebuffer, color);
@@ -437,6 +439,16 @@ inline tsgl_print_textArea tsgl_framebuffer_text(tsgl_framebuffer* framebuffer, 
 }
 
 inline void tsgl_framebuffer_clear(tsgl_framebuffer* framebuffer, tsgl_rawcolor color) {
+    if (framebuffer->viewport) {
+        tsgl_framebuffer_fillWithoutCheck(framebuffer,
+            framebuffer->viewport_minX,
+            framebuffer->viewport_minY,
+            framebuffer->viewport_maxX - framebuffer->viewport_minX,
+            framebuffer->viewport_maxY - framebuffer->viewport_minY
+        );
+        return;
+    }
+
     framebuffer->changed = true;
     tsgl_framebuffer_allChangedArea(framebuffer);
 
