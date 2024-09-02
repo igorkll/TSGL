@@ -6,15 +6,18 @@
 #include "TSGL_gui.h"
 #include "TSGL_math.h"
 #include <esp_random.h>
+#include <esp_log.h>
 #include <string.h>
 #include <math.h>
+
+static const char* TAG = "TSGL_gui";
 
 static tsgl_gui* _createRoot(void* target, bool buffered, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     tsgl_gui* gui = calloc(1, sizeof(tsgl_gui));    
     gui->root = gui;
     gui->target = target;
     gui->buffered = buffered;
-    gui->leaky_walls = false;
+    gui->leaky_walls = true;
     gui->processing = true;
 
     gui->interactive = true;
@@ -350,7 +353,7 @@ static void _recursionDrawLater(tsgl_gui* object, tsgl_gui* child, size_t index)
     }
 }
 
-static bool _draw(tsgl_gui* object, bool force, float dt) {
+static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     if (!object->displayable || !object->processing) {
         object->needDraw = false;
         return false;
@@ -371,14 +374,19 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
     }
 
     if (forceDraw) {
+        bool cleared = false;
         if (object->localMovent && !force) {
             if (!object->parent->color.invalid) {
                 TSGL_GUI_DRAW(object, fill, object->old_math_x, object->old_math_y, object->old_math_width, object->old_math_height, object->parent->color);
+                cleared = true;
             }
         }
         object->localMovent = false;
 
+        if (onlyClearOld) return cleared;
+
         object->needDraw = false;
+
         float delta = object->animationTarget - object->animationState;
         if (delta != 0) {
             bool animEnd;
@@ -421,7 +429,14 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         if (!object->color.invalid) {
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
-            if (object->fillParentSize && object->parent != NULL && !object->parent->color.invalid) {
+            if (object->viewport) {
+                tsgl_pos x = object->math_x;
+                tsgl_pos y = object->math_y;
+                tsgl_pos width = object->math_width;
+                tsgl_pos height = object->math_height;
+                TSGL_GUI_DRAW(object, setViewport, x, y, width, height);
+            }
+            if (object->fillSize && object->parent != NULL && !object->parent->color.invalid) {
                 TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
             }
             if (object->fast_draw_callback != NULL && object->validDraw) {
@@ -429,6 +444,9 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             } else {
                 object->draw_callback(object);
                 object->validDraw = true;
+            }
+            if (object->viewport) {
+                TSGL_GUI_DRAW_NO_ARGS(object, clrViewport);
             }
         }
 
@@ -484,14 +502,14 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
     if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
-            if (!child->drawLaterLater && _draw(child, forceDraw, dt)) anyDraw = true;
+            if (_draw(child, forceDraw, dt, child->drawLaterLater)) anyDraw = true;
         }
 
         if (anyDrawLater) {
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
                 if (child->drawLater) {
-                    _draw(child, true, dt);
+                    _draw(child, true, dt, false);
                     anyDraw = true;
                     child->drawLater = false;
                 }
@@ -500,7 +518,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
                 if (child->drawLaterLater) {
-                    _draw(child, true, dt);
+                    _draw(child, true, dt, false);
                     anyDraw = true;
                     child->drawLaterLater = false;
                 }
@@ -515,13 +533,11 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
     tsgl_gui* gui = tsgl_gui_createRoot_displayZone(display, colormode, 0, 0, display->width, display->height);
-    gui->leaky_walls = true;
     return gui;
 }
 
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     tsgl_gui* gui = tsgl_gui_createRoot_bufferZone(display, framebuffer, 0, 0, framebuffer->width, framebuffer->height);
-    gui->leaky_walls = true;
     return gui;
 }
 
@@ -636,6 +652,23 @@ void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat forma
 
 
 
+void tsgl_gui_select(tsgl_gui* scene) {
+    if (scene->root == scene) {
+        ESP_LOGE(TAG, "you cannot call tsgl_gui_select on gui root");
+        return;
+    }
+    for (size_t i = 0; i < scene->parent->childrenCount; i++) {
+        tsgl_gui* child = scene->parent->children[i];
+        child->interactive = false;
+        child->displayable = false;
+    }
+    scene->interactive = true;
+    scene->displayable = true;
+    scene->parent->needDraw = true;
+}
+
+
+
 void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType) {
     _event(obj, obj->math_x + x, obj->math_y + y, clickType);
 }
@@ -667,10 +700,10 @@ void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsg
     _math(root, 0, 0, false);
     bool needSend;
     if (benchmark != NULL) {
-        needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime) / 1000.0 / 1000.0);
+        needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime) / 1000.0 / 1000.0, false);
     } else {
         //if the benchmark has not been transmitted, it is assumed that the rendering is running at a frequency of 10 FPS. the animation speed can float a lot
-        needSend = _draw(root, false, 0.1);
+        needSend = _draw(root, false, 0.1, false);
     }
     if (benchmark != NULL) tsgl_benchmark_endRendering(benchmark);
     if (needSend && root->buffered) {

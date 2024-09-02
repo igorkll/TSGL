@@ -63,6 +63,13 @@ static void _draw_callback(tsgl_gui* self) {
     }
 }
 
+static void* _sceneLink(tsgl_gui* self, int arg0, void* arg1, void* userArg) {
+    if (arg0 == 0) {
+        tsgl_gui_select(userArg);
+    }
+    return NULL;
+}
+
 tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     tsgl_gui_buttonData* data = calloc(1, sizeof(tsgl_gui_buttonData));
     data->color = color;
@@ -74,9 +81,14 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     obj->data = data;
     obj->event_callback = _event_callback;
     obj->draw_callback = _draw_callback;
-    obj->fillParentSize = true;
+    obj->fillSize = true;
     obj->animationBaseDelta = 0.5;
     return obj;
+}
+
+void tsgl_gui_button_sceneLink(tsgl_gui* button, tsgl_gui* scene) {
+    button->user_callback = _sceneLink;
+    button->userArg = scene;
 }
 
 void tsgl_gui_button_setEmpty(tsgl_gui* button) {

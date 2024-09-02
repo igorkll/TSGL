@@ -37,10 +37,11 @@ struct tsgl_gui {
     bool centering; //sets the position relative to the center of the object and not relative to its upper left edge
 
     // setting
+    bool viewport; //restricts the rendering area, can be set by some objects. please set for movable windows if they are shuffled in a non-fullscreen field and the leaky_walls flag is set on parent
     bool interactive;
     bool displayable;
     bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
-    bool leaky_walls; //if the value is true, the child elements with the "draggable" flag will be able to go beyond the boundaries of this element. by default, the root element has true. may cause problems if this flag is set for a non-fullscreen element
+    bool leaky_walls; //if the value is true, the child elements with the "draggable" flag will be able to go beyond the boundaries of this element. by default, has true
     tsgl_pos resizable; //the size of the area at the edge of the object that can be used to resize. in order for the object to resize, this parameter must be greater than 0 and BE SURE to set the draggable flag
     tsgl_rawcolor color; //if you set this color, instead of rendering the object, it will be filled with a rectangle of a certain color
 
@@ -81,7 +82,6 @@ struct tsgl_gui {
     bool buffered;
     tsgl_colormode colormode;
 
-    bool fillParentSize;
     bool needMath;
     bool needDraw;
     bool validDraw;
@@ -114,6 +114,8 @@ struct tsgl_gui {
     tsgl_gui* parent;
     tsgl_gui* root;
 
+    // internal setting
+    bool fillSize;
     bool noFreeData;
     void* data;
     int intData;
@@ -134,6 +136,10 @@ void tsgl_gui_setMinFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setWidthMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
 void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
+
+// to create scenes. just create full-screen objects with the desired background color and attach all the objects to it, and then select the desired scene
+// be sure to call this method for the first scene immediately after creating all the scenes, otherwise all the scenes will be selected
+void tsgl_gui_select(tsgl_gui* scene);
 
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType);
