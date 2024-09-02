@@ -24,9 +24,6 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
 }
 
 static void _draw_callback(tsgl_gui* self) {
-    tsgl_framebuffer* f = self->target;
-    printf("butt %p %i %i %i %i\n", f, f->viewport_minX, f->viewport_minY, f->viewport_maxX, f->viewport_maxY);
-
     tsgl_gui_buttonData* data = self->data;
     tsgl_pos resize = self->animationState * (TSGL_MATH_MIN(self->math_width, self->math_height) * 0.05);
     float percent = 1 - (0.1 * self->animationState);

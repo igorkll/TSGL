@@ -393,7 +393,7 @@ void tsgl_display_incompleteSending(tsgl_display* display, bool enable, tsgl_fra
 
 void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     if (framebuffer->changed) {
-        if (display->incompleteSending && false) {
+        if (display->incompleteSending) {
             if (framebuffer->width != display->width || framebuffer->height != display->height) {
                 ESP_LOGW(TAG, "you have incompleteSending enabled, and the framebuffer size does not match the screen size. MAY LEAD TO UB");
             }
@@ -528,7 +528,8 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
 }
 
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
-    memcpy(framebuffer2->buffer, framebuffer->buffer, framebuffer->buffersize);
+    if (!framebuffer->changed) return;
+    memcpy(framebuffer2->buffer + framebuffer->changedFrom, framebuffer->buffer, framebuffer->changedTo - framebuffer->changedFrom);
 
     _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
     data->display = display;
