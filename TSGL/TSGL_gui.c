@@ -456,6 +456,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
             if (child->localMovent) {
+                anyDrawLater = true;
                 child->drawLaterLater = true;
                 for (size_t i = 0; i < object->childrenCount; i++) {
                     tsgl_gui* child2 = object->children[i];
@@ -463,7 +464,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
                         child2->drawLater = true;
                         child2->needDraw = false;
                         child2->validDraw = false;
-                        anyDrawLater = true;
                         _recursionDrawLater(object, child2, i);
                     }
                 }
@@ -483,13 +483,15 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
 
     if (object->children != NULL) {
         for (size_t i = 0; i < object->childrenCount; i++) {
-            if (_draw(object->children[i], forceDraw, dt)) anyDraw = true;
+            tsgl_gui* child = object->children[i];
+            if (!child->drawLaterLater && _draw(child, forceDraw, dt)) anyDraw = true;
         }
 
         if (anyDrawLater) {
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
-                if (child->drawLater && _draw(child, true, dt)) {
+                if (child->drawLater) {
+                    _draw(child, true, dt);
                     anyDraw = true;
                     child->drawLater = false;
                 }
@@ -497,7 +499,8 @@ static bool _draw(tsgl_gui* object, bool force, float dt) {
 
             for (size_t i = 0; i < object->childrenCount; i++) {
                 tsgl_gui* child = object->children[i];
-                if (child->drawLaterLater && _draw(child, true, dt)) {
+                if (child->drawLaterLater) {
+                    _draw(child, true, dt);
                     anyDraw = true;
                     child->drawLaterLater = false;
                 }

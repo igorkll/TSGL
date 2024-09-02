@@ -25,6 +25,10 @@ typedef struct {
     bool state;
 } spi_pretransfer_info;
 
+inline static bool _pointInFrame(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
+    return x >= display->viewport_minX && y >= display->viewport_minY && x < display->viewport_maxX && y < display->viewport_maxY;
+}
+
 static void _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
@@ -156,6 +160,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     display->colorsize = tsgl_colormodeSizes[display->colormode];
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
     display->incompleteSending = settings.driver->incompleteSending;
+    tsgl_display_clrViewport(display);
 
     esp_err_t result;
     if (false) {
@@ -264,6 +269,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
         }
         _doCommandList(display, display->driver->rotate(&display->storage, rotation));
         _selectAll(display);
+        tsgl_display_clrViewport(display);
     } else {
         ESP_LOGE(TAG, "your display does not support tsgl_display_rotate");
     }
@@ -535,21 +541,30 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
 }
 
 void tsgl_display_clrViewport(tsgl_display* display) {
-
+    tsgl_display_setViewport(display, 0, 0, display->width, display->height);
+    display->viewport = false;
 }
 
 void tsgl_display_setViewport(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
-
+    display->viewport = x != 0 || y != 0 || width != display->width || height != display->height;
+    display->viewport_minX = x;
+    display->viewport_minY = y;
+    display->viewport_maxX = x + width;
+    display->viewport_maxY = y + height;
 }
 
 // graphic
 
-void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
-    tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, sprite, 0, 0, display->width, display->height);
+inline void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+    tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, sprite, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
-    tsgl_display_pointer(display, x, y);
+inline void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    if (display->driver->pointer != NULL && display->driver->flatPointer != NULL) {
+        tsgl_display_pointer(display, x, y);
+    } else {
+        tsgl_display_select(display, x, y, 1, 1);
+    }
     switch (display->colormode) {
         case tsgl_rgb444:
         case tsgl_bgr444:
@@ -562,30 +577,31 @@ void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y,
     }
 }
 
-void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+inline void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    if (!_pointInFrame(display, x, y)) return;
     tsgl_display_setWithoutCheck(display, x, y, color);
 }
 
-void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
-    tsgl_gfx_line(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x1, y1, x2, y2, color, stroke, 0, 0, display->width, display->height);
+inline void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
+    tsgl_gfx_line(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x1, y1, x2, y2, color, stroke, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
-    if (x < 0) {
-        width = width + x;
-        x = 0;
+inline void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+    if (x < display->viewport_minX) {
+        width = width - (display->viewport_minX - x);
+        x = display->viewport_minX;
     }
-    if (y < 0) {
-        height = height + y;
-        y = 0;
+    if (y < display->viewport_minY) {
+        height = height - (display->viewport_minY - y);
+        y = display->viewport_minY;
     }
-    if (width + x > display->width) width = display->width - x;
-    if (height + y > display->height) height = display->height - y;
+    if (width + x > display->viewport_maxX) width = display->viewport_maxX - x;
+    if (height + y > display->viewport_maxY) height = display->viewport_maxY - y;
     if (width <= 0 || height <= 0) return;
     tsgl_display_fillWithoutCheck(display, x, y, width, height, color);
 }
 
-void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+inline void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     tsgl_display_select(display, x, y, width, height);
     switch (display->colormode) {
         case tsgl_rgb444:
@@ -599,14 +615,14 @@ void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y
     }
 }
 
-void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
+inline void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
     tsgl_gfx_rect(display, (TSGL_FILL_REFERENCE())tsgl_display_fill, x, y, width, height, color, stroke);
 }
 
-tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
-    return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, sets, text, 0, 0, display->width, display->height);
+inline tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+    return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, sets, text, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
+inline void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
     tsgl_display_fillWithoutCheck(display, 0, 0, display->width, display->height, color);
 }

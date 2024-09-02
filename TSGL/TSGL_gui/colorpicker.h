@@ -18,7 +18,19 @@ typedef struct {
     uint8_t selectedZone;
     bool svUpdateFlag;
     tsgl_color color;
+    uint8_t groupPixels;
+    uint8_t hueSelectorSize;
+    uint8_t svSelectorSize;
 } tsgl_gui_colorpickerData;
 
-tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui);
+typedef struct {
+    tsgl_color color;
+    uint8_t groupPixels;
+    uint8_t hueSelectorSize;
+    uint8_t svSelectorSize;
+} tsgl_gui_colorpickerConfig;
+
+tsgl_gui* tsgl_gui_addColorpicker(tsgl_gui* gui, tsgl_gui_colorpickerConfig config);
 tsgl_color tsgl_gui_colorpicker_getColor(tsgl_gui* self);
+void tsgl_gui_colorpicker_setConfig(tsgl_gui* self, tsgl_gui_colorpickerConfig config);
+void tsgl_gui_colorpicker_setColor(tsgl_gui* self, tsgl_color color);

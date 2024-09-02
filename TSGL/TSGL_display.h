@@ -81,6 +81,12 @@ struct tsgl_display { //please DO NOT write anything in the fields of the struct
     const tsgl_driver* driver;
     tsgl_display_interfaceType interfaceType;
     void* interface;
+
+    bool viewport;
+    tsgl_pos viewport_minX;
+    tsgl_pos viewport_minY;
+    tsgl_pos viewport_maxX;
+    tsgl_pos viewport_maxY;
 };
 
 // ---------------- initializing the display
@@ -121,7 +127,7 @@ void tsgl_display_setViewport(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsg
 //these method reset the viewport!
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation);
 
-//the pointer indicates where to start drawing from. note that on some screens it can only select a position multiple of 8 on one of the planes
+//the pointer indicates where to start drawing(only send methods) from. note that on some screens it can only select a position multiple of 8 on one of the planes
 void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y);
 void tsgl_display_flatPointer(tsgl_display* display, size_t index);
 
