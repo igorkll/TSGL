@@ -68,7 +68,7 @@ void system_init() {
         .globalCentering = true,
         .width = HEIGHT,
         .height = WIDTH,
-        .targetHeight = WIDTH / 3,
+        .targetHeight = WIDTH / 4,
         .locationMode = tsgl_print_start_top
     };
     tsgl_framebuffer_rotate(&framebuffer, 1);
