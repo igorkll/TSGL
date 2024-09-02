@@ -163,7 +163,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     tsgl_display_clrViewport(display);
 
     esp_err_t result;
-    if (false) {
+    if (true) {
         tsgl_display_interfaceData_lcd* interfaceData = malloc(sizeof(tsgl_display_interfaceData_lcd));
         display->interfaceType = tsgl_display_interface_lcd;
         display->interface = interfaceData;
@@ -175,7 +175,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
             .spi_mode = 0,
-            .trans_queue_depth = 16,
+            .trans_queue_depth = 128,
         };
 
         interfaceData->lcd = malloc(sizeof(esp_lcd_panel_io_handle_t));
@@ -330,7 +330,7 @@ void tsgl_display_sendData(tsgl_display* display, const uint8_t* data, size_t si
 
         case tsgl_display_interface_lcd:
             tsgl_display_interfaceData_lcd* interfaceData = display->interface;
-            size_t part = 512;
+            size_t part = 2048;
             size_t offset = 0;
             while (true) {
                 if (esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data + offset, TSGL_MATH_MIN(size - offset, part)) != ESP_OK) {
@@ -500,13 +500,12 @@ static bool asyncSendActive = false;
 
 typedef struct {
     tsgl_display* display;
-    uint8_t* buffer;
-    size_t buffersize;
+    tsgl_framebuffer* buffer;
 } _asyncData;
 
 static void _asyncSend(void* buffer) {
     _asyncData* data = (_asyncData*)buffer;
-    tsgl_display_sendData(data->display, data->buffer, data->buffersize);
+    tsgl_display_send(data->display, data->buffer);
     free(data);
     asyncSendActive = false;
     vTaskDelete(NULL);
@@ -515,8 +514,7 @@ static void _asyncSend(void* buffer) {
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
     _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
     data->display = display;
-    data->buffer = framebuffer->buffer;
-    data->buffersize = framebuffer->buffersize;
+    data->buffer = framebuffer;
 
     uint8_t* t = framebuffer2->buffer;
     framebuffer2->buffer = framebuffer->buffer;
@@ -529,15 +527,29 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
 
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
     if (!framebuffer->changed) return;
-    memcpy(framebuffer2->buffer + framebuffer->changedFrom, framebuffer->buffer, framebuffer->changedTo - framebuffer->changedFrom);
+    while (asyncSendActive) vTaskDelay(1);
+    asyncSendActive = true;
+
+    memcpy(framebuffer2->buffer + framebuffer->changedFrom, framebuffer->buffer + framebuffer->changedFrom, framebuffer->changedTo - framebuffer->changedFrom);
+
+    framebuffer2->changed = framebuffer->changed;
+    framebuffer2->changedFrom = framebuffer->changedFrom;
+    framebuffer2->changedTo = framebuffer->changedTo;
+    framebuffer2->changedLeft = framebuffer->changedLeft;
+    framebuffer2->changedRight = framebuffer->changedRight;
+    framebuffer2->changedUp = framebuffer->changedUp;
+    framebuffer2->changedDown = framebuffer->changedDown;
+    framebuffer2->rotation = framebuffer->rotation;
+    framebuffer2->realRotation = framebuffer->realRotation;
+    framebuffer2->hardwareRotate = framebuffer->hardwareRotate;
+    framebuffer2->softwareRotate = framebuffer->softwareRotate;
+    framebuffer2->width = framebuffer->width;
+    framebuffer2->height = framebuffer->height;
 
     _asyncData* data = (_asyncData*)malloc(sizeof(_asyncData));
     data->display = display;
-    data->buffer = framebuffer2->buffer;
-    data->buffersize = framebuffer2->buffersize;
+    data->buffer = framebuffer2;
 
-    while (asyncSendActive) vTaskDelay(1);
-    asyncSendActive = true;
     xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
 }
 
