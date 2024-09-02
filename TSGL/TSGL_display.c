@@ -134,6 +134,14 @@ static void _selectAll(tsgl_display* display) {
     _select(display, 0, 0, display->width, display->height);
 }
 
+static void _clrViewport(tsgl_display* display) {
+    display->dump_viewport = false;
+    display->dump_viewport_minX = 0;
+    display->dump_viewport_minY = 0;
+    display->dump_viewport_maxX = display->width;
+    display->dump_viewport_maxY = display->height;
+}
+
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
@@ -161,6 +169,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     display->black = tsgl_color_raw(TSGL_BLACK, display->colormode);
     display->incompleteSending = settings.driver->incompleteSending;
     tsgl_display_clrViewport(display);
+    _clrViewport(display);
 
     esp_err_t result;
     if (false) {
@@ -270,6 +279,7 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
         _doCommandList(display, display->driver->rotate(&display->storage, rotation));
         _selectAll(display);
         tsgl_display_clrViewport(display);
+        _clrViewport(display);
     } else {
         ESP_LOGE(TAG, "your display does not support tsgl_display_rotate");
     }
@@ -538,6 +548,22 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
     while (asyncSendActive) vTaskDelay(1);
     asyncSendActive = true;
     xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
+}
+
+void tsgl_display_dumpViewport(tsgl_display* display) {
+    display->dump_viewport = display->viewport;
+    display->dump_viewport_minX = display->viewport_minX;
+    display->dump_viewport_minY = display->viewport_minY;
+    display->dump_viewport_maxX = display->viewport_maxX;
+    display->dump_viewport_maxY = display->viewport_maxY;
+}
+
+void tsgl_display_flushViewport(tsgl_display* display) {
+    display->viewport = display->dump_viewport;
+    display->viewport_minX = display->dump_viewport_minX;
+    display->viewport_minY = display->dump_viewport_minY;
+    display->viewport_maxX = display->dump_viewport_maxX;
+    display->viewport_maxY = display->dump_viewport_maxY;
 }
 
 void tsgl_display_clrViewport(tsgl_display* display) {

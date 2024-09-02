@@ -363,6 +363,17 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     bool forceDraw = force || object->needDraw;
     bool anyDrawLater = false;
 
+    if (object->viewport) {
+        TSGL_GUI_DRAW_NO_ARGS(object, dumpViewport);
+        tsgl_pos x = object->math_x;
+        tsgl_pos y = object->math_y;
+        tsgl_pos width = object->math_width;
+        tsgl_pos height = object->math_height;
+        if (x < object->parent->math_x) x = object->parent->math_x;
+        if (y < object->parent->math_y) x = object->parent->math_y;
+        TSGL_GUI_DRAW(object, setViewport, x, y, width, height);
+    }
+
     if (object->children != NULL && !forceDraw && object->color.invalid) {
         for (size_t i = 0; i < object->childrenCount; i++) {
             tsgl_gui* child = object->children[i];
@@ -383,7 +394,12 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         }
         object->localMovent = false;
 
-        if (onlyClearOld) return cleared;
+        if (onlyClearOld) {
+            if (object->viewport) {
+                TSGL_GUI_DRAW_NO_ARGS(object, flushViewport);
+            }
+            return cleared;
+        }
 
         object->needDraw = false;
 
@@ -429,13 +445,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         if (!object->color.invalid) {
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {
-            if (object->viewport) {
-                tsgl_pos x = object->math_x;
-                tsgl_pos y = object->math_y;
-                tsgl_pos width = object->math_width;
-                tsgl_pos height = object->math_height;
-                TSGL_GUI_DRAW(object, setViewport, x, y, width, height);
-            }
             if (object->fillSize && object->parent != NULL && !object->parent->color.invalid) {
                 TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->parent->color);
             }
@@ -444,9 +453,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
             } else {
                 object->draw_callback(object);
                 object->validDraw = true;
-            }
-            if (object->viewport) {
-                TSGL_GUI_DRAW_NO_ARGS(object, clrViewport);
             }
         }
 
@@ -526,6 +532,10 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         }
     }
 
+    if (object->viewport) {
+        TSGL_GUI_DRAW_NO_ARGS(object, flushViewport);
+    }
+
     return anyDraw;
 }
 
@@ -533,11 +543,13 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode) {
     tsgl_gui* gui = tsgl_gui_createRoot_displayZone(display, colormode, 0, 0, display->width, display->height);
+    gui->viewport = false;
     return gui;
 }
 
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer) {
     tsgl_gui* gui = tsgl_gui_createRoot_bufferZone(display, framebuffer, 0, 0, framebuffer->width, framebuffer->height);
+    gui->viewport = false;
     return gui;
 }
 
@@ -546,6 +558,7 @@ tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode 
     gui->colormode = colormode;
     gui->display = display;
     gui->color = display->black;
+    gui->viewport = true;
     return gui;
 }
 
@@ -554,6 +567,7 @@ tsgl_gui* tsgl_gui_createRoot_bufferZone(tsgl_display* display, tsgl_framebuffer
     gui->colormode = framebuffer->colormode;
     gui->display = display;
     gui->color = framebuffer->black;
+    gui->viewport = true;
     return gui;
 }
 
@@ -566,6 +580,7 @@ tsgl_gui* tsgl_gui_addObject(tsgl_gui* object) {
     }
 
     tsgl_gui* newObject = calloc(1, sizeof(tsgl_gui));
+    newObject->leaky_walls = true;
     newObject->colormode = object->colormode;
     newObject->root = object->root;
     newObject->target = object->target;
@@ -661,6 +676,7 @@ void tsgl_gui_select(tsgl_gui* scene) {
         tsgl_gui* child = scene->parent->children[i];
         child->interactive = false;
         child->displayable = false;
+        child->viewport = true;
     }
     scene->interactive = true;
     scene->displayable = true;

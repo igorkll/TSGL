@@ -37,7 +37,7 @@ struct tsgl_gui {
     bool centering; //sets the position relative to the center of the object and not relative to its upper left edge
 
     // setting
-    bool viewport; //restricts the rendering area, can be set by some objects. please set for movable windows if they are shuffled in a non-fullscreen field and the leaky_walls flag is set on parent
+    bool viewport; //restricts the rendering area, can be set by some objects. please set for movable windows or it self parent if they are shuffled in a non-fullscreen field and the leaky_walls flag is set on parent
     bool interactive;
     bool displayable;
     bool draggable; //allows elements to move in the space of the parent element. to work, the object must use an absolute position
@@ -123,8 +123,8 @@ struct tsgl_gui {
 
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode); //you specify the colormode yourself because on some screens it must be different from the colormode specified in the driver
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer);
-tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode colormode, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
-tsgl_gui* tsgl_gui_createRoot_bufferZone(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
+tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode colormode, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height); //viewport enabled by default
+tsgl_gui* tsgl_gui_createRoot_bufferZone(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height); //viewport enabled by default
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
 
@@ -139,6 +139,7 @@ void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat forma
 
 // to create scenes. just create full-screen objects with the desired background color and attach all the objects to it, and then select the desired scene
 // be sure to call this method for the first scene immediately after creating all the scenes, otherwise all the scenes will be selected
+// automatically sets the viewport to true for all childs(all scenes) of the parent element so that the windows work correctly
 void tsgl_gui_select(tsgl_gui* scene);
 
 // call it in a perpetual loop for the gui to work

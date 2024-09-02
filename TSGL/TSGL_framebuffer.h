@@ -34,6 +34,12 @@ typedef struct {
     tsgl_pos viewport_minY;
     tsgl_pos viewport_maxX;
     tsgl_pos viewport_maxY;
+
+    bool dump_viewport;
+    tsgl_pos dump_viewport_minX;
+    tsgl_pos dump_viewport_minY;
+    tsgl_pos dump_viewport_maxX;
+    tsgl_pos dump_viewport_maxY;
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
@@ -46,6 +52,8 @@ void tsgl_framebuffer_updateChangedAreaIndex(tsgl_framebuffer* framebuffer, int3
 void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y);
 
 // control
+void tsgl_framebuffer_dumpViewport(tsgl_framebuffer* framebuffer);
+void tsgl_framebuffer_flushViewport(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer);
 void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 

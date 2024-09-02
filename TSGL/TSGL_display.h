@@ -87,6 +87,12 @@ struct tsgl_display { //please DO NOT write anything in the fields of the struct
     tsgl_pos viewport_minY;
     tsgl_pos viewport_maxX;
     tsgl_pos viewport_maxY;
+
+    bool dump_viewport;
+    tsgl_pos dump_viewport_minX;
+    tsgl_pos dump_viewport_minY;
+    tsgl_pos dump_viewport_maxX;
+    tsgl_pos dump_viewport_maxY;
 };
 
 // ---------------- initializing the display
@@ -119,6 +125,8 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer);
 void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //sends the framebuffer asynchronously and swaps buffers. it requires a complete redrawing of the buffer for correct operation. both buffers must be initialized in the same way
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2); //it does not swapbuffers, but copies buffer 1 to buffer 2 before sending it. it is slow but does not require a complete redrawing of the buffer. the problem is that it is OFTEN slower than just using tsgl_display_send
 
+void tsgl_display_dumpViewport(tsgl_display* display);
+void tsgl_display_flushViewport(tsgl_display* display);
 void tsgl_display_clrViewport(tsgl_display* display);
 void tsgl_display_setViewport(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height);
 
