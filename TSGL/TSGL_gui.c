@@ -414,7 +414,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
 
         if (onlyClearOld) {
             if (object->viewport) {
-                printf("flushViewport2\n");
                 TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
             }
             return cleared;
@@ -552,7 +551,6 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     }
 
     if (object->viewport) {
-        printf("flushViewport\n");
         TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
     }
 
