@@ -369,8 +369,10 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         tsgl_pos y = object->math_y;
         tsgl_pos width = object->math_width;
         tsgl_pos height = object->math_height;
-        if (x < object->parent->math_x) x = object->parent->math_x;
-        if (y < object->parent->math_y) x = object->parent->math_y;
+        if (object->parent != NULL) {
+            if (x < object->parent->math_x) x = object->parent->math_x;
+            if (y < object->parent->math_y) x = object->parent->math_y;
+        }
         TSGL_GUI_DRAW(object, setViewport, x, y, width, height);
     }
 
