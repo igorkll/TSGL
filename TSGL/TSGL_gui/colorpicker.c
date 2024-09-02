@@ -95,6 +95,8 @@ static void _fast_draw_callback(tsgl_gui* self) {
     tsgl_rawcolor selectorBgColor = self->display->black;
 
     uint8_t lsel = data->hueSelectorSize / 2;
+    tsgl_viewport_dump dump;
+    TSGL_GUI_DRAW(self, dumpViewport, &dump);
     TSGL_GUI_DRAW(self, setViewport, self->math_x + data->baseWidth, self->math_y, self->math_width - data->baseWidth, self->math_height);
     for (tsgl_pos iy = data->oldHuePointerPos - lsel; iy <= data->oldHuePointerPos + lsel; iy++) {
         TSGL_GUI_DRAW(self, fill, self->math_x + data->baseWidth, self->math_y + iy, self->math_width - data->baseWidth, 1, tsgl_color_raw(
@@ -136,7 +138,7 @@ static void _fast_draw_callback(tsgl_gui* self) {
         TSGL_GUI_DRAW(self, set, x, y + -i, selectorColor);
     }
 
-    TSGL_GUI_DRAW_NO_ARGS(self, clrViewport);
+    TSGL_GUI_DRAW(self, flushViewport, &dump);
 }
 
 static void _draw_callback(tsgl_gui* self) {

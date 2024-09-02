@@ -372,21 +372,21 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         tsgl_pos y2 = object->math_y + object->math_height;
         tsgl_gui* parent = object->parent;
         while (parent != NULL) {
-            tsgl_pos maxX = object->parent->math_x + object->parent->math_width;
-            tsgl_pos maxY = object->parent->math_y + object->parent->math_height;
+            tsgl_pos maxX = parent->math_x + parent->math_width;
+            tsgl_pos maxY = parent->math_y + parent->math_height;
 
-            if (x < object->parent->math_x) {
-                x = object->parent->math_x;
+            if (x < parent->math_x) {
+                x = parent->math_x;
             } else if (x2 > maxX) {
                 x2 = maxX;
             }
 
-            if (y < object->parent->math_y) {
-                y = object->parent->math_y;
+            if (y < parent->math_y) {
+                y = parent->math_y;
             } if (y2 > maxY) {
                 y2 = maxY;
             }
-            
+
             parent = parent->parent;
         }
         TSGL_GUI_DRAW(object, setViewportRange, x, y, x2, y2);
@@ -414,6 +414,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
 
         if (onlyClearOld) {
             if (object->viewport) {
+                printf("flushViewport2\n");
                 TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
             }
             return cleared;
@@ -551,6 +552,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     }
 
     if (object->viewport) {
+        printf("flushViewport\n");
         TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
     }
 
