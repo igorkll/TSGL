@@ -68,12 +68,12 @@ void system_init() {
         .globalCentering = true,
         .width = HEIGHT,
         .height = WIDTH,
-        .targetHeight = WIDTH / 4,
+        .targetHeight = WIDTH / 6,
         .locationMode = tsgl_print_start_top
     };
     tsgl_framebuffer_rotate(&framebuffer, 1);
     tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(tsgl_color_fromHex(0x091078), settings.driver->colormode));
-    tsgl_framebuffer_text(&framebuffer, 0, 0, print, "SMART SPEAKER");
+    tsgl_framebuffer_text(&framebuffer, 0, 0, print, "SMART\nSPEAKER");
     tsgl_framebuffer_rotate(&framebuffer, 0);
 
     settings.init_state = tsgl_display_init_framebuffer;
