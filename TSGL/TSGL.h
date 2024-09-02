@@ -13,7 +13,7 @@ typedef struct tsgl_display tsgl_display;
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767
 
-#define TSGL_SPIRAM   MALLOC_CAP_SPIRAM
+#define TSGL_SPIRAM   (MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT)
 #define TSGL_RAM      0
 
 extern const float tsgl_colormodeSizes[];

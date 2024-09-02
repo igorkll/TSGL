@@ -131,6 +131,7 @@ void tsgl_display_setViewportRange(tsgl_display* display, tsgl_pos minX, tsgl_po
 void tsgl_display_rotate(tsgl_display* display, uint8_t rotation);
 
 //the pointer indicates where to start drawing(only send methods) from. note that on some screens it can only select a position multiple of 8 on one of the planes
+void tsgl_display_resetPointer(tsgl_display* display);
 void tsgl_display_pointer(tsgl_display* display, tsgl_pos x, tsgl_pos y);
 void tsgl_display_flatPointer(tsgl_display* display, size_t index);
 

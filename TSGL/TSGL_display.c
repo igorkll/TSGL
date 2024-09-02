@@ -163,7 +163,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
     tsgl_display_clrViewport(display);
 
     esp_err_t result;
-    if (true) {
+    if (false) {
         tsgl_display_interfaceData_lcd* interfaceData = malloc(sizeof(tsgl_display_interfaceData_lcd));
         display->interfaceType = tsgl_display_interface_lcd;
         display->interface = interfaceData;
@@ -190,8 +190,10 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
             .clock_speed_hz = freq,
             .mode = 0,
             .spics_io_num = cs,
+            .input_delay_ns = 0,
             .queue_size = 1,
-            .pre_cb = _spi_pre_transfer_callback
+            .pre_cb = _spi_pre_transfer_callback,
+            .flags = SPI_DEVICE_NO_DUMMY
         };
 
         interfaceData->spi = malloc(sizeof(spi_device_handle_t));
@@ -272,6 +274,14 @@ void tsgl_display_rotate(tsgl_display* display, uint8_t rotation) {
         tsgl_display_clrViewport(display);
     } else {
         ESP_LOGE(TAG, "your display does not support tsgl_display_rotate");
+    }
+}
+
+void tsgl_display_resetPointer(tsgl_display* display) {
+    if (display->driver->pointer != NULL && display->driver->flatPointer != NULL) {
+        tsgl_display_flatPointer(display, 0);
+    } else {
+        tsgl_display_selectAll(display);
     }
 }
 
