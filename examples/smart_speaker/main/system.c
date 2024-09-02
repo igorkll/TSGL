@@ -61,15 +61,20 @@ void system_init() {
 
     tsgl_print_settings print = {
         .font = tsgl_font_defaultFont,
-        .fill = tsgl_color_raw(tsgl_color_fromHex(0x091078), settings.driver->colormode),
+        .fill = TSGL_INVALID_RAWCOLOR,
+        .bg = TSGL_INVALID_RAWCOLOR,
         .fg = tsgl_color_raw(tsgl_color_fromHex(0xda02c1), settings.driver->colormode),
         .multiline = true,
         .globalCentering = true,
-        .width = WIDTH,
-        .height = HEIGHT,
-        .targetHeight = HEIGHT / 3
+        .width = HEIGHT,
+        .height = WIDTH,
+        .targetHeight = WIDTH / 3,
+        .locationMode = tsgl_print_start_top
     };
+    tsgl_framebuffer_rotate(&framebuffer, 1);
+    tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(tsgl_color_fromHex(0x091078), settings.driver->colormode));
     tsgl_framebuffer_text(&framebuffer, 0, 0, print, "SMART SPEAKER");
+    tsgl_framebuffer_rotate(&framebuffer, 0);
 
     settings.init_state = tsgl_display_init_framebuffer;
     settings.init_framebuffer_ptr = framebuffer.buffer;
