@@ -363,17 +363,33 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     bool forceDraw = force || object->needDraw;
     bool anyDrawLater = false;
 
+    tsgl_viewport_dump viewportDump;
     if (object->viewport) {
-        TSGL_GUI_DRAW_NO_ARGS(object, dumpViewport);
+        TSGL_GUI_DRAW(object, dumpViewport, &viewportDump);
         tsgl_pos x = object->math_x;
         tsgl_pos y = object->math_y;
-        tsgl_pos width = object->math_width;
-        tsgl_pos height = object->math_height;
-        if (object->parent != NULL) {
-            if (x < object->parent->math_x) x = object->parent->math_x;
-            if (y < object->parent->math_y) x = object->parent->math_y;
+        tsgl_pos x2 = object->math_x + object->math_width;
+        tsgl_pos y2 = object->math_y + object->math_height;
+        tsgl_gui* parent = object->parent;
+        while (parent != NULL) {
+            tsgl_pos maxX = object->parent->math_x + object->parent->math_width;
+            tsgl_pos maxY = object->parent->math_y + object->parent->math_height;
+
+            if (x < object->parent->math_x) {
+                x = object->parent->math_x;
+            } else if (x2 > maxX) {
+                x2 = maxX;
+            }
+
+            if (y < object->parent->math_y) {
+                y = object->parent->math_y;
+            } if (y2 > maxY) {
+                y2 = maxY;
+            }
+            
+            parent = parent->parent;
         }
-        TSGL_GUI_DRAW(object, setViewport, x, y, width, height);
+        TSGL_GUI_DRAW(object, setViewportRange, x, y, x2, y2);
     }
 
     if (object->children != NULL && !forceDraw && object->color.invalid) {
@@ -398,7 +414,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
 
         if (onlyClearOld) {
             if (object->viewport) {
-                TSGL_GUI_DRAW_NO_ARGS(object, flushViewport);
+                TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
             }
             return cleared;
         }
@@ -535,7 +551,7 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
     }
 
     if (object->viewport) {
-        TSGL_GUI_DRAW_NO_ARGS(object, flushViewport);
+        TSGL_GUI_DRAW(object, flushViewport, &viewportDump);
     }
 
     return anyDraw;

@@ -30,6 +30,14 @@ typedef enum {
     tsgl_monochrome
 } tsgl_colormode;
 
+typedef struct {
+    bool viewport;
+    tsgl_pos viewport_minX;
+    tsgl_pos viewport_minY;
+    tsgl_pos viewport_maxX;
+    tsgl_pos viewport_maxY;
+} tsgl_viewport_dump;
+
 size_t tsgl_getPartSize();
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
 void* tsgl_malloc(size_t size, int64_t caps);

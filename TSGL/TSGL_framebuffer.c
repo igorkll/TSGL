@@ -158,15 +158,6 @@ inline static tsgl_rawcolor _444read(size_t rawindex, uint8_t* buffer) {
     return result;
 }
 
-static void _clrViewport(tsgl_framebuffer* framebuffer) {
-    framebuffer->dump_viewport = false;
-    framebuffer->dump_viewport_minX = 0;
-    framebuffer->dump_viewport_minY = 0;
-    framebuffer->dump_viewport_maxX = framebuffer->width;
-    framebuffer->dump_viewport_maxY = framebuffer->height;
-}
-
-
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
     memset(framebuffer, 0, sizeof(tsgl_framebuffer));
     framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
@@ -183,7 +174,6 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->buffer = tsgl_malloc(framebuffer->buffersize, caps);
     tsgl_framebuffer_resetChangedArea(framebuffer);
     tsgl_framebuffer_clrViewport(framebuffer);
-    _clrViewport(framebuffer);
     if (framebuffer->buffer == NULL) {
         ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
         return ESP_FAIL;
@@ -231,32 +221,40 @@ inline void tsgl_framebuffer_updateChangedAreaXY(tsgl_framebuffer* framebuffer, 
     if (y > framebuffer->changedDown) framebuffer->changedDown = y;
 }
 
-void tsgl_framebuffer_dumpViewport(tsgl_framebuffer* framebuffer) {
-    framebuffer->dump_viewport = framebuffer->viewport;
-    framebuffer->dump_viewport_minX = framebuffer->viewport_minX;
-    framebuffer->dump_viewport_minY = framebuffer->viewport_minY;
-    framebuffer->dump_viewport_maxX = framebuffer->viewport_maxX;
-    framebuffer->dump_viewport_maxY = framebuffer->viewport_maxY;
+void tsgl_framebuffer_dumpViewport(tsgl_framebuffer* framebuffer, tsgl_viewport_dump* dump) {
+    dump->viewport = framebuffer->viewport;
+    dump->viewport_minX = framebuffer->viewport_minX;
+    dump->viewport_minY = framebuffer->viewport_minY;
+    dump->viewport_maxX = framebuffer->viewport_maxX;
+    dump->viewport_maxY = framebuffer->viewport_maxY;
 }
-void tsgl_framebuffer_flushViewport(tsgl_framebuffer* framebuffer) {
-    framebuffer->viewport = framebuffer->dump_viewport;
-    framebuffer->viewport_minX = framebuffer->dump_viewport_minX;
-    framebuffer->viewport_minY = framebuffer->dump_viewport_minY;
-    framebuffer->viewport_maxX = framebuffer->dump_viewport_maxX;
-    framebuffer->viewport_maxY = framebuffer->dump_viewport_maxY;
+void tsgl_framebuffer_flushViewport(tsgl_framebuffer* framebuffer, tsgl_viewport_dump* dump) {
+    framebuffer->viewport = dump->viewport;
+    framebuffer->viewport_minX = dump->viewport_minX;
+    framebuffer->viewport_minY = dump->viewport_minY;
+    framebuffer->viewport_maxX = dump->viewport_maxX;
+    framebuffer->viewport_maxY = dump->viewport_maxY;
 }
 
-inline void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer) {
+void tsgl_framebuffer_clrViewport(tsgl_framebuffer* framebuffer) {
     tsgl_framebuffer_setViewport(framebuffer, 0, 0, framebuffer->width, framebuffer->height);
     framebuffer->viewport = false;
 }
 
-inline void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+void tsgl_framebuffer_setViewport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     framebuffer->viewport = x != 0 || y != 0 || width != framebuffer->width || height != framebuffer->height;
     framebuffer->viewport_minX = x;
     framebuffer->viewport_minY = y;
     framebuffer->viewport_maxX = x + width;
     framebuffer->viewport_maxY = y + height;
+}
+
+void tsgl_framebuffer_setViewportRange(tsgl_framebuffer* framebuffer, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+    framebuffer->viewport = minX != 0 || minX != 0 || maxX != framebuffer->width || maxY != framebuffer->height;
+    framebuffer->viewport_minX = minX;
+    framebuffer->viewport_minY = minY;
+    framebuffer->viewport_maxX = maxX;
+    framebuffer->viewport_maxY = maxY;
 }
 
 inline void tsgl_framebuffer_rotate(tsgl_framebuffer* framebuffer, uint8_t rotation) {
@@ -286,7 +284,6 @@ inline void tsgl_framebuffer_hardwareRotate(tsgl_framebuffer* framebuffer, uint8
     framebuffer->hardwareRotate = true;
     framebuffer->softwareRotate = false;
     tsgl_framebuffer_clrViewport(framebuffer);
-    _clrViewport(framebuffer);
 }
 
 
