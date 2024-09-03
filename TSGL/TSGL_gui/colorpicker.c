@@ -20,13 +20,13 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
     tsgl_gui_colorpickerData* data = self->data;
 
     switch (event) {
-        // fall through
         case tsgl_gui_click:
             if (x >= data->baseWidth) {
                 data->selectedZone = 1;
             } else {
                 data->selectedZone = 2;
             }
+            // fall through
 
         case tsgl_gui_drag:
             if (data->selectedZone > 0) {
