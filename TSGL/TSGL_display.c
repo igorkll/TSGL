@@ -25,11 +25,11 @@ typedef struct {
     bool state;
 } spi_pretransfer_info;
 
-inline static bool _pointInFrame(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
+static bool TSGL_FAST_FUNC _pointInFrame(tsgl_display* display, tsgl_pos x, tsgl_pos y) {
     return x >= display->viewport_minX && y >= display->viewport_minY && x < display->viewport_maxX && y < display->viewport_maxY;
 }
 
-static void _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
+static void TSGL_FAST_FUNC _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
     spi_pretransfer_info pre_transfer_info = {
@@ -46,7 +46,7 @@ static void _spi_sendCommand(tsgl_display* display, const uint8_t cmd) {
     ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &t));
 }
 
-static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
+static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
     spi_pretransfer_info pre_transfer_info = {
@@ -82,7 +82,7 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
     }
 }
 
-static bool _doCommand(tsgl_display* display, const tsgl_driver_command command) {
+static bool TSGL_FAST_FUNC _doCommand(tsgl_display* display, const tsgl_driver_command command) {
     tsgl_display_sendCommandWithArgs(display, command.cmd, command.data, command.datalen);
     
     if (command.delay > 0) {
@@ -93,31 +93,31 @@ static bool _doCommand(tsgl_display* display, const tsgl_driver_command command)
     return false;
 }
 
-static void _doCommands(tsgl_display* display, const tsgl_driver_command* list) {
+static void TSGL_FAST_FUNC _doCommands(tsgl_display* display, const tsgl_driver_command* list) {
     uint16_t cmd = 0;
     while (!_doCommand(display, list[cmd++]));
 }
 
-static void _doCommandList(tsgl_display* display, tsgl_driver_list list) {
+static void TSGL_FAST_FUNC _doCommandList(tsgl_display* display, tsgl_driver_list list) {
     _doCommands(display, list.list);
 }
 
-static void _spi_pre_transfer_callback(spi_transaction_t* t) {
+static void TSGL_FAST_FUNC _spi_pre_transfer_callback(spi_transaction_t* t) {
     spi_pretransfer_info* pretransfer_info = (spi_pretransfer_info*)t->user;
     gpio_set_level(pretransfer_info->pin, pretransfer_info->state);
 }
 
-static bool _spi_floodCallback(void* arg, void* data, size_t size) {
+static bool TSGL_FAST_FUNC _spi_floodCallback(void* arg, void* data, size_t size) {
     _spi_sendData((tsgl_display*)arg, data, size);
     return true;
 }
 
-static bool _lcd_floodCallback(void* arg, void* data, size_t size) {
+static bool TSGL_FAST_FUNC _lcd_floodCallback(void* arg, void* data, size_t size) {
     tsgl_display_interfaceData_lcd* interfaceData = ((tsgl_display*)arg)->interface;
     return esp_lcd_panel_io_tx_color(*interfaceData->lcd, -1, data, size) == ESP_OK;
 }
 
-static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
+static void TSGL_FAST_FUNC _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height) {
     if (display->driver->select != NULL) {
         _doCommandList(display,
             display->driver->select(&display->storage,
@@ -130,7 +130,7 @@ static void _select(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos widt
     }
 }
 
-static void _selectAll(tsgl_display* display) {
+static void TSGL_FAST_FUNC _selectAll(tsgl_display* display) {
     _select(display, 0, 0, display->width, display->height);
 }
 
@@ -602,11 +602,11 @@ void tsgl_display_setViewportRange(tsgl_display* display, tsgl_pos minX, tsgl_po
 
 // graphic
 
-inline void tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+void TSGL_FAST_FUNC tsgl_display_push(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
     tsgl_gfx_push(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, x, y, sprite, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-inline void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+void TSGL_FAST_FUNC tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (display->driver->pointer != NULL && display->driver->flatPointer != NULL) {
         tsgl_display_pointer(display, x, y);
     } else {
@@ -624,16 +624,16 @@ inline void tsgl_display_setWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl
     }
 }
 
-inline void tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+void TSGL_FAST_FUNC tsgl_display_set(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
     if (!_pointInFrame(display, x, y)) return;
     tsgl_display_setWithoutCheck(display, x, y, color);
 }
 
-inline void tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
+void TSGL_FAST_FUNC tsgl_display_line(tsgl_display* display, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
     tsgl_gfx_line(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x1, y1, x2, y2, color, stroke, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-inline void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+void TSGL_FAST_FUNC tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     if (x < display->viewport_minX) {
         width = width - (display->viewport_minX - x);
         x = display->viewport_minX;
@@ -648,7 +648,7 @@ inline void tsgl_display_fill(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsg
     tsgl_display_fillWithoutCheck(display, x, y, width, height, color);
 }
 
-inline void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
+void TSGL_FAST_FUNC tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
     tsgl_display_select(display, x, y, width, height);
     switch (display->colormode) {
         case tsgl_rgb444:
@@ -662,14 +662,14 @@ inline void tsgl_display_fillWithoutCheck(tsgl_display* display, tsgl_pos x, tsg
     }
 }
 
-inline void tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
+void TSGL_FAST_FUNC tsgl_display_rect(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color, tsgl_pos stroke) {
     tsgl_gfx_rect(display, (TSGL_FILL_REFERENCE())tsgl_display_fill, x, y, width, height, color, stroke);
 }
 
-inline tsgl_print_textArea tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
+tsgl_print_textArea TSGL_FAST_FUNC tsgl_display_text(tsgl_display* display, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {
     return tsgl_gfx_text(display, (TSGL_SET_REFERENCE())tsgl_display_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_display_fillWithoutCheck, x, y, sets, text, display->viewport_minX, display->viewport_minY, display->viewport_maxX, display->viewport_maxY);
 }
 
-inline void tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
+void TSGL_FAST_FUNC tsgl_display_clear(tsgl_display* display, tsgl_rawcolor color) {
     tsgl_display_fillWithoutCheck(display, 0, 0, display->width, display->height, color);
 }

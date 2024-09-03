@@ -153,6 +153,7 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     }
 }
 
+/*
 tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
@@ -364,4 +365,9 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     textArea.width = (textArea.right - textArea.left) + 1;
     textArea.height = (textArea.bottom - textArea.top) + 1;
     return textArea;
+}
+*/
+
+tsgl_print_textArea TSGL_FAST_FUNC tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+    return (tsgl_print_textArea) {};
 }

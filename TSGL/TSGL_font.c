@@ -8,20 +8,19 @@ static uint16_t _read_uint16(const uint8_t* ptr, size_t index) {
     return (ptr[index] << 8) | (ptr[index + 1] & 0xff);
 }
 
-
-bool tsgl_font_isSmoothing(const void* font) {
-    return ((const uint8_t*)font)[0] > 0;
+static uint8_t _version(const void* font) {
+    return ((const uint8_t*)font)[0];
 }
 
+
+
 size_t tsgl_font_find(const void* font, char chr) {
-    bool smoothing = tsgl_font_isSmoothing(font);
     const uint8_t* ptr = font;
     size_t index = 1;
     while (true) {
         if (ptr[index] == chr) break;
         if (ptr[index] == 0) return 0;
-        size_t charSize = _read_uint16(font, index + 1) * _read_uint16(font, index + 3);
-        if (!smoothing) charSize = ceil(charSize / 8.0);
+        size_t charSize = ceil((_read_uint16(font, index + 1) * _read_uint16(font, index + 3)) / 8.0);
         index += charSize + 5;
     }
     return index + 5;
@@ -41,10 +40,8 @@ uint16_t tsgl_font_height(const void* font, char chr) {
 
 uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
     const uint8_t* ptr = font;
-    if (!tsgl_font_isSmoothing(font)) {
-        uint8_t byte = ptr[lptr + (index / 8)];
-        return byte & (1 << (index % 8)) ? 255 : 0;
-    }
+    uint8_t byte = ptr[lptr + (index / 8)];
+    return byte & (1 << (index % 8)) ? 255 : 0;
     return ptr[lptr + index];
 }
 

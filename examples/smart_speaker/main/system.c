@@ -13,6 +13,7 @@
 
 #define WIDTH 320
 #define HEIGHT 480
+#define ROTATION 0
 
 static tsgl_display_settings settings = {
     .driver = &st77XX_rgb565,
@@ -66,12 +67,12 @@ void system_init() {
         .fg = tsgl_color_raw(tsgl_color_fromHex(0xda02c1), settings.driver->colormode),
         .multiline = true,
         .globalCentering = true,
-        .width = HEIGHT,
-        .height = WIDTH,
-        .targetHeight = WIDTH / 6,
         .locationMode = tsgl_print_start_top
     };
-    tsgl_framebuffer_rotate(&framebuffer, 1);
+    tsgl_framebuffer_rotate(&framebuffer, ROTATION);
+    print.width = framebuffer.width;
+    print.height = framebuffer.height;
+    print.targetHeight = framebuffer.width / 6;
     tsgl_framebuffer_clear(&framebuffer, tsgl_color_raw(tsgl_color_fromHex(0x091078), settings.driver->colormode));
     tsgl_framebuffer_text(&framebuffer, 0, 0, print, "SMART\nSPEAKER");
     tsgl_framebuffer_rotate(&framebuffer, 0);
@@ -92,9 +93,9 @@ void system_init() {
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
     ESP_ERROR_CHECK(tsgl_filesystem_mount_fatfs("/storage", "storage"));
 
-    tsgl_framebuffer_hardwareRotate(&framebuffer, 1);
-    tsgl_display_rotate(&display, 1);
-    touchscreen.rotation = 1;
+    tsgl_framebuffer_hardwareRotate(&framebuffer, ROTATION);
+    tsgl_display_rotate(&display, ROTATION);
+    touchscreen.rotation = ROTATION;
 
     gpio_config_t io_conf = {};
     io_conf.pin_bit_mask |= 1ULL << POWERLOCK;
