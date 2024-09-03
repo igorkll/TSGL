@@ -191,6 +191,7 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->buffersize = width * height * framebuffer->colorsize;
 
     void* buffer = tsgl_malloc(framebuffer->buffersize, caps);
+    tsgl_framebuffer_staticInit(framebuffer, buffer, colormode, width, height);
     if (buffer == NULL) {
         ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
         return ESP_FAIL;
@@ -198,7 +199,6 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
         ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.3f", width, height, framebuffer->colorsize);
         return ESP_OK;
     }
-    return tsgl_framebuffer_staticInit(framebuffer, buffer, colormode, width, height);
 }
 
 esp_err_t tsgl_framebuffer_staticInit(tsgl_framebuffer* framebuffer, void* ptr, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
