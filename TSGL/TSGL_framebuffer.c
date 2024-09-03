@@ -158,6 +158,19 @@ static tsgl_rawcolor TSGL_FAST_FUNC _444read(size_t rawindex, uint8_t* buffer) {
     return result;
 }
 
+static void TSGL_FAST_FUNC _unRotation(tsgl_framebuffer* framebuffer, tsgl_pos* x, tsgl_pos* y, tsgl_pos* width, tsgl_pos* height) {
+    tsgl_pos _x = *x;
+    tsgl_pos _y = *y;
+    tsgl_pos _width = *width;
+    tsgl_pos _height = *height;
+    if (framebuffer->realRotation == 1 || framebuffer->realRotation == 3) {
+        *width = _height;
+        *height = _width;
+    }
+    *x = _rotateX(framebuffer, _x, _y);
+    *y = _rotateY(framebuffer, _x, _y);
+}
+
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
     memset(framebuffer, 0, sizeof(tsgl_framebuffer));
     framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
@@ -431,6 +444,7 @@ void TSGL_FAST_FUNC tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuf
                         break;
                 }
             } else {
+                _unRotation(framebuffer, &x, &y, &width, &height);
                 uint8_t* firstLine = framebuffer->buffer + _rotateGetBufferIndex(framebuffer, 0, x, y);
                 size_t lineSize = width * framebuffer->colorsize;
                 memcpy(firstLine, color.arr, framebuffer->colorsize);
