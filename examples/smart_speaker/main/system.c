@@ -94,9 +94,8 @@ void system_init() {
     ESP_ERROR_CHECK(tsgl_framebuffer_init(&framebuffer2, display.colormode, settings.width, settings.height, BUFFER));
     ESP_ERROR_CHECK(tsgl_filesystem_mount_fatfs("/storage", "storage"));
 
-    //tsgl_framebuffer_hardwareRotate(&framebuffer, ROTATION);
-    tsgl_framebuffer_rotate(&framebuffer, ROTATION);
-    //tsgl_display_rotate(&display, ROTATION);
+    tsgl_framebuffer_hardwareRotate(&framebuffer, ROTATION);
+    tsgl_display_rotate(&display, ROTATION);
     touchscreen.rotation = ROTATION;
 
     gpio_config_t io_conf = {};

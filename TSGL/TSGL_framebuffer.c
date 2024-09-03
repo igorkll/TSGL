@@ -176,12 +176,12 @@ static void TSGL_FAST_FUNC _unRotation(tsgl_framebuffer* framebuffer, tsgl_pos* 
             break;
 
         case 2:
-            *x -= _width;
-            *y -= _height;
+            *x -= (_width - 1);
+            *y -= (_height - 1);
             break;
 
         case 3:
-            *y -= _height;
+            *y -= (_width - 1);
             break;
     }
 }
@@ -459,10 +459,7 @@ void TSGL_FAST_FUNC tsgl_framebuffer_fillWithoutCheck(tsgl_framebuffer* framebuf
                         break;
                 }
             } else {
-                printf("i %i %i %i %i\n", x, y, width, height);
                 _unRotation(framebuffer, &x, &y, &width, &height);
-                printf("o %i %i %i %i\n", x, y, width, height);
-
                 uint8_t* firstLine = framebuffer->buffer + _rotateGetBufferIndex(framebuffer, 0, x, y);
                 size_t lineSize = width * framebuffer->colorsize;
                 memcpy(firstLine, color.arr, framebuffer->colorsize);
