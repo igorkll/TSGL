@@ -29,7 +29,7 @@ static void _soundTask(void* _sound) {
     while (true) {
         if (sound->reload) {
             sound->reload = false;
-            fseek(sound->file, sound->position, SEEK_SET);
+            fseek(sound->file, sound->position + sound->offset, SEEK_SET);
         }
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
         gptimer_start(sound->timer);
@@ -148,7 +148,7 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
 
     if (sound->file != NULL) {
         sound->bufferPosition = 0;
-        fseek(sound->file, sound->position, SEEK_SET);
+        fseek(sound->file, sound->position + sound->offset, SEEK_SET);
         fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
     } else {
         sound->bufferPosition = sound->position;
@@ -157,13 +157,23 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
 
 
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
+    return tsgl_sound_load_pcmPart(sound, 0, 0, bufferSize, caps, path, sample_rate, bit_rate, channels, pcm_format);
+}
+
+esp_err_t tsgl_sound_load_pcmPart(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
     memset(sound, 0, sizeof(tsgl_sound));
     sound->file = fopen(path, "rb");
     if (sound->file == NULL) return ESP_FAIL;
+    fseek(sound->file, offset, SEEK_SET);
 
+    sound->offset = offset;
     sound->speed = 1.0;
     sound->volume = 1.0;
-    sound->len = tsgl_filesystem_size(path);
+    if (loadsize == 0) {
+        sound->len = tsgl_filesystem_size(path) - offset;
+    } else {
+        sound->len = loadsize;
+    }
     sound->sample_rate = sample_rate;
     sound->bit_rate = bit_rate;
     sound->channels = channels;
@@ -349,6 +359,7 @@ tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin) {
 }
 
 void IRAM_ATTR tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value) {
+    if (output == NULL) return;
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(*output->channel, value);

@@ -140,6 +140,6 @@ void app_main() {
         tsgl_keyboard_readAll(&keyboard);
         tsgl_gui_processTouchscreen(gui, &touchscreen);
         tsgl_gui_processGui(gui, &framebuffer2, &benchmark);
-        tsgl_benchmark_print(&benchmark);
+        //tsgl_benchmark_print(&benchmark);
     }
 }
