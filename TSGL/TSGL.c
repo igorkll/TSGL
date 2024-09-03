@@ -5,6 +5,7 @@
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_timer.h>
 
 static const char* TAG = "TSGL";
 const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
@@ -59,4 +60,8 @@ void tsgl_delay(size_t time) {
     size_t ticks = time / portTICK_PERIOD_MS;
     if (ticks <= 0) ticks = 1;
     vTaskDelay(ticks);
+}
+
+time_t tsgl_time() {
+    return esp_timer_get_time() / 1000;
 }

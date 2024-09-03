@@ -9,29 +9,47 @@ typedef struct {
 } _bind_pin;
 
 static bool _rawRead(tsgl_keyboard_bind* bindState) {
-    bool state = false;
+    bool rawState = false;
     if (bindState != NULL) {
         switch (bindState->bindType) {
             case 0:
                 _bind_pin* bind = bindState->bind;
-                state = gpio_get_level(bind->pin);
-                if (!bind->highLevel) state = !state;
+                rawState = gpio_get_level(bind->pin);
+                if (!bind->highLevel) rawState = !rawState;
                 break;
 
             default:
                 ESP_LOGE(TAG, "unknown bind type: %i", bindState->bindType);
                 break;
         }
+
+        time_t time = tsgl_time();
+        if (rawState != bindState->realState) {
+            if (rawState) {
+                bindState->press_time = time;
+            } else {
+                bindState->release_time = time;
+            }
+            bindState->realState = rawState;
+        }
+
+        if (rawState) {
+            if (bindState->pressing_ms == 0 || time - bindState->pressing_ms >= bindState->press_time)
+                bindState->realState = true;
+        } else {
+            if (bindState->releasing_ms == 0 || time - bindState->releasing_ms >= bindState->release_time)
+                bindState->realState = false;
+        }
         
         bindState->whenPressed = false;
         bindState->whenReleasing = false;
-        if (state != bindState->state) {
-            if (state) {
+        if (bindState->realState != bindState->state) {
+            if (bindState->realState) {
                 bindState->whenPressed = true;
             } else {
                 bindState->whenReleasing = true;
             }
-            bindState->state = state;
+            bindState->state = bindState->realState;
         }
 
         if (bindState->object != NULL) {
@@ -39,7 +57,7 @@ static bool _rawRead(tsgl_keyboard_bind* bindState) {
             if (bindState->whenReleasing) tsgl_gui_processClick(bindState->object, 0, 0, tsgl_gui_drop);
         }
     }
-    return state;
+    return bindState->state;
 }
 
 void tsgl_keyboard_init(tsgl_keyboard* keyboard) {
@@ -109,6 +127,12 @@ void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* ob
     if (bindState != NULL) {
         bindState->object = object;
     }
+}
+
+void tsgl_keyboard_setDebounce(tsgl_keyboard* keyboard, int buttonID, time_t pressing_ms, time_t releasing_ms) {
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
+    bindState->pressing_ms = pressing_ms;
+    bindState->releasing_ms = releasing_ms;
 }
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {

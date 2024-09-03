@@ -8,9 +8,11 @@ static uint16_t _read_uint16(const uint8_t* ptr, size_t index) {
     return (ptr[index] << 8) | (ptr[index + 1] & 0xff);
 }
 
+/*
 static uint8_t _version(const void* font) {
     return ((const uint8_t*)font)[0];
 }
+*/
 
 
 

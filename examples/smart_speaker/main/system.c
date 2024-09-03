@@ -110,6 +110,8 @@ void system_init() {
     tsgl_keyboard_init(&keyboard);
     tsgl_keyboard_bindButton(&keyboard, 'A', false, false, FIRST);
     tsgl_keyboard_bindButton(&keyboard, 'B', false, false, LAST);
+    tsgl_keyboard_setDebounce(&keyboard, 'A', 100, 100);
+    tsgl_keyboard_setDebounce(&keyboard, 'B', 100, 100);
 }
 
 void system_powerOff() {

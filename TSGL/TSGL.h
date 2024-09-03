@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <driver/gpio.h>
+#include <time.h>
 
 typedef int16_t tsgl_pos;
 typedef struct tsgl_sprite tsgl_sprite;
@@ -44,6 +45,7 @@ size_t tsgl_getPartSize();
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
 void* tsgl_malloc(size_t size, int64_t caps);
 void tsgl_delay(size_t time);
+time_t tsgl_time(); //returns the start time in milliseconds
 
 // ---------------- driver
 

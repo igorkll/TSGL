@@ -36,6 +36,6 @@ void tsgl_benchmark_noSend(tsgl_benchmark* benchmark); //you will call when noth
 void tsgl_benchmark_print(tsgl_benchmark* benchmark);
 void tsgl_benchmark_wait(tsgl_benchmark* benchmark, float targetFPS); //waits for the right time in order not to exceed the target frequency of frames, you need to call after endSend
 
-int tsgl_benchmark_getWait(tsgl_benchmark* benchmark, float targetFPS); //returns the time to wait so as not to refresh the screen more often than necessary to ensure the target FPS
+time_t tsgl_benchmark_getWait(tsgl_benchmark* benchmark, float targetFPS); //returns the time to wait so as not to refresh the screen more often than necessary to ensure the target FPS
 float tsgl_benchmark_processMul(tsgl_benchmark* benchmark, float targetFPS); //calculates a multiplier for the speed of processes based on the refresh rate of the screen and the target frequency. if the real frequency is equal to the target, then the number will be 1. if the real frequency is two times less, then the number will be 2 and so on
 int tsgl_benchmark_processMulInt(tsgl_benchmark* benchmark, float targetFPS); //unlike tsgl_benchmark_processMul, this method cannot return less than one

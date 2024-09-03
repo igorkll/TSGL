@@ -14,6 +14,13 @@ typedef struct {
 
     uint8_t bindType;
     void* bind;
+
+    time_t pressing_ms;
+    time_t releasing_ms;
+
+    time_t press_time;
+    time_t release_time;
+    bool realState;
 } tsgl_keyboard_bind;
 
 typedef struct {
@@ -29,9 +36,11 @@ tsgl_keyboard_bind* tsgl_keyboard_bindButton(tsgl_keyboard* keyboard, int button
 tsgl_keyboard_bind* tsgl_keyboard_findButton(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_unbindButton(tsgl_keyboard* keyboard, int buttonID);
 
-void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object); //allows you to simulate clicking on an element using a button, to work, you need to call readState at the button
-bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed, getState, whenReleasing to update the status
 void tsgl_keyboard_readAll(tsgl_keyboard* keyboard); //calls readState on all buttons
+void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* object); //allows you to simulate clicking on an element using a button, to work, you need to call readState at the button
+void tsgl_keyboard_setDebounce(tsgl_keyboard* keyboard, int buttonID, time_t pressing_ms, time_t releasing_ms);
+
+bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed, getState, whenReleasing to update the status
 bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID);
