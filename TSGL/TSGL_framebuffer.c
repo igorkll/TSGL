@@ -187,6 +187,21 @@ static void TSGL_FAST_FUNC _unRotation(tsgl_framebuffer* framebuffer, tsgl_pos* 
 }
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps) {
+    framebuffer->colorsize = tsgl_colormodeSizes[colormode];
+    framebuffer->buffersize = width * height * framebuffer->colorsize;
+
+    void* buffer = tsgl_malloc(framebuffer->buffersize, caps);
+    if (buffer == NULL) {
+        ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
+        return ESP_FAIL;
+    } else {
+        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.3f", width, height, framebuffer->colorsize);
+        return ESP_OK;
+    }
+    return tsgl_framebuffer_staticInit(framebuffer, buffer, colormode, width, height);
+}
+
+esp_err_t tsgl_framebuffer_staticInit(tsgl_framebuffer* framebuffer, void* ptr, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height) {
     memset(framebuffer, 0, sizeof(tsgl_framebuffer));
     framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
     framebuffer->colorsize = tsgl_colormodeSizes[colormode];
@@ -199,16 +214,10 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     framebuffer->buffersize = width * height * framebuffer->colorsize;
     double notUsed;
     framebuffer->floatColorsize = modf(framebuffer->colorsize, &notUsed) != 0;
-    framebuffer->buffer = tsgl_malloc(framebuffer->buffersize, caps);
+    framebuffer->buffer = ptr;
     tsgl_framebuffer_resetChangedArea(framebuffer);
     tsgl_framebuffer_clrViewport(framebuffer);
-    if (framebuffer->buffer == NULL) {
-        ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
-        return ESP_FAIL;
-    } else {
-        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.3f", width, height, framebuffer->colorsize);
-        return ESP_OK;
-    }
+    return ESP_OK;
 }
 
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer) {

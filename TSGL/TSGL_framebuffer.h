@@ -4,6 +4,8 @@
 #include "TSGL_font.h"
 #include <esp_err.h>
 
+#define tsgl_static_framebuffer DMA_ATTR uint8_t
+
 typedef struct {
     uint8_t* buffer;
     size_t buffersize;
@@ -37,6 +39,7 @@ typedef struct {
 } tsgl_framebuffer;
 
 esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height, int64_t caps);
+esp_err_t tsgl_framebuffer_staticInit(tsgl_framebuffer* framebuffer, void* ptr, tsgl_colormode colormode, tsgl_pos width, tsgl_pos height);
 void tsgl_framebuffer_free(tsgl_framebuffer* framebuffer);
 
 // changed area detector
