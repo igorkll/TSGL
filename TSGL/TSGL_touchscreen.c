@@ -2,6 +2,7 @@
 #include "TSGL_touchscreen.h"
 #include "TSGL_i2c.h"
 #include <esp_err.h>
+#include <string.h>
 #include <driver/gpio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -59,14 +60,14 @@ esp_err_t tsgl_touchscreen_ft6336u(tsgl_touchscreen* touchscreen, i2c_port_t hos
 
 void tsgl_touchscreen_imitateClicks(tsgl_touchscreen* touchscreen, tsgl_touchscreen_point* imitateClicks, uint8_t imitateClicksCount) {
     touchscreen->imitateClicksCount = imitateClicksCount;
-    if (sound->imitateClicks != NULL) {
-        free(sound->imitateClicks);
-        sound->imitateClicks = NULL;
+    if (touchscreen->imitateClicks != NULL) {
+        free(touchscreen->imitateClicks);
+        touchscreen->imitateClicks = NULL;
     }
     if (imitateClicksCount == 0) return;
-    sound->imitateClicks = malloc(imitateClicksCount * sizeof(tsgl_touchscreen_point));
+    touchscreen->imitateClicks = malloc(imitateClicksCount * sizeof(tsgl_touchscreen_point));
     for (size_t i = 0; i < imitateClicksCount; i++) {
-        sound->imitateClicks[i] = imitateClicks[i];
+        touchscreen->imitateClicks[i] = imitateClicks[i];
     }
 }
 
@@ -77,6 +78,9 @@ uint8_t tsgl_touchscreen_touchCount(tsgl_touchscreen* touchscreen) {
             touchscreen->realClicksCount = i2c_readReg(touchscreen, 0x02) & 0x0F;
             clicksCount += touchscreen->realClicksCount;
             break;
+
+        default:
+            break;
     }
     return clicksCount;
 }
@@ -84,7 +88,7 @@ uint8_t tsgl_touchscreen_touchCount(tsgl_touchscreen* touchscreen) {
 tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, uint8_t index) {
     if (index >= touchscreen->realClicksCount) {
         if (touchscreen->imitateClicks != NULL) {
-            return sound->imitateClicks[index - touchscreen->realClicksCount];
+            return touchscreen->imitateClicks[index - touchscreen->realClicksCount];
         }
         return (tsgl_touchscreen_point) {
             .x = 0,
@@ -112,6 +116,9 @@ tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, 
                     z = 1;
                     break;
             }
+            break;
+
+        default:
             break;
     }
 

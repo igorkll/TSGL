@@ -136,7 +136,17 @@ void app_main() {
 
     tsgl_gui_select(scene1);
 
+    int i = 0;
     while (true) {
+        tsgl_touchscreen_point points[2] = {
+            {
+                .x = 80,
+                .y = 80,
+                .z = 1
+            }
+        };
+        tsgl_touchscreen_imitateClicks(&touchscreen, points, i % 2);
+
         tsgl_keyboard_readAll(&keyboard);
         tsgl_gui_processTouchscreen(gui, &touchscreen);
         tsgl_gui_processGui(gui, &framebuffer2, &benchmark);
