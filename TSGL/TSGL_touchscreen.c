@@ -26,7 +26,15 @@ static int i2c_readDualReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
     return ((read_buf[0] & 0x0f) << 8) | read_buf[1];
 }
 
+esp_err_t tsgl_touchscreen_empty(tsgl_touchscreen* touchscreen) {
+    memset(touchscreen, 0, sizeof(tsgl_touchscreen));
+    touchscreen->type = tsgl_touchscreen_capacitive_empty;
+    return ESP_OK;
+}
+
 esp_err_t tsgl_touchscreen_ft6336u(tsgl_touchscreen* touchscreen, i2c_port_t host, uint8_t address, gpio_num_t rst) {
+    tsgl_touchscreen_empty(touchscreen);
+
     ts_i2c* ts = malloc(sizeof(ts_i2c));
     touchscreen->type = tsgl_touchscreen_capacitive_ft6336u;
     touchscreen->ts = (void*)ts;
@@ -49,15 +57,42 @@ esp_err_t tsgl_touchscreen_ft6336u(tsgl_touchscreen* touchscreen, i2c_port_t hos
     return ESP_OK;
 }
 
+void tsgl_touchscreen_imitateClicks(tsgl_touchscreen* touchscreen, tsgl_touchscreen_point* imitateClicks, uint8_t imitateClicksCount) {
+    touchscreen->imitateClicksCount = imitateClicksCount;
+    if (sound->imitateClicks != NULL) {
+        free(sound->imitateClicks);
+        sound->imitateClicks = NULL;
+    }
+    if (imitateClicksCount == 0) return;
+    sound->imitateClicks = malloc(imitateClicksCount * sizeof(tsgl_touchscreen_point));
+    for (size_t i = 0; i < imitateClicksCount; i++) {
+        sound->imitateClicks[i] = imitateClicks[i];
+    }
+}
+
 uint8_t tsgl_touchscreen_touchCount(tsgl_touchscreen* touchscreen) {
+    uint8_t clicksCount = touchscreen->imitateClicksCount;
     switch (touchscreen->type) {
         case tsgl_touchscreen_capacitive_ft6336u:
-            return i2c_readReg(touchscreen, 0x02) & 0x0F;
+            touchscreen->realClicksCount = i2c_readReg(touchscreen, 0x02) & 0x0F;
+            clicksCount += touchscreen->realClicksCount;
+            break;
     }
-    return 0;
+    return clicksCount;
 }
 
 tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, uint8_t index) {
+    if (index >= touchscreen->realClicksCount) {
+        if (touchscreen->imitateClicks != NULL) {
+            return sound->imitateClicks[index - touchscreen->realClicksCount];
+        }
+        return (tsgl_touchscreen_point) {
+            .x = 0,
+            .y = 0,
+            .z = -1
+        };
+    }
+
     float x = 0;
     float y = 0;
     float z = 0;
@@ -70,6 +105,7 @@ tsgl_touchscreen_point tsgl_touchscreen_getPoint(tsgl_touchscreen* touchscreen, 
                     y = i2c_readDualReg(touchscreen, 0x05);
                     z = 1;
                     break;
+
                 case 1:
                     x = i2c_readDualReg(touchscreen, 0x09);
                     y = i2c_readDualReg(touchscreen, 0x0B);

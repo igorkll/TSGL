@@ -34,10 +34,10 @@ static bool _rawRead(tsgl_keyboard_bind* bindState) {
         }
 
         if (rawState) {
-            if (bindState->pressing_ms == 0 || time - bindState->pressing_ms >= bindState->press_time)
+            if (bindState->pressing_ms == 0 || time - bindState->press_time >= bindState->pressing_ms)
                 bindState->realState = true;
         } else {
-            if (bindState->releasing_ms == 0 || time - bindState->releasing_ms >= bindState->release_time)
+            if (bindState->releasing_ms == 0 || time - bindState->release_time >= bindState->releasing_ms)
                 bindState->realState = false;
         }
         
@@ -126,13 +126,19 @@ void tsgl_keyboard_bindToGui(tsgl_keyboard* keyboard, int buttonID, tsgl_gui* ob
     tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {
         bindState->object = object;
+    } else {
+        ESP_LOGE(TAG, "tsgl_keyboard_bindToGui. there is no button with ID %i/%c", buttonID, (char)buttonID);
     }
 }
 
 void tsgl_keyboard_setDebounce(tsgl_keyboard* keyboard, int buttonID, time_t pressing_ms, time_t releasing_ms) {
     tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
-    bindState->pressing_ms = pressing_ms;
-    bindState->releasing_ms = releasing_ms;
+    if (bindState != NULL) {
+        bindState->pressing_ms = pressing_ms;
+        bindState->releasing_ms = releasing_ms;
+    } else {
+        ESP_LOGE(TAG, "tsgl_keyboard_setDebounce. there is no button with ID %i/%c", buttonID, (char)buttonID);
+    }
 }
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID) {
