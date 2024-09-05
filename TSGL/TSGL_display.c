@@ -46,6 +46,8 @@ static void TSGL_FAST_FUNC _spi_sendCommand(tsgl_display* display, const uint8_t
     ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &t));
 }
 
+static spi_transaction_t smallTransaction;
+static bool smallTransactionExists;
 static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
@@ -54,29 +56,38 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
         .state = true
     };
 
-    spi_transaction_t transaction = {
-        .length = size * 8,
-        .tx_buffer = data,
-        .user = (void*)(&pre_transfer_info)
-    };
+    if (size <= 16) {
+        if (smallTransactionExists) {
+            spi_transaction_t* partTransactionPtr = &smallTransaction;
+            ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
+            smallTransactionExists = false;
+        }
 
-    if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
+        smallTransaction = (spi_transaction_t) {
+            .length = size * 8,
+            .tx_buffer = data,
+            .user = (void*)(&pre_transfer_info)
+        };
+
+        ESP_ERROR_CHECK(spi_device_queue_trans(*interfaceData->spi, &smallTransaction, portMAX_DELAY));
+        smallTransactionExists = true;
+    } else {
         size_t part = tsgl_getPartSize() / 2;
         uint8_t* buffer1 = malloc(part);
         uint8_t* buffer2 = malloc(part);
         size_t offset = 0;
         bool currentBuffer = false;
         spi_transaction_t partTransaction;
-        bool oldPartTransactionExists = false;
+        bool partTransactionExists = false;
         while (true) {
             uint8_t* buffer = currentBuffer ? buffer2 : buffer1;
             size_t len = TSGL_MATH_MIN(size - offset, part);
             memcpy(buffer, data + offset, len);
 
-            if (oldPartTransactionExists) {
+            if (partTransactionExists) {
                 spi_transaction_t* partTransactionPtr = &partTransaction;
                 ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
-                oldPartTransactionExists = false;
+                partTransactionExists = false;
             }
 
             partTransaction = (spi_transaction_t) {
@@ -86,7 +97,7 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
             };
 
             ESP_ERROR_CHECK(spi_device_queue_trans(*interfaceData->spi, &partTransaction, portMAX_DELAY));
-            oldPartTransactionExists = true;
+            partTransactionExists = true;
             currentBuffer = !currentBuffer;
 
             offset += part;
@@ -94,7 +105,7 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
                 break;
             }
         }
-        if (oldPartTransactionExists) {
+        if (partTransactionExists) {
             spi_transaction_t* partTransactionPtr = &partTransaction;
             ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
         }
