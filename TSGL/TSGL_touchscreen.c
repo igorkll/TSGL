@@ -28,20 +28,17 @@ static int i2c_readDualReg(tsgl_touchscreen* touchscreen, uint8_t addr) {
 }
 
 esp_err_t tsgl_touchscreen_empty(tsgl_touchscreen* touchscreen) {
-    memset(touchscreen, 0, sizeof(tsgl_touchscreen));
     touchscreen->type = tsgl_touchscreen_capacitive_empty;
     return ESP_OK;
 }
 
 esp_err_t tsgl_touchscreen_ft6336u(tsgl_touchscreen* touchscreen, i2c_port_t host, uint8_t address, gpio_num_t rst) {
-    tsgl_touchscreen_empty(touchscreen);
-
     ts_i2c* ts = malloc(sizeof(ts_i2c));
-    touchscreen->type = tsgl_touchscreen_capacitive_ft6336u;
-    touchscreen->ts = (void*)ts;
-
     ts->host = host;
     ts->address = address;
+
+    touchscreen->type = tsgl_touchscreen_capacitive_ft6336u;
+    touchscreen->ts = (void*)ts;
 
     if (rst >= 0) {
         gpio_config_t io_conf = {};
