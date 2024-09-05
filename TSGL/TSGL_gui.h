@@ -20,7 +20,8 @@ typedef enum {
 typedef enum {
     tsgl_gui_click,
     tsgl_gui_drag,
-    tsgl_gui_drop
+    tsgl_gui_drop,
+    tsgl_gui_dropOutside
 } tsgl_gui_event;
 
 typedef struct tsgl_gui tsgl_gui;
@@ -145,4 +146,4 @@ void tsgl_gui_select(tsgl_gui* scene);
 // call it in a perpetual loop for the gui to work
 void tsgl_gui_processClick(tsgl_gui* obj, tsgl_pos x, tsgl_pos y, tsgl_gui_event clickType);
 void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen);
-void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark);
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark, time_t userCallDelay_ms);

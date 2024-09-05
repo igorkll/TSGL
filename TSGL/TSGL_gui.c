@@ -307,8 +307,15 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
 
             case tsgl_gui_drop:
                 if (object->pressed) {
-                    if (object->event_callback != NULL)
-                        object->event_callback(object, x - object->math_x, y - object->math_y, event);
+                    if (object->event_callback != NULL) {
+                        tsgl_pos localX = x - object->math_x;
+                        tsgl_pos localY = y - object->math_y;
+                        if (localX >= 0 && localY >= 0 && localX < object->math_width && localY < object->math_height) {
+                            object->event_callback(object, localX, localY, tsgl_gui_drop);
+                        } else {
+                            object->event_callback(object, localX, localY, tsgl_gui_dropOutside);
+                        }
+                    }
                     object->pressed = false;
                 }
                 if (object->tActionType > 0) {
@@ -729,15 +736,14 @@ void tsgl_gui_processTouchscreen(tsgl_gui* root, tsgl_touchscreen* touchscreen) 
     }
 }
 
-void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark) {
+void tsgl_gui_processGui(tsgl_gui* root, tsgl_framebuffer* asyncFramebuffer, tsgl_benchmark* benchmark, time_t userCallDelay_ms) {
     if (benchmark != NULL) tsgl_benchmark_startRendering(benchmark);
     _math(root, 0, 0, false);
     bool needSend;
     if (benchmark != NULL) {
-        needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime) / 1000.0, false);
+        needSend = _draw(root, false, (benchmark->renderingTime + benchmark->sendTime + userCallDelay_ms) / 1000.0, false);
     } else {
-        //if the benchmark has not been transmitted, it is assumed that the rendering is running at a frequency of 10 FPS. the animation speed can float a lot
-        needSend = _draw(root, false, 0.1, false);
+        needSend = _draw(root, false, userCallDelay_ms / 1000.0, false);
     }
     if (benchmark != NULL) tsgl_benchmark_endRendering(benchmark);
     if (needSend && root->buffered) {

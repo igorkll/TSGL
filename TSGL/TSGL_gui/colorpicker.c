@@ -53,6 +53,7 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
             break;
 
         case tsgl_gui_drop:
+        case tsgl_gui_dropOutside:
             data->selectedZone = 0;
             data->color = tsgl_color_hsv(data->hue, data->saturation, data->value);
             if (self->user_callback != NULL) self->user_callback(self, 0, &data->color, self->userArg);
