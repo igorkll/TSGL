@@ -20,9 +20,8 @@ static void gui_loop() {
     while (true) {
         tsgl_keyboard_readAll(&keyboard);
         tsgl_gui_processTouchscreen(gui, &touchscreen);
-        tsgl_gui_processGui(gui, NULL, &benchmark, portTICK_PERIOD_MS);
-        //tsgl_benchmark_print(&benchmark);
-        vTaskDelay(1);
+        tsgl_gui_processGui(gui, NULL, &benchmark, 0);
+        tsgl_benchmark_printRealFPS(&benchmark);
     }
 }
 
@@ -36,6 +35,7 @@ static void gui_scene_main() {
     plate_up->width = framebuffer.width;
     plate_up->height = 50;
     plate_up->color = tsgl_color_raw(tsgl_color_fromHex(0x757575), plate_up->colormode);
+    plate_up->draggable = true;
 
     button_powerOff = tsgl_gui_addButton(plate_up);
     button_powerOff->x = 0;
@@ -51,5 +51,5 @@ static void gui_scene_main() {
 void gui_init() {
     gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
     gui_scene_main();
-    xTaskCreate(gui_loop, NULL, 4096, NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(gui_loop, NULL, 4096, NULL, 24, NULL);
 }

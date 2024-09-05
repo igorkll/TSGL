@@ -33,7 +33,9 @@ void tsgl_benchmark_startSend(tsgl_benchmark* benchmark);
 void tsgl_benchmark_endSend(tsgl_benchmark* benchmark);
 void tsgl_benchmark_noSend(tsgl_benchmark* benchmark); //you will call when nothing is sent to reset the result
 
+void tsgl_benchmark_mathResult(tsgl_benchmark* benchmark);
 void tsgl_benchmark_print(tsgl_benchmark* benchmark);
+void tsgl_benchmark_printRealFPS(tsgl_benchmark* benchmark);
 void tsgl_benchmark_wait(tsgl_benchmark* benchmark, float targetFPS); //waits for the right time in order not to exceed the target frequency of frames, you need to call after endSend
 
 time_t tsgl_benchmark_getWait(tsgl_benchmark* benchmark, float targetFPS); //returns the time to wait so as not to refresh the screen more often than necessary to ensure the target FPS

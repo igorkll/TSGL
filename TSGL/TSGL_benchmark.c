@@ -55,22 +55,38 @@ void tsgl_benchmark_noSend(tsgl_benchmark* benchmark) {
     benchmark->realFPSexists = false;
 }
 
-void tsgl_benchmark_print(tsgl_benchmark* benchmark) {
+void tsgl_benchmark_mathResult(tsgl_benchmark* benchmark) {
     benchmark->totalTime = 0;
     if (benchmark->renderingFlag) benchmark->totalTime += benchmark->renderingTime;
     if (benchmark->sendFlag) benchmark->totalTime += benchmark->sendTime;
     benchmark->totalFPS = 1.0 / (benchmark->totalTime / 1000.0);
+}
 
-    ESP_LOGI(TAG, "------ tsgl benchmark ------");
-    if (benchmark->renderingFlag)
-        ESP_LOGI(TAG, "rendering time: %.3f", benchmark->renderingTime / 1000.0);
-    if (benchmark->sendFlag)
-        ESP_LOGI(TAG, "send      time: %.3f", benchmark->sendTime / 1000.0);
-    if (benchmark->totalTime > 0)
-        ESP_LOGI(TAG, "total     fps:  %.3f", benchmark->totalFPS);
-    if (benchmark->realFPSexists)
-        ESP_LOGI(TAG, "real      fps:  %li",  benchmark->realFPS);
-    ESP_LOGI(TAG, "----------------------------");
+void tsgl_benchmark_print(tsgl_benchmark* benchmark) {
+    tsgl_benchmark_mathResult(benchmark);
+
+    bool output1 = benchmark->renderingFlag;
+    bool output2 = benchmark->sendFlag;
+    bool output3 = benchmark->totalTime > 0;
+    bool output4 = benchmark->realFPSexists;
+    if (output1 && output2 && output3 && output4) {
+        ESP_LOGI(TAG, "------ tsgl benchmark ------");
+        if (output1)
+            ESP_LOGI(TAG, "rendering time: %.3f", benchmark->renderingTime / 1000.0);
+        if (output2)
+            ESP_LOGI(TAG, "send      time: %.3f", benchmark->sendTime / 1000.0);
+        if (output3)
+            ESP_LOGI(TAG, "total     fps:  %.3f", benchmark->totalFPS);
+        if (output4)
+            ESP_LOGI(TAG, "real      fps:  %li",  benchmark->realFPS);
+        ESP_LOGI(TAG, "----------------------------");
+    }
+}
+
+void tsgl_benchmark_printRealFPS(tsgl_benchmark* benchmark) {
+    if (benchmark->realFPSexists) {
+        ESP_LOGI(TAG, "real fps:  %li",  benchmark->realFPS);
+    }
 }
 
 void tsgl_benchmark_wait(tsgl_benchmark* benchmark, float targetFPS) {

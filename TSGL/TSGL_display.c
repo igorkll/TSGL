@@ -61,24 +61,45 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
     };
 
     if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
-        size_t part = tsgl_getPartSize();
+        size_t part = tsgl_getPartSize() / 2;
+        uint8_t* buffer1 = malloc(part);
+        uint8_t* buffer2 = malloc(part);
         size_t offset = 0;
-        uint8_t* buffer = malloc(part);
+        bool currentBuffer = false;
+        spi_transaction_t partTransaction;
+        bool oldPartTransactionExists = false;
         while (true) {
+            uint8_t* buffer = currentBuffer ? buffer2 : buffer1;
             size_t len = TSGL_MATH_MIN(size - offset, part);
-            spi_transaction_t partTransaction = {
+            memcpy(buffer, data + offset, len);
+
+            if (oldPartTransactionExists) {
+                spi_transaction_t* partTransactionPtr = &partTransaction;
+                ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
+                oldPartTransactionExists = false;
+            }
+
+            partTransaction = (spi_transaction_t) {
                 .length = len * 8,
                 .tx_buffer = buffer,
                 .user = (void*)(&pre_transfer_info)
             };
-            memcpy(buffer, data + offset, len);
-            ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &partTransaction));
+
+            ESP_ERROR_CHECK(spi_device_queue_trans(*interfaceData->spi, &partTransaction, portMAX_DELAY));
+            oldPartTransactionExists = true;
+            currentBuffer = !currentBuffer;
+
             offset += part;
             if (offset >= size) {
                 break;
             }
         }
-        free(buffer);
+        if (oldPartTransactionExists) {
+            spi_transaction_t* partTransactionPtr = &partTransaction;
+            ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
+        }
+        free(buffer1);
+        free(buffer2);
     }
 }
 
@@ -191,7 +212,7 @@ esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings se
             .mode = 0,
             .spics_io_num = cs,
             .input_delay_ns = 0,
-            .queue_size = 1,
+            .queue_size = 2,
             .pre_cb = _spi_pre_transfer_callback,
             .flags = SPI_DEVICE_NO_DUMMY
         };
