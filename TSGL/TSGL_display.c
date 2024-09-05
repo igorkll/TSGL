@@ -447,9 +447,9 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
                 tsgl_pos xLine = (framebuffer->changedRight - framebuffer->changedLeft) + 1;
                 tsgl_pos yLine = (framebuffer->changedDown - framebuffer->changedUp) + 1;
                 tsgl_pos sendSize = xLine * framebuffer->colorsize;
-                tsgl_display_select(display, framebuffer->changedLeft, framebuffer->changedUp, xLine + 1, yLine);
+                tsgl_display_select(display, framebuffer->changedLeft, framebuffer->changedUp, xLine, yLine);
                 for (tsgl_pos iy = 0; iy < yLine; iy++) {
-                    tsgl_display_sendData(display, framebuffer->buffer + framebuffer->changedFrom + ((size_t)(display->width * iy * framebuffer->colorsize)), sendSize);
+                    tsgl_display_sendData(display, framebuffer->buffer + ((framebuffer->changedLeft + (framebuffer->changedUp * display->width)) * 2) + ((size_t)(display->width * iy * framebuffer->colorsize)), sendSize);
                 }
             }
         } else {

@@ -40,17 +40,10 @@ uint16_t tsgl_font_height(const void* font, char chr) {
     return _read_uint16(font, index - 2);
 }
 
-uint8_t tsgl_font_parse(const void* font, size_t lptr, size_t index) {
+bool tsgl_font_parse(const void* font, size_t lptr, size_t index) {
     const uint8_t* ptr = font;
     uint8_t byte = ptr[lptr + (index / 8)];
-    return byte & (1 << (index % 8)) ? 255 : 0;
-    return ptr[lptr + index];
-}
-
-size_t tsgl_font_len(const char* str) { //custom strlen
-    size_t size = 0;
-    while (str[size] != '\n' && str[size] != '\0') size++;
-    return size;
+    return byte & (1 << (index % 8));
 }
 
 tsgl_print_textArea tsgl_font_getTextArea(tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text) {

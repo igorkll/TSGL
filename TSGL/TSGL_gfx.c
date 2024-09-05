@@ -153,6 +153,12 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     }
 }
 
+static size_t _len(const char* str) {
+    size_t size = 0;
+    while (str[size] != '\n' && str[size] != '\0') size++;
+    return size;
+}
+
 tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
@@ -283,7 +289,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             textArea.bottom = TSGL_POS_MIN;
             break;
     }
-    size_t strsize = tsgl_font_len(text);
+    size_t strsize = _len(text);
     textArea.strlen = strsize;
     tsgl_pos offset = 0;
     for (size_t i = 0; i < strsize; i++) {
@@ -295,6 +301,10 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                 uint16_t charHeight = tsgl_font_height(sets.font, chr);
                 uint16_t scaleCharWidth = ((float)charWidth * sets._scaleX * sets.scaleX) + 0.5;
                 uint16_t scaleCharHeight = ((float)charHeight * sets._scaleY * sets.scaleY) + 0.5;
+                uint16_t blockCheckX = charWidth / scaleCharWidth;
+                if (blockCheckX < 1 || set == NULL) blockCheckX = 1;
+                uint16_t blockCheckY = charHeight / scaleCharHeight;
+                if (blockCheckY < 1 || set == NULL) blockCheckY = 1;
                 for (tsgl_pos iy = 0; iy < scaleCharHeight; iy++) {
                     tsgl_pos checkPy = 0;
                     switch (sets.locationMode) {
@@ -305,6 +315,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                             checkPy = y + iy;
                             break;
                     }
+                    if (checkPy < minY) continue;
                     if (checkPy >= maxY) break;
                     if (sets._clamp) {
                         if (checkPy < sets._minHeight) continue;
@@ -313,37 +324,57 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
 
                     for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
                         tsgl_pos px = x + ix + offset;
+                        if (px < minX) continue;
                         if (px >= maxX) break;
                         if (sets._clamp) {
                             if (px < sets._minWidth) continue;
                             if (px > sets._maxWidth) break;
                         }
-
-                        tsgl_pos oix = ((float)ix) / sets._scaleX / sets.scaleX;
-                        tsgl_pos oiy = ((float)iy) / sets._scaleY / sets.scaleY;
+                        if (px > textArea.right) textArea.right = px;
 
                         tsgl_pos py = 0;
-                        size_t index = 0;
                         switch (sets.locationMode) {
                             case tsgl_print_start_bottom:
-                                index = oix + (((charHeight - 1) - oiy) * charWidth);
                                 py = y - iy;
                                 if (py < textArea.top) textArea.top = py;
                                 break;
                             case tsgl_print_start_top:
-                                index = oix + (oiy * charWidth);
                                 py = y + iy;
                                 if (py > textArea.bottom) textArea.bottom = py;
                                 break;
                         }
-                        if (px > textArea.right) textArea.right = px;
-                        if (set != NULL && px >= 0 && py >= 0) {
-                            uint8_t value = tsgl_font_parse(sets.font, charPosition, index);
-                            if (value == 255) {
-                                if (!sets.fg.invalid) set(arg, px, py, sets.fg);
-                            } else if (value == 0) {
-                                if (!sets.bg.invalid) set(arg, px, py, sets.bg);
+
+                        bool findPixel = false;
+                        for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
+                            tsgl_pos oix = (((float)ix) / sets._scaleX / sets.scaleX) + lix;
+                            if (oix >= charWidth) break;
+                            for (tsgl_pos liy = 0; liy < blockCheckY; liy++) {
+                                tsgl_pos oiy = (((float)iy) / sets._scaleY / sets.scaleY) + liy;
+                                if (oiy >= charHeight) break;
+
+                                size_t index = 0;
+                                switch (sets.locationMode) {
+                                    case tsgl_print_start_bottom:
+                                        index = oix + (((charHeight - 1) - oiy) * charWidth);
+                                        break;
+                                    case tsgl_print_start_top:
+                                        index = oix + (oiy * charWidth);
+                                        break;
+                                }
+                                
+                                if (tsgl_font_parse(sets.font, charPosition, index)) {
+                                    findPixel = true;
+                                    break;
+                                }
                             }
+                            if (findPixel) {
+                                break;
+                            }
+                        }
+                        if (findPixel) {
+                            if (set != NULL && !sets.fg.invalid) set(arg, px, py, sets.fg);
+                        } else {
+                            if (set != NULL && !sets.bg.invalid) set(arg, px, py, sets.bg);
                         }
                     }
                 }
