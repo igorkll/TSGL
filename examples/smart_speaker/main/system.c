@@ -116,7 +116,10 @@ void system_init() {
 
 void system_powerOff() {
     tsgl_display_setBacklight(&display, 0);
-    gpio_set_level(POWERLOCK, true);
+    gpio_config_t io_conf = {};
+    io_conf.pin_bit_mask |= 1ULL << POWERLOCK;
+    io_conf.mode = GPIO_MODE_DISABLE;
+    gpio_config(&io_conf);
     while (true) vTaskDelay(1);
 }
 

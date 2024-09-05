@@ -18,13 +18,10 @@
 #include <TSGL_font.h>
 #include <TSGL_ledc.h>
 #include <TSGL_spi.h>
-#include <TSGL_gui.h>
 #include <TSGL_i2c.h>
+#include <TSGL_math.h>
 
 #include <TSGL_fonts/default.h>
-#include <TSGL_gui/button.h>
-#include <TSGL_gui/sprite.h>
-#include <TSGL_gui/colorpicker.h>
 
 extern tsgl_display display;
 extern tsgl_framebuffer framebuffer;

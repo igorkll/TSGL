@@ -5,14 +5,21 @@
 #include "../TSGL_math.h"
 #include "text.h"
 
+typedef enum {
+    tsgl_gui_button_fill
+} tsgl_gui_button_style;
+
 typedef struct {
     tsgl_color color;
     tsgl_color pressedColor;
+    tsgl_gui_button_style style;
     uint8_t childType;
 } tsgl_gui_buttonData;
 
-tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color);
+tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui);
 void tsgl_gui_button_sceneLink(tsgl_gui* button, tsgl_gui* scene);
+
+void tsgl_gui_button_setStyle(tsgl_gui* button, tsgl_color color, tsgl_color pressedColor, tsgl_gui_button_style style);
 
 void tsgl_gui_button_setEmpty(tsgl_gui* button);
 void tsgl_gui_button_setText(tsgl_gui* button, tsgl_color textColor, tsgl_pos targetWidth, const char* text, bool freeText);

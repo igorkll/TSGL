@@ -79,11 +79,8 @@ static void* _sceneLink(tsgl_gui* self, int arg0, void* arg1, void* userArg) {
     return NULL;
 }
 
-tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
+tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui) {
     tsgl_gui_buttonData* data = calloc(1, sizeof(tsgl_gui_buttonData));
-    data->color = color;
-    data->pressedColor = tsgl_color_mul(data->color, 0.9);
-
     tsgl_gui* obj = tsgl_gui_addObject(gui);
     obj->animationSpeedUpMul = 2;
     obj->animationSpeedDownMul = 1;
@@ -92,12 +89,20 @@ tsgl_gui* tsgl_gui_addButton(tsgl_gui* gui, tsgl_color color) {
     obj->draw_callback = _draw_callback;
     obj->fillSize = true;
     obj->animationBaseDelta = 0.5;
+    tsgl_gui_button_setStyle(obj, TSGL_WHITE, TSGL_BLUE, tsgl_gui_button_fill);
     return obj;
 }
 
 void tsgl_gui_button_sceneLink(tsgl_gui* button, tsgl_gui* scene) {
     button->user_callback = _sceneLink;
     button->userArg = scene;
+}
+
+void tsgl_gui_button_setStyle(tsgl_gui* button, tsgl_color color, tsgl_color pressedColor, tsgl_gui_button_style style) {
+    tsgl_gui_buttonData* data = button->data;
+    data->color = color;
+    data->pressedColor = pressedColor;
+    data->style = style;
 }
 
 void tsgl_gui_button_setEmpty(tsgl_gui* button) {

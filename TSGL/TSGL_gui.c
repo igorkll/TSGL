@@ -323,6 +323,9 @@ static bool _event(tsgl_gui* object, tsgl_pos x, tsgl_pos y, tsgl_gui_event even
                     object->needDraw = true;
                 }
                 break;
+
+            default:
+                break;
         }
     }
     
