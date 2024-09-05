@@ -24,32 +24,32 @@ static bool _rawRead(tsgl_keyboard_bind* bindState) {
         }
 
         time_t time = tsgl_time();
-        if (rawState != bindState->realState) {
+        if (rawState != bindState->rawState) {
             if (rawState) {
                 bindState->press_time = time;
             } else {
                 bindState->release_time = time;
             }
-            bindState->realState = rawState;
+            bindState->rawState = rawState;
         }
 
         if (rawState) {
             if (bindState->pressing_ms == 0 || time - bindState->press_time >= bindState->pressing_ms)
-                bindState->realState = true;
+               bindState->newState = true;
         } else {
             if (bindState->releasing_ms == 0 || time - bindState->release_time >= bindState->releasing_ms)
-                bindState->realState = false;
+                bindState->newState = false;
         }
         
         bindState->whenPressed = false;
         bindState->whenReleasing = false;
-        if (bindState->realState != bindState->state) {
-            if (bindState->realState) {
+        if (bindState->newState != bindState->state) {
+            if (bindState->newState) {
                 bindState->whenPressed = true;
             } else {
                 bindState->whenReleasing = true;
             }
-            bindState->state = bindState->realState;
+            bindState->state = bindState->newState;
         }
 
         if (bindState->object != NULL) {

@@ -20,7 +20,8 @@ typedef struct {
 
     time_t press_time;
     time_t release_time;
-    bool realState;
+    bool rawState;
+    bool newState;
 } tsgl_keyboard_bind;
 
 typedef struct {

@@ -239,7 +239,7 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
         gptimer_disable(sound->timer);
         gptimer_del_timer(sound->timer);
         _initTimer(sound);
-        ESP_ERROR_CHECK(gptimer_start(sound->timer));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(gptimer_start(sound->timer));
     }
 }
 
@@ -305,7 +305,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
 	//timer_start(sound->timerGroup, sound->timer);
 
     _initTimer(sound);
-    ESP_ERROR_CHECK(gptimer_start(sound->timer));
+    gptimer_start(sound->timer);
     sound->playing = true;
 }
 
@@ -315,9 +315,9 @@ void tsgl_sound_stop(tsgl_sound* sound) {
         return;
     }
 
-    ESP_ERROR_CHECK(gptimer_stop(sound->timer));
-    ESP_ERROR_CHECK(gptimer_disable(sound->timer));
-    ESP_ERROR_CHECK(gptimer_del_timer(sound->timer));
+    gptimer_stop(sound->timer);
+    gptimer_disable(sound->timer);
+    gptimer_del_timer(sound->timer);
     sound->playing = false;
     _rstOutput(sound);
 }
