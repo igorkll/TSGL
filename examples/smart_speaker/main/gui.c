@@ -49,8 +49,8 @@ static void gui_scene_main() {
 }
 
 void gui_init() {
-    //gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
-    gui = tsgl_gui_createRoot_display(&display, display.colormode);
+    gui = tsgl_gui_createRoot_buffer(&display, &framebuffer);
+    //gui = tsgl_gui_createRoot_display(&display, display.colormode);
     gui_scene_main();
     xTaskCreate(gui_loop, NULL, 4096, NULL, 24, NULL);
 }

@@ -46,8 +46,6 @@ static void TSGL_FAST_FUNC _spi_sendCommand(tsgl_display* display, const uint8_t
     ESP_ERROR_CHECK(spi_device_transmit(*interfaceData->spi, &t));
 }
 
-static spi_transaction_t smallTransaction;
-static bool smallTransactionExists;
 static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* data, size_t size) {
     tsgl_display_interfaceData_spi* interfaceData = display->interface;
 
@@ -56,38 +54,29 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
         .state = true
     };
 
-    if (size <= 16) {
-        if (smallTransactionExists) {
-            spi_transaction_t* partTransactionPtr = &smallTransaction;
-            ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
-            smallTransactionExists = false;
-        }
-
-        smallTransaction = (spi_transaction_t) {
-            .length = size * 8,
-            .tx_buffer = data,
-            .user = (void*)(&pre_transfer_info)
-        };
-
-        ESP_ERROR_CHECK(spi_device_queue_trans(*interfaceData->spi, &smallTransaction, portMAX_DELAY));
-        smallTransactionExists = true;
-    } else {
+    spi_transaction_t transaction = {
+        .length = size * 8,
+        .tx_buffer = data,
+        .user = (void*)(&pre_transfer_info)
+    };
+    
+    if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
         size_t part = tsgl_getPartSize() / 2;
         uint8_t* buffer1 = malloc(part);
         uint8_t* buffer2 = malloc(part);
         size_t offset = 0;
         bool currentBuffer = false;
         spi_transaction_t partTransaction;
-        bool partTransactionExists = false;
+        bool oldPartTransactionExists = false;
         while (true) {
             uint8_t* buffer = currentBuffer ? buffer2 : buffer1;
             size_t len = TSGL_MATH_MIN(size - offset, part);
             memcpy(buffer, data + offset, len);
 
-            if (partTransactionExists) {
+            if (oldPartTransactionExists) {
                 spi_transaction_t* partTransactionPtr = &partTransaction;
                 ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
-                partTransactionExists = false;
+                oldPartTransactionExists = false;
             }
 
             partTransaction = (spi_transaction_t) {
@@ -97,7 +86,7 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
             };
 
             ESP_ERROR_CHECK(spi_device_queue_trans(*interfaceData->spi, &partTransaction, portMAX_DELAY));
-            partTransactionExists = true;
+            oldPartTransactionExists = true;
             currentBuffer = !currentBuffer;
 
             offset += part;
@@ -105,7 +94,7 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
                 break;
             }
         }
-        if (partTransactionExists) {
+        if (oldPartTransactionExists) {
             spi_transaction_t* partTransactionPtr = &partTransaction;
             ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
         }
@@ -458,7 +447,7 @@ void tsgl_display_send(tsgl_display* display, tsgl_framebuffer* framebuffer) {
                 tsgl_pos xLine = (framebuffer->changedRight - framebuffer->changedLeft) + 1;
                 tsgl_pos yLine = (framebuffer->changedDown - framebuffer->changedUp) + 1;
                 tsgl_pos sendSize = xLine * framebuffer->colorsize;
-                tsgl_display_select(display, framebuffer->changedLeft, framebuffer->changedUp, xLine, yLine);
+                tsgl_display_select(display, framebuffer->changedLeft, framebuffer->changedUp, xLine + 1, yLine);
                 for (tsgl_pos iy = 0; iy < yLine; iy++) {
                     tsgl_display_sendData(display, framebuffer->buffer + framebuffer->changedFrom + ((size_t)(display->width * iy * framebuffer->colorsize)), sendSize);
                 }
@@ -564,7 +553,7 @@ void tsgl_display_asyncSend(tsgl_display* display, tsgl_framebuffer* framebuffer
 
     while (asyncSendActive) vTaskDelay(1);
     asyncSendActive = true;
-    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
+    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 24, NULL);
 }
 
 void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_framebuffer* framebuffer2) {
@@ -592,7 +581,7 @@ void tsgl_display_asyncCopySend(tsgl_display* display, tsgl_framebuffer* framebu
     data->display = display;
     data->buffer = framebuffer2;
 
-    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 1, NULL);
+    xTaskCreate(_asyncSend, NULL, 4096, (void*)data, 24, NULL);
 }
 
 void tsgl_display_dumpViewport(tsgl_display* display, tsgl_viewport_dump* dump) {

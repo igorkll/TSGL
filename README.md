@@ -6,6 +6,9 @@
 * also, this library has an APIs for working with other peripherals.
 * in fact, TSQL is a framework for working with the esp32 peripherals
 
+# warnings
+* a task that works with the render and sends data to the screen must NECESSARILY have a high priority (preferably 24) otherwise there will be severe lags
+
 # features
 * the ability to install custom drivers without having to change the library code
 * the ability to install drivers directly inside the project
