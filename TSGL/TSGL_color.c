@@ -92,7 +92,7 @@ tsgl_color tsgl_color_mul(tsgl_color color, float mul) {
 
 tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
     tsgl_color rgb;
-    uint8_t region, remainder, p, q, t;
+    rgb.invalid = false;
 
     if (saturation == 0) {
         rgb.r = value;
@@ -101,12 +101,11 @@ tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
         return rgb;
     }
 
-    region = hue / 43;
-    remainder = (hue - (region * 43)) * 6;
-
-    p = (value * (255 - saturation)) >> 8;
-    q = (value * (255 - ((saturation * remainder) >> 8))) >> 8;
-    t = (value * (255 - ((saturation * (255 - remainder)) >> 8))) >> 8;
+    uint8_t region = hue / 43;
+    uint8_t remainder = (hue - (region * 43)) * 6;
+    uint8_t p = (value * (255 - saturation)) >> 8;
+    uint8_t q = (value * (255 - ((saturation * remainder) >> 8))) >> 8;
+    uint8_t t = (value * (255 - ((saturation * (255 - remainder)) >> 8))) >> 8;
 
     switch (region) {
         case 0:
