@@ -29,6 +29,7 @@ static void gui_scene_main() {
     mainScene = tsgl_gui_addObject(gui);
     mainScene->color = tsgl_color_raw(tsgl_color_fromHex(0x018db4), gui->colormode);
 
+    /*
     plate_up = tsgl_gui_addObject(mainScene);
     plate_up->x = 0;
     plate_up->y = 0;
@@ -44,6 +45,9 @@ static void gui_scene_main() {
     button_powerOff->user_callback = callback_powerOff;
     tsgl_gui_button_setStyle(button_powerOff, TSGL_RED, tsgl_color_fromHex(0x9c6800), tsgl_gui_button_fill);
     tsgl_gui_button_setText(button_powerOff, TSGL_WHITE, 8, "power off", false);
+    */
+
+    tsgl_gui_addColorpicker(mainScene, (tsgl_gui_colorpickerConfig) {});
 
     tsgl_gui_select(mainScene);
 }

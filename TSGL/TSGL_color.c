@@ -91,55 +91,45 @@ tsgl_color tsgl_color_mul(tsgl_color color, float mul) {
 }
 
 tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
-    float h = hue / 255.0;
-    float s = saturation / 255.0;
-    float v = value / 255.0;
+    tsgl_color rgb;
+    uint8_t region, remainder, p, q, t;
 
-    float r = 0;
-    float g = 0;
-    float b = 0;
+    if (saturation == 0) {
+        rgb.r = value;
+        rgb.g = value;
+        rgb.b = value;
+        return rgb;
+    }
 
-    int i = h * 6;
+    region = hue / 43;
+    remainder = (hue - (region * 43)) * 6;
 
-    float f = h * 6 - i;
-    float p = v * (1 - s);
-    float q = v * (1 - f * s);
-    float t = v * (1 - (1 - f) * s);
+    p = (value * (255 - saturation)) >> 8;
+    q = (value * (255 - ((saturation * remainder) >> 8))) >> 8;
+    t = (value * (255 - ((saturation * (255 - remainder)) >> 8))) >> 8;
 
-    switch (i % 6) {
+    switch (region) {
         case 0:
-            r = v;
-            g = t;
-            b = p;
+            rgb.r = value; rgb.g = t; rgb.b = p;
             break;
         case 1:
-            r = q;
-            g = v;
-            b = p;
+            rgb.r = q; rgb.g = value; rgb.b = p;
             break;
         case 2:
-            r = p;
-            g = v;
-            b = t;
+            rgb.r = p; rgb.g = value; rgb.b = t;
             break;
         case 3:
-            r = p;
-            g = q;
-            b = v;
+            rgb.r = p; rgb.g = q; rgb.b = value;
             break;
         case 4:
-            r = t;
-            g = p;
-            b = v;
+            rgb.r = t; rgb.g = p; rgb.b = value;
             break;
-        case 5:
-            r = v;
-            g = p;
-            b = q;
+        default:
+            rgb.r = value; rgb.g = p; rgb.b = q;
             break;
     }
 
-    return tsgl_color_pack(r * 255, g * 255, b * 255);
+    return rgb;
 }
 
 uint16_t tsgl_color_to565(tsgl_color color) {

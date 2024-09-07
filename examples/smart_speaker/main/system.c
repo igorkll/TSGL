@@ -87,6 +87,7 @@ void system_init() {
 
     ESP_ERROR_CHECK(tsgl_spi_init(tsgl_math_maxSendSize(settings), SPI));
     ESP_ERROR_CHECK(tsgl_display_spi(&display, settings, SPI, FREQ, DC, CS, RST));
+    tsgl_display_incompleteSending(&display, false, NULL);
     tsgl_display_setBacklight(&display, 255);
     ESP_ERROR_CHECK(tsgl_i2c_init(TS_HOST, TS_SDA, TS_SCL));
     ESP_ERROR_CHECK(tsgl_touchscreen_ft6336u(&touchscreen, TS_HOST, TS_ADDR, TS_RST));
