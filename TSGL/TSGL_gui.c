@@ -58,10 +58,22 @@ static tsgl_pos _localMath(tsgl_gui_paramFormat format, uint8_t valType, float v
         case tsgl_gui_percentWidth:
             return val * width;
 
-        case tsgl_gui_percentheight:
+        case tsgl_gui_percentHeight:
             return val * height;
     }
     return 0;
+}
+
+static tsgl_pos _mathObjectSize(tsgl_gui* object, bool height) {
+    tsgl_pos mWidth = object->parent == object->root ? object->root->math_width : _mathObjectSize(object->parent, false);
+    tsgl_pos mHeight = object->parent == object->root ? object->root->math_height : _mathObjectSize(object->parent, true);
+    tsgl_pos minSide = TSGL_MATH_MIN(mWidth, mHeight);
+    tsgl_pos maxSide = TSGL_MATH_MAX(mWidth, mHeight);
+    if (height) {
+        return _localMath(object->format_height, 1, object->height, mHeight, minSide, maxSide, mWidth, mHeight);
+    } else {
+        return _localMath(object->format_width, 1, object->width, mWidth, minSide, maxSide, mWidth, mHeight);
+    }
 }
 
 static bool _checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_gui* object2) {
@@ -653,6 +665,61 @@ void tsgl_gui_free(tsgl_gui* object) {
     if (object->data != NULL && !object->noFreeData) free(object->data);
     free(object->children);
     free(object);
+}
+
+
+void tsgl_gui_setOffsetFromBorder(tsgl_gui* object, tsgl_gui_offsetFromBorder offsetFromBorder, tsgl_pos offsetX, tsgl_pos offsetY) {
+    tsgl_gui_setPosFormat(object, tsgl_gui_absolute);
+
+    switch (offsetFromBorder) {
+        case tsgl_gui_offsetFromBorder_center:
+            object->x = ((_mathObjectSize(object->parent, false) / 2) - (_mathObjectSize(object, false) / 2)) + offsetX;
+            object->y = ((_mathObjectSize(object->parent, true) / 2) - (_mathObjectSize(object, true) / 2)) + offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_center_left:
+            object->x = offsetX;
+            object->y = ((_mathObjectSize(object->parent, true) / 2) - (_mathObjectSize(object, true) / 2)) + offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_center_right:
+            object->x = _mathObjectSize(object->parent, false) - _mathObjectSize(object, false) - offsetX;
+            object->y = ((_mathObjectSize(object->parent, true) / 2) - (_mathObjectSize(object, true) / 2)) + offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_up_center:
+            object->x = ((_mathObjectSize(object->parent, false) / 2) - (_mathObjectSize(object, false) / 2)) + offsetX;
+            object->y = offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_up_left:
+            object->x = offsetX;
+            object->y = offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_up_right:
+            object->x = _mathObjectSize(object->parent, false) - _mathObjectSize(object, false) - offsetX;
+            object->y = offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_down_center:
+            object->x = ((_mathObjectSize(object->parent, false) / 2) - (_mathObjectSize(object, false) / 2)) + offsetX;
+            object->y = _mathObjectSize(object->parent, true) - _mathObjectSize(object, true) - offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_down_left:
+            object->x = offsetX;
+            object->y = _mathObjectSize(object->parent, true) - _mathObjectSize(object, true) - offsetY;
+            break;
+
+        case tsgl_gui_offsetFromBorder_down_right:
+            object->x = _mathObjectSize(object->parent, false) - _mathObjectSize(object, false) - offsetX;
+            object->y = _mathObjectSize(object->parent, true) - _mathObjectSize(object, true) - offsetY;
+            break;
+
+        default:
+            break;
+    }
 }
 
 

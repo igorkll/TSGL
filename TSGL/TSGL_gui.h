@@ -14,7 +14,7 @@ typedef enum {
     tsgl_gui_percentMinSide, //uses a smaller scale even for the larger side
     tsgl_gui_percentMaxSide, //uses the maximum side, including for the smaller scale
     tsgl_gui_percentWidth,
-    tsgl_gui_percentheight
+    tsgl_gui_percentHeight
 } tsgl_gui_paramFormat;
 
 typedef enum {
@@ -23,6 +23,20 @@ typedef enum {
     tsgl_gui_drop,
     tsgl_gui_dropOutside
 } tsgl_gui_event;
+
+typedef enum {
+    tsgl_gui_offsetFromBorder_center,
+    tsgl_gui_offsetFromBorder_center_left,
+    tsgl_gui_offsetFromBorder_center_right,
+
+    tsgl_gui_offsetFromBorder_up_center,
+    tsgl_gui_offsetFromBorder_up_left,
+    tsgl_gui_offsetFromBorder_up_right,
+
+    tsgl_gui_offsetFromBorder_down_center,
+    tsgl_gui_offsetFromBorder_down_left,
+    tsgl_gui_offsetFromBorder_down_right
+} tsgl_gui_offsetFromBorder;
 
 typedef struct tsgl_gui tsgl_gui;
 struct tsgl_gui {
@@ -128,6 +142,9 @@ tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode 
 tsgl_gui* tsgl_gui_createRoot_bufferZone(tsgl_display* display, tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height); //viewport enabled by default
 tsgl_gui* tsgl_gui_addObject(tsgl_gui* object);
 void tsgl_gui_free(tsgl_gui* object);
+
+// auto-selection of the position
+void tsgl_gui_setOffsetFromBorder(tsgl_gui* object, tsgl_gui_offsetFromBorder offsetFromBorder, tsgl_pos offsetX, tsgl_pos offsetY); //automatically converts the position to absolute values
 
 // these are just shortcuts in order to set formats in one line
 void tsgl_gui_setAllFormat(tsgl_gui* object, tsgl_gui_paramFormat format);
