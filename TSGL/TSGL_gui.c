@@ -482,6 +482,10 @@ static bool _draw(tsgl_gui* object, bool force, float dt, bool onlyClearOld) {
         }
         object->oldAnimationTarget = object->animationTarget;
 
+        if (object->animationStopEnable) {
+            object->animationState = object->animationStop;
+        }
+
         if (!object->color.invalid) {
             TSGL_GUI_DRAW(object, fill, object->math_x, object->math_y, object->math_width, object->math_height, object->color);
         } else if (object->draw_callback != NULL) {

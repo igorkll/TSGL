@@ -82,6 +82,8 @@ struct tsgl_gui {
     uint8_t tActionType;
 
     // animation
+    bool animationStopEnable;
+    float animationStop;
     float animationState;
     float animationTarget;
     float animationSpeed; //the number of seconds that the animation should run
