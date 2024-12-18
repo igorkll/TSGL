@@ -62,7 +62,7 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
-//It is used to download pcm content from other files, for example wav
+//It is used to load pcm content from other files, for example wav
 //you can pass 0 to loadsize to load the entire file to the end from your offset
 esp_err_t tsgl_sound_load_pcmPart(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
 //it makes a second instance of sound from already loaded data, works only with tracks fully loaded into RAM, it is necessary so that several sound effects can be run simultaneously
