@@ -762,6 +762,13 @@ void tsgl_gui_setHeightMinMaxFormat(tsgl_gui* object, tsgl_gui_paramFormat forma
 
 
 
+void _stopAnimation(tsgl_gui* object) {
+    object->animationState = 0;
+    for (size_t i = 0; i < object->childrenCount; i++) {
+        _stopAnimation(object->children[i]);
+    }
+}
+
 void tsgl_gui_select(tsgl_gui* scene) {
     if (scene->root == scene) {
         ESP_LOGE(TAG, "you cannot call tsgl_gui_select on gui root");
@@ -769,6 +776,7 @@ void tsgl_gui_select(tsgl_gui* scene) {
     }
     for (size_t i = 0; i < scene->parent->childrenCount; i++) {
         tsgl_gui* child = scene->parent->children[i];
+        _stopAnimation(child);
         child->interactive = false;
         child->displayable = false;
         child->viewport = true;
