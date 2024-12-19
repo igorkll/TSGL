@@ -344,7 +344,8 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                                 break;
                         }
 
-                        bool findPixel = false;
+                        float findedCount = 0;
+                        float allCount = 0;
                         for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
                             tsgl_pos oix = (((float)ix) / sets._scaleX / sets.scaleX) + lix;
                             if (oix >= charWidth) break;
@@ -362,16 +363,12 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                                         break;
                                 }
                                 
-                                if (tsgl_font_parse(sets.font, charPosition, index)) {
-                                    findPixel = true;
-                                    break;
-                                }
-                            }
-                            if (findPixel) {
-                                break;
+                                if (tsgl_font_parse(sets.font, charPosition, index))
+                                    findedCount++;
+                                allCount++;
                             }
                         }
-                        if (findPixel) {
+                        if (findedCount / allCount > 0.5) {
                             if (set != NULL && !sets.fg.invalid) set(arg, px, py, sets.fg);
                         } else {
                             if (set != NULL && !sets.bg.invalid) set(arg, px, py, sets.bg);

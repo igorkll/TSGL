@@ -1,5 +1,5 @@
 // TSGL font
-// name - font
+// name - TSGL Default Font
 // size - 80
 // contrast - 50
 

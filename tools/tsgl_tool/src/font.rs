@@ -119,6 +119,8 @@ pub fn process_font(path: &Path, contrast: u8, px: f32) {
     charmaps.push(String::from(gen_ascii('A', 'Z')));
     charmaps.push(String::from(gen_ascii('a', 'z')));
     charmaps.push(String::from(gen_ascii('0', '9')));
+    charmaps.push(String::from(gen_ascii('!', '~')));
+    charmaps.push(String::from("абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ"));
 
     let parsed_font = parse(&path, px, contrast, &charmaps);
     fs::write(path.with_extension("fnt"), &parsed_font).expect("failed to write");
