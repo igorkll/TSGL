@@ -33,7 +33,7 @@ tsgl_gui* tsgl_gui_addTabbar(tsgl_gui* gui, bool horizontal, tsgl_pos padding, t
     return tabbar;
 }
 
-tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor) {
+tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor, tsgl_gui* tabObject) {
     tsgl_gui_tabbarData* data = self->data;
     data->tabsCount++;
     if (data->tabs == NULL) {
@@ -41,6 +41,9 @@ tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color se
     } else {
         data->tabs = realloc(data->tabs, data->tabsCount * sizeof(size_t));
     }
+
+    tabObject->interactive = false;
+    tabObject->displayable = false;
 
     tsgl_gui* tabButton = tsgl_gui_addButton(self);
     tabButton->color = tsgl_color_raw(color, self->colormode);
@@ -65,6 +68,7 @@ tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color se
     tabData->selectedColor = tsgl_color_raw(selectedColor, self->colormode);
     tabData->button = tabButton;
     tabData->tabbarData = data;
+    tabData->tabObject = tabObject;
     data->tabs[data->tabsCount - 1] = tabData;
     tabButton->userArg = tabData;
 
@@ -81,8 +85,13 @@ void tsgl_gui_tabbar_select(tsgl_gui* self) {
     if (tabbarData->oldTab) {
         tabbarData->oldTab->button->color = tabData->color;
         tabbarData->oldTab->button->needDraw = true;
+        tabbarData->oldTab->tabObject->interactive = false;
+        tabbarData->oldTab->tabObject->displayable = false;
     }
     tabData->button->color = tabData->selectedColor;
     tabData->button->needDraw = true;
+    tabData->tabObject->interactive = true;
+    tabData->tabObject->displayable = true;
+    tabData->tabObject->needDraw = true;
     tabbarData->oldTab = tabData;
 }

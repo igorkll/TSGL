@@ -10,6 +10,7 @@ typedef struct {
     tsgl_rawcolor selectedColor;
     tsgl_gui* button;
     tsgl_gui_tabbarData* tabbarData;
+    tsgl_gui* tabObject;
 } tsgl_gui_tabbarData_tab;
 
 struct tsgl_gui_tabbarData {
@@ -23,6 +24,13 @@ struct tsgl_gui_tabbarData {
     size_t tabsCount;
 };
 
+typedef struct {
+    tsgl_rawcolor color;
+    tsgl_rawcolor selectedColor;
+    tsgl_gui* button;
+    tsgl_gui_tabbarData* tabbarData;
+} tsgl_gui_ewq;
+
 tsgl_gui* tsgl_gui_addTabbar(tsgl_gui* gui, bool horizontal, tsgl_pos padding, tsgl_pos offset, tsgl_pos buttonSize);
-tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor);
+tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor, tsgl_gui* tabObject); //returns the button for the tab
 void tsgl_gui_tabbar_select(tsgl_gui* self);
