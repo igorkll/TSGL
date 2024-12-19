@@ -138,6 +138,9 @@ struct tsgl_gui {
     int intData;
 };
 
+tsgl_pos tsgl_gui_mathObjectPos(tsgl_gui* object, bool y);
+tsgl_pos tsgl_gui_mathObjectSize(tsgl_gui* object, bool height);
+
 tsgl_gui* tsgl_gui_createRoot_display(tsgl_display* display, tsgl_colormode colormode); //you specify the colormode yourself because on some screens it must be different from the colormode specified in the driver
 tsgl_gui* tsgl_gui_createRoot_buffer(tsgl_display* display, tsgl_framebuffer* framebuffer);
 tsgl_gui* tsgl_gui_createRoot_displayZone(tsgl_display* display, tsgl_colormode colormode, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height); //viewport enabled by default
