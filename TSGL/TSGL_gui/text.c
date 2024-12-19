@@ -44,3 +44,8 @@ void tsgl_gui_text_setParams(tsgl_gui* self, tsgl_print_settings sets) {
     tsgl_gui_textData* data = self->data;
     data->sets = sets;
 }
+
+tsgl_print_textArea tsgl_gui_text_getTextArea(tsgl_gui* self) {
+    tsgl_gui_textData* data = self->data;
+    return tsgl_font_getTextArea(self->math_x, self->math_y, data->sets, data->text);
+}
