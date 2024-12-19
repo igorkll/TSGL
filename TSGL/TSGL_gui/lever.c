@@ -10,7 +10,6 @@ static void _event_callback(tsgl_gui* self, tsgl_pos x, tsgl_pos y, tsgl_gui_eve
     switch (event) {
         case tsgl_gui_click:
             self->intData = !self->intData;
-            printf("CGB %i\n", self->intData);
             self->needDraw = true;
             if (self->user_callback != NULL) self->user_callback(self, self->intData, NULL, self->userArg);
             break;
