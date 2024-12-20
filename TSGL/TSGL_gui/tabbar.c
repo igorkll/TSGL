@@ -33,7 +33,38 @@ tsgl_gui* tsgl_gui_addTabbar(tsgl_gui* gui, bool horizontal, tsgl_pos padding, t
     return tabbar;
 }
 
-tsgl_gui* tsgl_gui_tabbar_addTab(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor, tsgl_gui* tabObject) {
+tsgl_gui* tsgl_gui_tabbar_addTabObject(tsgl_gui* self, bool negSide) {
+    tsgl_gui_tabbarData* data = self->data;
+    tsgl_gui* tab = tsgl_gui_addObject(self->parent);
+    tsgl_pos x = tsgl_gui_mathObjectPos(self, false);
+    tsgl_pos y = tsgl_gui_mathObjectPos(self, true);
+    if (negSide) {
+        if (data->horizontal) {
+            tab->x = x;
+            tab->y = 0;
+            tab->width = tsgl_gui_mathObjectSize(self, false);
+            tab->height = y;
+        } else {
+            tab->x = 0;
+            tab->y = y;
+            tab->width = x;
+            tab->height = tsgl_gui_mathObjectSize(self, true);
+        }
+    } else {
+        if (data->horizontal) {
+            tab->x = x;
+            tab->y = y + tsgl_gui_mathObjectSize(self, true);
+            tab->width = tsgl_gui_mathObjectSize(self, false);
+        } else {
+            tab->x = x + tsgl_gui_mathObjectSize(self, false);
+            tab->y = y;
+            tab->height = tsgl_gui_mathObjectSize(self, true);
+        }
+    }
+    return tab;
+}
+
+tsgl_gui* tsgl_gui_tabbar_addTabButton(tsgl_gui* self, tsgl_color color, tsgl_color selectedColor, tsgl_gui* tabObject) {
     tsgl_gui_tabbarData* data = self->data;
     data->tabsCount++;
     if (data->tabs == NULL) {
