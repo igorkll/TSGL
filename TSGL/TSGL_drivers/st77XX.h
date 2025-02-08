@@ -1,5 +1,6 @@
 #pragma once
 #include "../TSGL.h"
+#include "../TSGL_display.h"
 
 extern const tsgl_driver st77XX_rgb444; //does not work on st7796
 extern const tsgl_driver st77XX_rgb565; //the most optimal option

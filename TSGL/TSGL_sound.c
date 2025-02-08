@@ -46,8 +46,10 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         uint8_t* ptr = sound->buffer + sound->bufferPosition;
 
         if (sound->floatAllow) {
-            xthal_set_cpenable(true);
-            xthal_save_cp0(cp0_regs);
+            #ifdef HARDWARE_IRC_FLOAT
+                xthal_set_cpenable(true);
+                xthal_save_cp0(cp0_regs);
+            #endif
 
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],
@@ -55,8 +57,10 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
                 );
             }
 
-            xthal_restore_cp0(cp0_regs);
-            xthal_set_cpenable(false);
+            #ifdef HARDWARE_IRC_FLOAT
+                xthal_restore_cp0(cp0_regs);
+                xthal_set_cpenable(false);
+            #endif
         } else {
             for (size_t i = 0; i < sound->outputsCount; i++) {
                 tsgl_sound_setOutputValue(sound->outputs[i],

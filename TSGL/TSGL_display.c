@@ -61,7 +61,11 @@ static void TSGL_FAST_FUNC _spi_sendData(tsgl_display* display, const uint8_t* d
     };
     
     if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
-        size_t part = tsgl_getPartSize() / 2;
+        #ifdef CONFIG_IDF_TARGET_ESP32
+            size_t part = tsgl_getPartSize() / 2;
+        #else
+            size_t part = 1024 * 16;
+        #endif
         uint8_t* buffer1 = malloc(part);
         uint8_t* buffer2 = malloc(part);
         size_t offset = 0;

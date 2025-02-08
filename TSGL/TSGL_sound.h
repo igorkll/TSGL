@@ -1,7 +1,8 @@
 #pragma once
-#if __has_include(<driver/dac_oneshot.h>)
+#ifdef CONFIG_IDF_TARGET_ESP32
     #include <driver/dac_oneshot.h>
     #define HARDWARE_DAC
+    #define HARDWARE_IRC_FLOAT
 #endif
 #include "TSGL.h"
 #include "TSGL_ledc.h"
