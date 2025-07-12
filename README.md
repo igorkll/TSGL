@@ -1,13 +1,9 @@
 # TSGL
-* extended graphics library for the ESP 32 family controller.
-* this library is written entirely in "C".
-* designed exclusively for use with ESP-IDF.
-* the esp-idf version i use is 5.3.
-* also, this library has an APIs for working with other peripherals.
-* in fact, TSQL is a framework for working with the esp32 peripherals
-
-# warnings
-* a task that works with the render and sends data to the screen must NECESSARILY have a high priority (preferably 24) otherwise there will be severe lags
+* extended graphics library for the ESP 32 family controller
+* this library is written entirely in "C"
+* designed exclusively for use with ESP-IDF
+* the esp-idf version i use is 5.3
+* also, this library has an APIs for working with other peripherals
 
 # features
 * the ability to install custom drivers without having to change the library code
