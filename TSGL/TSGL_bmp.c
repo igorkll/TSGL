@@ -244,3 +244,8 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
     ESP_LOGI(TAG, "bmp loaded: %s", path);
     return sprite;
 }
+
+void tsgl_bmp_free(tsgl_sprite* image) {
+    free(image->sprite)
+    free(image);
+}
