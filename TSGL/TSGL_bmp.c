@@ -249,7 +249,8 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
     return sprite;
 }
 
-void tsgl_bmp_free(tsgl_sprite* image) {
-    free(image->sprite);
-    free(image);
+void tsgl_bmp_free(tsgl_sprite* sprite) {
+    tsgl_framebuffer_free(sprite->sprite);
+    free(sprite->sprite);
+    free(sprite);
 }
