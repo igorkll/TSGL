@@ -75,7 +75,7 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
             tsgl_sound_addOutputValue(sound->outputs[i],
                 (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
             );
-            tsgl_sound_flushOutput(sound);
+            tsgl_sound_flushOutput(sound->outputs[i]);
         }
     }
 

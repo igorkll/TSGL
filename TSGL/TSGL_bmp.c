@@ -1,6 +1,8 @@
 #include "TSGL_bmp.h"
+#include <esp_log.h>
 
 #define BMP_BUFFER_SIZE (8 * 1024)
+static const char* TAG = "TSGL_bmp";
 
 #pragma pack(push, 1)
 
@@ -199,7 +201,6 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             }
         }
 
-        *bufferPtr = imageBuffer;
         free(bmpBuffer);
     }
 
@@ -219,12 +220,14 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
 
     tsgl_imageInfo imageInfo = _parse(path, NULL, TSGL_INVALID_RAWCOLOR);
     if (imageInfo.width == 0) {
+        ESP_LOGW(TAG, "failed to read bmp info: %s", path);
         free(sprite);
         free(sprite_fb);
         return NULL;
     }
 
-    if (tsgl_framebuffer_init(sprite_fb, colormode, imageInfo.width, imageInfo.height, caps)) {
+    if (tsgl_framebuffer_init(sprite_fb, colormode, imageInfo.width, imageInfo.height, caps) != ESP_OK) {
+        ESP_LOGW(TAG, "failed to allocate bmp framebuffer: %s", path);
         free(sprite);
         free(sprite_fb);
         return NULL;
@@ -232,10 +235,12 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
 
     imageInfo = _parse(path, sprite_fb, transparentColor);
     if (imageInfo.width == 0) {
+        ESP_LOGW(TAG, "failed to parse bmp: %s", path);
         free(sprite);
         free(sprite_fb);
         return NULL;
     }
 
+    ESP_LOGI(TAG, "bmp loaded: %s", path);
     return sprite;
 }

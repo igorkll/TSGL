@@ -9,4 +9,4 @@ typedef struct {
 } tsgl_imageInfo;
 
 tsgl_imageInfo tsgl_bmp_readImageInfo(const char* path);
-tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t caps);
+tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t caps, tsgl_rawcolor transparentColor);
