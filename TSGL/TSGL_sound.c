@@ -6,17 +6,35 @@
 #include <soc/soc.h>
 #include <esp_log.h>
 #include <string.h>
+#include <limits.h>
 
 static const char* TAG = "TSGL_sound";
-static uint32_t cp0_regs[18];
 
-static uint8_t IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
-    switch (sound->pcm_format) {
-        case tsgl_sound_pcm_unsigned:
-            return *((uint8_t*)source);
-        
-        case tsgl_sound_pcm_signed:
-            return *((int8_t*)source) + 128;
+static int IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
+    if (sound->bit_rate == 4) {
+        switch (sound->pcm_format) {
+            case tsgl_sound_pcm_unsigned:
+                return *((uint32_t*)source) - 2147483648.0;
+            
+            case tsgl_sound_pcm_signed:
+                return *((int32_t*)source);
+        }
+    } else if (sound->bit_rate == 2) {
+        switch (sound->pcm_format) {
+            case tsgl_sound_pcm_unsigned:
+                return *((uint16_t*)source) - 32768.0;
+            
+            case tsgl_sound_pcm_signed:
+                return *((int16_t*)source);
+        }
+    } else {
+        switch (sound->pcm_format) {
+            case tsgl_sound_pcm_unsigned:
+                return *((uint8_t*)source) - 128;
+            
+            case tsgl_sound_pcm_signed:
+                return *((int8_t*)source);
+        }
     }
     return 0;
 }
@@ -43,30 +61,21 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
     tsgl_sound* sound = user_ctx;
 
     if (!sound->mute) {
-        uint8_t* ptr = sound->buffer + sound->bufferPosition;
-
-        if (sound->floatAllow) {
-            #ifdef HARDWARE_IRC_FLOAT
-                xthal_set_cpenable(true);
-                xthal_save_cp0(cp0_regs);
-            #endif
-
-            for (size_t i = 0; i < sound->outputsCount; i++) {
-                tsgl_sound_setOutputValue(sound->outputs[i],
-                    TSGL_MATH_MIN(_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume, 255)
-                );
-            }
-
-            #ifdef HARDWARE_IRC_FLOAT
-                xthal_restore_cp0(cp0_regs);
-                xthal_set_cpenable(false);
-            #endif
+        void* ptr = sound->buffer + sound->bufferPosition;
+        int div;
+        if (sound->bit_rate == 4) {
+            div = 256 * 256 * 256;
+        } else if (sound->bit_rate == 2) {
+            div = 256;
         } else {
-            for (size_t i = 0; i < sound->outputsCount; i++) {
-                tsgl_sound_setOutputValue(sound->outputs[i],
-                    _convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate))
-                );
-            }
+            div = 1;
+        }
+
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_addOutputValue(sound->outputs[i],
+                (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
+            );
+            tsgl_sound_flushOutput(sound);
         }
     }
 
@@ -85,11 +94,7 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
             sound->reload = true;
             readFile = true;
         } else {
-            if (sound->freeAfterPlay) {
-                tsgl_sound_free(sound);
-            } else {
-                tsgl_sound_stop(sound);
-            }
+            tsgl_sound_stop(sound);
         }
     }
 
@@ -130,12 +135,6 @@ static void _initTimer(tsgl_sound* sound) {
     ESP_ERROR_CHECK(gptimer_enable(sound->timer));
 }
 
-static void _rstOutput(tsgl_sound* sound) {
-    for (size_t i = 0; i < sound->outputsCount; i++) {
-        tsgl_sound_setOutputValue(sound->outputs[i], 0);
-    }
-}
-
 static void _freeOutputs(tsgl_sound* sound) {
     if (sound->freeOutputs) {
         for (size_t i = 0; i < sound->outputsCount; i++) {
@@ -172,7 +171,7 @@ esp_err_t tsgl_sound_load_pcmPart(tsgl_sound* sound, size_t offset, size_t loads
 
     sound->offset = offset;
     sound->speed = 1.0;
-    sound->volume = 1.0;
+    tsgl_sound_setVolume(sound, 1);
     if (loadsize == 0) {
         sound->len = tsgl_filesystem_size(path) - offset;
     } else {
@@ -252,15 +251,11 @@ void tsgl_sound_setLoop(tsgl_sound* sound, bool loop) {
 }
 
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
-    sound->volume = volume;
-    if (volume == 1) {
-        sound->floatAllow = false;
-        sound->mute = false;
-    } else if (volume == 0) {
-        sound->floatAllow = false;
+    if (volume == 0) {
+        sound->volume = 0;
         sound->mute = true;
     } else {
-        sound->floatAllow = true;
+        sound->volume = volume * 255;
         sound->mute = false;
     }
 }
@@ -323,7 +318,6 @@ void tsgl_sound_stop(tsgl_sound* sound) {
     gptimer_disable(sound->timer);
     gptimer_del_timer(sound->timer);
     sound->playing = false;
-    _rstOutput(sound);
 }
 
 void tsgl_sound_free(tsgl_sound* sound) {
@@ -362,20 +356,32 @@ tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin) {
     return output;
 }
 
-void IRAM_ATTR tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value) {
+void IRAM_ATTR tsgl_sound_addOutputValue(tsgl_sound_output* output, int value) {
+    output->value += value;
+}
+
+void IRAM_ATTR tsgl_sound_flushOutput(tsgl_sound_output* output) {
     if (output == NULL) return;
+
+    uint8_t value = TSGL_MATH_CLAMP(output->value + 128, 0, 255);
+    
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(*output->channel, value);
         }
     #endif
+    
     if (output->ledc != NULL) {
         tsgl_ledc_rawSet(output->ledc, value);
     }
+
+    output->value = 0;
 }
 
 void tsgl_sound_freeOutput(tsgl_sound_output* output) {
-    tsgl_sound_setOutputValue(output, 0);
+    output->value = 0;
+    tsgl_sound_flushOutput(output);
+
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             ESP_ERROR_CHECK_WITHOUT_ABORT(dac_oneshot_del_channel(*output->channel));

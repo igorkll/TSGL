@@ -11,7 +11,7 @@ typedef int16_t tsgl_pos;
 typedef struct tsgl_sprite tsgl_sprite;
 typedef struct tsgl_display tsgl_display;
 
-#define TSGL_FAST_FUNC inline IRAM_ATTR
+#define TSGL_VERSION "1.0"
 
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767
@@ -65,7 +65,7 @@ typedef struct {
     bool swapRGB;
     bool flipX;
     bool flipY;
-    bool flipXY;
+    bool swapXY;
     tsgl_display* display;
 } tsgl_driver_storage;
 

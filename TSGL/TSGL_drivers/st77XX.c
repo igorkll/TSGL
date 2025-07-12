@@ -46,7 +46,7 @@ static tsgl_driver_list _rotate(const tsgl_driver_storage* storage, uint8_t rota
         regvalue ^= (1 << 7);
         regvalue ^= (1 << 4);
     }
-    if (storage->flipXY) {
+    if (storage->swapXY) {
         regvalue ^= (1 << 5);
     }
 

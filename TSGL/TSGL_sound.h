@@ -2,7 +2,6 @@
 #ifdef CONFIG_IDF_TARGET_ESP32
     #include <driver/dac_oneshot.h>
     #define HARDWARE_DAC
-    #define HARDWARE_IRC_FLOAT
 #endif
 #include "TSGL.h"
 #include "TSGL_ledc.h"
@@ -20,6 +19,7 @@ typedef struct {
         dac_oneshot_handle_t* channel;
     #endif
     tsgl_ledc* ledc;
+    int value;
 } tsgl_sound_output;
 
 typedef enum {
@@ -28,18 +28,17 @@ typedef enum {
 } tsgl_sound_pcm_format;
 
 typedef struct { //do not write ANYTHING in the fields of the structure. use methods. you can only write values to the first two configuration fields
-    bool freeAfterPlay; //it will automatically call tsgl_sound_free when the playback is completed
     bool heap; //it will automatically call free when calling tsgl_sound_free
 
     bool playing;
     float speed;
-    float volume;
+    int volume;
     bool loop;
     size_t position;
 
     TaskHandle_t task;
     FILE* file;
-    uint8_t* buffer;
+    void* buffer;
     size_t bufferSize;
     size_t bufferPosition;
 
@@ -55,7 +54,6 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     bool freeOutputs;
 
     gptimer_handle_t timer;
-    bool floatAllow;
     bool mute;
     bool reload;
 } tsgl_sound;
@@ -88,5 +86,6 @@ void tsgl_sound_free(tsgl_sound* sound);
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);
 #endif
 tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin);
-void tsgl_sound_setOutputValue(tsgl_sound_output* output, uint8_t value);
+void tsgl_sound_addOutputValue(tsgl_sound_output* output, int value);
+void tsgl_sound_flushOutput(tsgl_sound_output* output); //
 void tsgl_sound_freeOutput(tsgl_sound_output* output);
