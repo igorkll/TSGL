@@ -1,22 +1,12 @@
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stddef.h>
+#include "TSGL.h"
+#include "TSGL_gfx.h"
 
 typedef struct {
     int32_t width;
     int32_t height;
     uint8_t bits;
     bool reverseLines;
-} ImageInfo;
+} tsgl_imageInfo;
 
-typedef struct {
-    uint16_t* img;
-    int32_t width;
-    int32_t height;
-} Image;
-
-#define BMP_BUFFER_SIZE (2 * 1024)
-
-ImageInfo bmp_readImageInfo(const char* path);
-Image* bmp_load(const char* path);
+tsgl_imageInfo tsgl_bmp_readImageInfo(const char* path);
+tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t caps);

@@ -1,5 +1,6 @@
-#include "bmp.h"
-#include "display.h"
+#include "TSGL_bmp.h"
+
+#define BMP_BUFFER_SIZE (8 * 1024)
 
 #pragma pack(push, 1)
 
@@ -98,8 +99,8 @@ typedef struct {
 
 #pragma pack(pop)
 
-static ImageInfo _parse(const char* path, uint16_t** bufferPtr) {
-    ImageInfo info = {0};
+static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl_rawcolor transparentColor) {
+    tsgl_imageInfo info = {0};
 
     FILE* file = fopen(path, "rb");
     if (file == NULL) return info;
@@ -163,7 +164,7 @@ static ImageInfo _parse(const char* path, uint16_t** bufferPtr) {
     info.reverseLines = info.height > 0;
     info.height = abs(info.height);
 
-    if (bufferPtr) {
+    if (sprite_fb) {
         uint16_t* imageBuffer = malloc(info.width * info.height * sizeof(uint16_t));
 
         fseek(file, BITMAPFILEHEADER.bfOffBits, SEEK_SET);
@@ -190,12 +191,11 @@ static ImageInfo _parse(const char* path, uint16_t** bufferPtr) {
                     alpha = bmpRead();
                 }
 
-                uint32_t color = 0;
                 if (alpha > 0) {
-                    color = (red << 16) | (green << 8) | blue;
+                    tsgl_framebuffer_set(sprite_fb, ix, iy, tsgl_color_raw(tsgl_color_pack(red, green, blue), sprite_fb->colormode));
+                } else {
+                    tsgl_framebuffer_set(sprite_fb, ix, iy, transparentColor);
                 }
-
-                //imageBuffer[bufferPointer++] = rgb888_to_rgb565(color);
             }
         }
 
@@ -207,18 +207,35 @@ static ImageInfo _parse(const char* path, uint16_t** bufferPtr) {
     return info;
 }
 
-ImageInfo bmp_readImageInfo(const char* path) {
-    return _parse(path, NULL);
+tsgl_imageInfo tsgl_bmp_readImageInfo(const char* path) {
+    return _parse(path, NULL, TSGL_INVALID_RAWCOLOR);
 }
 
-Image* bmp_load(const char* path) {
-    Image* image = malloc(sizeof(Image));
-    ImageInfo imageInfo = _parse(path, &image->img); //pointer to pointer!
+tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t caps, tsgl_rawcolor transparentColor) {
+    tsgl_sprite* sprite = calloc(1, sizeof(tsgl_sprite));
+    tsgl_framebuffer* sprite_fb = malloc(sizeof(tsgl_framebuffer));
+    sprite->sprite = sprite_fb;
+    sprite->transparentColor = transparentColor;
+
+    tsgl_imageInfo imageInfo = _parse(path, NULL, TSGL_INVALID_RAWCOLOR);
     if (imageInfo.width == 0) {
-        free(image);
+        free(sprite);
+        free(sprite_fb);
         return NULL;
     }
-    image->width = imageInfo.width;
-    image->height = imageInfo.height;
-    return image;
+
+    if (tsgl_framebuffer_init(sprite_fb, colormode, imageInfo.width, imageInfo.height, caps)) {
+        free(sprite);
+        free(sprite_fb);
+        return NULL;
+    }
+
+    imageInfo = _parse(path, sprite_fb, transparentColor);
+    if (imageInfo.width == 0) {
+        free(sprite);
+        free(sprite_fb);
+        return NULL;
+    }
+
+    return sprite;
 }
