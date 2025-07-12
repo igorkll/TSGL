@@ -246,6 +246,6 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
 }
 
 void tsgl_bmp_free(tsgl_sprite* image) {
-    free(image->sprite)
+    free(image->sprite);
     free(image);
 }
