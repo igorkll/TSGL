@@ -87,5 +87,5 @@ void tsgl_sound_free(tsgl_sound* sound);
 #endif
 tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin);
 void tsgl_sound_addOutputValue(tsgl_sound_output* output, int value);
-void tsgl_sound_flushOutput(tsgl_sound_output* output); //
+void tsgl_sound_flushOutput(tsgl_sound_output* output); //mixes all added samples and sets the output voltages
 void tsgl_sound_freeOutput(tsgl_sound_output* output);

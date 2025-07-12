@@ -167,8 +167,6 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
     info.height = abs(info.height);
 
     if (sprite_fb) {
-        uint16_t* imageBuffer = malloc(info.width * info.height * sizeof(uint16_t));
-
         fseek(file, BITMAPFILEHEADER.bfOffBits, SEEK_SET);
 
         uint8_t* bmpBuffer = malloc(BMP_BUFFER_SIZE);
@@ -182,9 +180,8 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             return bmpBuffer[bmpBufferPos++];
         }
 
-        size_t bufferPointer = 0;
-        for (int iy = 0; iy < info.height; iy++) {
-            for (int ix = 0; ix < info.width; ix++) {
+        for (tsgl_pos iy = 0; iy < info.height; iy++) {
+            for (tsgl_pos ix = 0; ix < info.width; ix++) {
                 uint8_t blue = bmpRead();
                 uint8_t green = bmpRead();
                 uint8_t red = bmpRead();
@@ -193,10 +190,17 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
                     alpha = bmpRead();
                 }
 
-                if (alpha > 0) {
-                    tsgl_framebuffer_set(sprite_fb, ix, iy, tsgl_color_raw(tsgl_color_pack(red, green, blue), sprite_fb->colormode));
+                tsgl_pos iiy;
+                if (info.reverseLines) {
+                    iiy = info.height - iy - 1;
                 } else {
-                    tsgl_framebuffer_set(sprite_fb, ix, iy, transparentColor);
+                    iiy = iy;
+                }
+
+                if (alpha > 0) {
+                    tsgl_framebuffer_set(sprite_fb, ix, iiy, tsgl_color_raw(tsgl_color_pack(red, green, blue), sprite_fb->colormode));
+                } else {
+                    tsgl_framebuffer_set(sprite_fb, ix, iiy, transparentColor);
                 }
             }
         }
