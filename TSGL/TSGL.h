@@ -45,6 +45,8 @@ size_t tsgl_getPartSize();
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
 void* tsgl_malloc(size_t size, int64_t caps);
 void tsgl_delay(size_t time);
+int tsgl_random(int min, int max);
+float tsgl_randomFloat(); //from 0 to 1
 time_t tsgl_time(); //returns the start time in milliseconds
 
 // ---------------- driver

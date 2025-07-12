@@ -6,6 +6,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_timer.h>
+#include <esp_random.h>
 
 static const char* TAG = "TSGL";
 const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
@@ -64,4 +65,12 @@ void tsgl_delay(size_t time) {
 
 time_t tsgl_time() {
     return esp_timer_get_time() / 1000;
+}
+
+int tsgl_random(int min, int max) {
+    return esp_random() % (max - min + 1) + min;
+}
+
+float tsgl_randomFloat() {
+    return esp_random() / 4294967295.0;
 }
