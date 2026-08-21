@@ -4,7 +4,7 @@
 #include "TSGL_framebuffer.h"
 #include "TSGL_font.h"
 #include "TSGL_math.h"
-#include <ESP_LOG.h>
+#include <esp_log.h>
 #include <string.h>
 
 static const char* TAG = "TSGL_gfx";

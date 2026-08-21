@@ -1,4 +1,4 @@
-#include "st77xx.h"
+#include "st77XX.h"
 #include "../TSGL_ledc.h"
 
 #define _ROTATION_0 0
