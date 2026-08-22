@@ -189,8 +189,16 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     if (spacing <= 0) spacing = 1;
 
     if (!sets.fill.invalid && fill != NULL) {
-        tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, sets, text);
-        fill(arg, textArea.left, textArea.top, textArea.width, textArea.height, sets.fill);
+        tsgl_print_textArea area = tsgl_font_getTextArea(x, y, sets, text);
+
+        tsgl_pos left   = TSGL_MATH_MAX(area.left, minX);
+        tsgl_pos top    = TSGL_MATH_MAX(area.top, minY);
+        tsgl_pos right  = TSGL_MATH_MIN(area.left + area.width - 1, maxX - 1);
+        tsgl_pos bottom = TSGL_MATH_MIN(area.top + area.height - 1, maxY - 1);
+
+        if (left <= right && top <= bottom) {
+            fill(arg, left, top, right - left + 1, bottom - top + 1, sets.fill);
+        }
     }
 
     if (sets.multiline) {
