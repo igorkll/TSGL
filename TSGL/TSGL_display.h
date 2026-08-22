@@ -87,6 +87,8 @@ struct tsgl_display { //please DO NOT write anything in the fields of the struct
     tsgl_pos viewport_minY;
     tsgl_pos viewport_maxX;
     tsgl_pos viewport_maxY;
+
+    size_t max_hw_send_size;
 };
 
 // ---------------- initializing the display

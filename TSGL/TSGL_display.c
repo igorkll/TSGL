@@ -60,7 +60,8 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
         .user = (void*)(&pre_transfer_info)
     };
     
-    if (spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
+    if ((display->max_hw_send_size && size > display->max_hw_send_size) || spi_device_transmit(*interfaceData->spi, &transaction) != ESP_OK) {
+        if (size >= display->max_hw_send_size) display->max_hw_send_size = size - 1;
         #ifdef CONFIG_IDF_TARGET_ESP32
             size_t part = tsgl_getPartSize() / 2;
         #else
