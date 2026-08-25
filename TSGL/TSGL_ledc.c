@@ -13,14 +13,7 @@
 int8_t tsgl_ledc_getChannel() {
     static int8_t ledcChannel = -1;
     ledcChannel++;
-    if (ledcChannel >= 8) ledcChannel = 0;
-    return ledcChannel;
-}
-
-int8_t tsgl_ledc_getFastChannel() {
-    static int8_t ledcChannel = -1;
-    ledcChannel++;
-    if (ledcChannel >= 8) ledcChannel = 0;
+    if (ledcChannel >= SOC_LEDC_CHANNEL_NUM) ledcChannel = 0;
     return ledcChannel;
 }
 
@@ -74,7 +67,7 @@ esp_err_t tsgl_ledc_newFast(tsgl_ledc* obj, gpio_num_t pin, bool invert, uint8_t
         ledcInited = true;
     }
 
-    int8_t channel = tsgl_ledc_getFastChannel();
+    int8_t channel = tsgl_ledc_getChannel();
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = LEDC_MODE,
         .channel        = channel,

@@ -10,6 +10,7 @@
 #include <freertos/task.h>
 #include <driver/gptimer.h>
 #include <driver/gpio.h>
+#include <freertos/portmacro.h>
 
 //use this instead of the bufferSize to load the track immediately into RAM without loading on playing
 #define TSGL_SOUND_FULLBUFFER (2 ^ sizeof(size_t))
@@ -20,6 +21,7 @@ typedef struct {
     #endif
     tsgl_ledc* ledc;
     int value;
+    int count;
 } tsgl_sound_output;
 
 typedef enum {
@@ -27,7 +29,8 @@ typedef enum {
     tsgl_sound_pcm_signed
 } tsgl_sound_pcm_format;
 
-typedef struct { //do not write ANYTHING in the fields of the structure. use methods. you can only write values to the first two configuration fields
+typedef struct tsgl_sound tsgl_sound;
+struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use methods. you can only write values to the first two configuration fields
     bool heap; //it will automatically call free when calling tsgl_sound_free
 
     bool playing;
@@ -37,8 +40,17 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     size_t position;
 
     TaskHandle_t task;
+    bool task_used;
+
+    TaskHandle_t task_service;
+    bool task_service_used;
+
     FILE* file;
+
     void* buffer;
+    void* buffer2;
+    bool doubleSwapBuffer;
+
     size_t bufferSize;
     size_t bufferPosition;
 
@@ -53,17 +65,38 @@ typedef struct { //do not write ANYTHING in the fields of the structure. use met
     size_t outputsCount;
     bool freeOutputs;
 
+    uint8_t global_timer_div;
+    uint8_t global_timer_state;
+
     gptimer_handle_t timer;
+    bool use_local_timer;
+
     bool mute;
     bool reload;
-} tsgl_sound;
+
+    bool callback_end_run;
+    void(*callback_end)(tsgl_sound* sound);
+
+    bool freeOnEnd;
+
+    portMUX_TYPE lock;
+};
+
+// If you want to produce multiple sounds at the same time, you must activate the global timer.
+// the frequency of the global timer should be such that it can be divided by the frequency of each sound without remainder or fraction.
+// for example, if you have sounds with a sample_rate of 16000 and 8000, then the timer frequency should be 16000
+void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds);
 
 //the bitrate is set not in bits but in bytes
 //however, due to the features of the DAC in esp32, it does not make sense to use more than 8 bit (this will not increase the sound quality)
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
+// allows you to specify double buffering to avoid clicks
+esp_err_t tsgl_sound_load_pcmEx(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format, bool doubleSwapBuffer);
 //It is used to load pcm content from other files, for example wav
 //you can pass 0 to loadsize to load the entire file to the end from your offset
 esp_err_t tsgl_sound_load_pcmPart(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format);
+// allows you to specify double buffering to avoid clicks
+esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format, bool doubleSwapBuffer);
 //it makes a second instance of sound from already loaded data, works only with tracks fully loaded into RAM, it is necessary so that several sound effects can be run simultaneously
 esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent);
 //sets the outputs for sample playback. if the track is single-channel,
@@ -81,6 +114,9 @@ void tsgl_sound_seek(tsgl_sound* sound, int offset);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
+void tsgl_sound_enableFreeOnEnd(tsgl_sound* sound, bool freeOnEnd);
+
+void tsgl_sound_attachCallback_end(tsgl_sound* sound, void(*callback)(tsgl_sound* sound));
 
 #ifdef HARDWARE_DAC
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);

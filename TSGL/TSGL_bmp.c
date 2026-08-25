@@ -111,7 +111,7 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
     BITMAPFILEHEADER_struct BITMAPFILEHEADER;
     fread(&BITMAPFILEHEADER, 1, sizeof(BITMAPFILEHEADER), file);
     if (BITMAPFILEHEADER.bfTypeB != 'B' || BITMAPFILEHEADER.bfTypeM != 'M') {
-        printf("BMP ERROR: invalid bmp signature: %c%c\n", BITMAPFILEHEADER.bfTypeB, BITMAPFILEHEADER.bfTypeM);
+        ESP_LOGE(TAG, "BMP ERROR: invalid bmp signature: %c%c\n", BITMAPFILEHEADER.bfTypeB, BITMAPFILEHEADER.bfTypeM);
         fclose(file);
         return info;
     }
@@ -157,7 +157,7 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
         }
 
         default : {
-            printf("BMP ERROR: unsupported BITMAPINFO: %li\n", bcSize);
+            ESP_LOGE(TAG, "BMP ERROR: unsupported BITMAPINFO: %li\n", bcSize);
             fclose(file);
             return info;
         }
