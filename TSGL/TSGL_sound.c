@@ -94,7 +94,9 @@ static void _soundServiceTask(void* _sound) {
             if (!sound->loop) tsgl_sound_stop(sound);
             if (sound->callback_end != NULL) sound->callback_end(sound);
             if (sound->freeOnEnd) {
+                sound->task_service_used = false;
                 tsgl_sound_free(sound);
+                vTaskDelete(NULL);
                 return;
             }
         }
@@ -400,7 +402,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
             fread(sound->buffer2, sound->bit_rate, bufferSize, sound->file);
         }
 
-        xTaskCreate(_soundTask, NULL, 4096, sound, 1, &sound->task);
+        xTaskCreate(_soundTask, NULL, 1024 * 8, sound, 1, &sound->task);
         sound->task_used = true;
     } else {
         sound->bufferSize = sound->len;
@@ -417,7 +419,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
         sound->file = NULL;
     }
 
-    xTaskCreate(_soundServiceTask, NULL, 4096, sound, 1, &sound->task_service);
+    xTaskCreate(_soundServiceTask, NULL, 1024 * 8, sound, 1, &sound->task_service);
     sound->task_service_used = true;
 
     if (use_global_timer && global_sounds_index < global_sounds_max_count) {
@@ -564,20 +566,16 @@ void tsgl_sound_stop(tsgl_sound* sound) {
 }
 
 void tsgl_sound_free(tsgl_sound* sound) {
-    if (sound->file != NULL) {
-        fclose(sound->file);
-    }
-    
     portENTER_CRITICAL(&sound->lock);
     if (sound->playing) _stop(sound);
-    if (sound->buffer != NULL) free(sound->buffer);
-    if (sound->buffer2 != NULL) free(sound->buffer2);
     if (sound->task_used) {
         vTaskDelete(sound->task);
     }
     if (sound->task_service_used) {
         vTaskDelete(sound->task_service);
     }
+    if (sound->buffer != NULL) free(sound->buffer);
+    if (sound->buffer2 != NULL) free(sound->buffer2);
     _freeOutputs(sound);
     if (use_global_timer) {
         portENTER_CRITICAL(&global_sounds_lock);
@@ -592,6 +590,10 @@ void tsgl_sound_free(tsgl_sound* sound) {
         portEXIT_CRITICAL(&global_sounds_lock);
     }
     portEXIT_CRITICAL(&sound->lock);
+
+    if (sound->file != NULL) {
+        fclose(sound->file);
+    }
     
     memset(sound, 0, sizeof(tsgl_sound));
     if (sound->heap) free(sound);
