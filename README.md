@@ -1,4 +1,4 @@
-# TSGL 0.4.2 - BETA
+# TSGL 0.5.0 - BETA
 * extended graphics library for the ESP 32 family controller
 * this library is written entirely in "C"
 * designed exclusively for use with ESP-IDF
@@ -27,5 +27,9 @@
 * the ability to change driver settings for specific display features, which allows you to use 1 driver for most displays (can configure: resolution, offsets, inversion, flipX, flipY, swapXY)
 * are red and blue mixed up? this is not a problem, just send the color encoded on the display not using the driver's color space, but its BGR/RGB counterpart. or set the swapRGB flag in the driver settings
 * support for the 444 color space, where 3 pixels are encoded in 2 bits (accessing such a framebuffer is slower, and working without framebuffer can cause graphical artifacts)
+
+## commands examples
+* convert audio (mono, 8 bit, 8000 sample rate): ffmpeg -i input.mp3 -acodec pcm_u8 -ac 1 -ar 8000 -f u8 output.pcm
+* convert audio fragment (mono, 8 bit, 4000 sample rate): ffmpeg -i input.mp3 -ss 00:10 -to 01:42 -acodec pcm_u8 -ac 1 -ar 4000 -f u8 output.pcm
 
 ## warnings

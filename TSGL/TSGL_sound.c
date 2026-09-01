@@ -171,6 +171,11 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
 
             tsgl_sound_flushOutput(output);
         }
+    } else {
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+            tsgl_sound_rawSetOutput(output, 0);
+        }
     }
 
     _read_next_block(sound, sound->bit_rate * sound->channels);
@@ -210,7 +215,7 @@ static void _resetOutputs(tsgl_sound* sound) {
     for (size_t i = 0; i < sound->outputsCount; i++) {
         tsgl_sound_output* output = sound->outputs[i];
         output->value = 0;
-        tsgl_sound_flushOutput(output);
+        tsgl_sound_rawSetOutput(output, 0);
     }
 }
 
@@ -286,7 +291,27 @@ static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_al
 
         for (size_t i = 0; i < sound->outputsCount; i++) {
             tsgl_sound_output* output = sound->outputs[i];
-            if (output->count > 0) tsgl_sound_flushOutput(output);
+            output->processed = true;
+        }
+
+        portEXIT_CRITICAL_ISR(&sound->lock);
+    }
+
+    for (size_t i = 0; i < global_sounds_index; i++) {
+        tsgl_sound* sound = global_sounds[i];
+
+        portENTER_CRITICAL_ISR(&sound->lock);
+
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+            if (output->processed) {
+                if (output->count > 0) {
+                    tsgl_sound_flushOutput(output);
+                } else {
+                    tsgl_sound_rawSetOutput(output, 0);
+                }
+                output->processed = false;
+            }
         }
 
         portEXIT_CRITICAL_ISR(&sound->lock);
@@ -637,20 +662,23 @@ void IRAM_ATTR tsgl_sound_addOutputValue(tsgl_sound_output* output, int value) {
     output->count++;
 }
 
-void IRAM_ATTR tsgl_sound_flushOutput(tsgl_sound_output* output) {
-    if (output == NULL) return;
-
-    uint8_t value = TSGL_MATH_CLAMP(output->value + 128, 0, 255);
-    
+void IRAM_ATTR tsgl_sound_rawSetOutput(tsgl_sound_output* output, uint8_t value) {
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {
             dac_oneshot_output_voltage(*output->channel, value);
         }
     #endif
-    
+
     if (output->ledc != NULL) {
         tsgl_ledc_rawSet(output->ledc, value);
     }
+}
+
+void IRAM_ATTR tsgl_sound_flushOutput(tsgl_sound_output* output) {
+    if (output == NULL) return;
+
+    uint8_t value = TSGL_MATH_CLAMP(output->value + 128, 0, 255);
+    tsgl_sound_rawSetOutput(output, value);
 
     output->value = 0;
     output->count = 0;
@@ -658,7 +686,7 @@ void IRAM_ATTR tsgl_sound_flushOutput(tsgl_sound_output* output) {
 
 void tsgl_sound_freeOutput(tsgl_sound_output* output) {
     output->value = 0;
-    tsgl_sound_flushOutput(output);
+    tsgl_sound_rawSetOutput(output, 0);
 
     #ifdef HARDWARE_DAC
         if (output->channel != NULL) {

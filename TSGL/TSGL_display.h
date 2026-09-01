@@ -63,7 +63,7 @@ struct tsgl_display { //please DO NOT write anything in the fields of the struct
     tsgl_pos defaultHeight;
     uint8_t rotation;
     tsgl_colormode colormode;
-    float colorsize;
+    tsgl_colormode_raw colorsize;
     tsgl_rawcolor black;
     bool enable;
     bool invert;

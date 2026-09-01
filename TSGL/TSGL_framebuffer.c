@@ -193,10 +193,10 @@ esp_err_t tsgl_framebuffer_init(tsgl_framebuffer* framebuffer, tsgl_colormode co
     void* buffer = tsgl_malloc(framebuffer->buffersize, caps);
     tsgl_framebuffer_staticInit(framebuffer, buffer, colormode, width, height);
     if (buffer == NULL) {
-        ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i x %.3f", width, height, framebuffer->colorsize);
+        ESP_LOGE(TAG, "failed to allocate framebuffer: %i x %i", width, height);
         return ESP_FAIL;
     } else {
-        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i x %.3f", width, height, framebuffer->colorsize);
+        ESP_LOGI(TAG, "framebuffer has been successfully allocated: %i x %i", width, height);
         return ESP_OK;
     }
 }
@@ -205,6 +205,7 @@ esp_err_t tsgl_framebuffer_staticInit(tsgl_framebuffer* framebuffer, void* ptr, 
     memset(framebuffer, 0, sizeof(tsgl_framebuffer));
     framebuffer->black = tsgl_color_raw(TSGL_BLACK, colormode);
     framebuffer->colorsize = tsgl_colormodeSizes[colormode];
+    framebuffer->colorsizeInt = (uint8_t)framebuffer->colorsize;
     framebuffer->width = width;
     framebuffer->height = height;
     framebuffer->defaultWidth = width;
@@ -330,6 +331,39 @@ void tsgl_framebuffer_push(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y
     tsgl_gfx_push(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, x, y, sprite, framebuffer->viewport_minX, framebuffer->viewport_minY, framebuffer->viewport_maxX, framebuffer->viewport_maxY);
 }
 
+void tsgl_framebuffer_pushFast(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+    framebuffer->changed = true;
+    
+    tsgl_pos spriteWidth = sprite->sprite->defaultWidth;
+    tsgl_pos spriteHeight = sprite->sprite->defaultHeight;
+
+    for (tsgl_pos posX = 0; posX < spriteWidth; posX++) {
+        tsgl_pos setPosX = posX + x;
+        for (tsgl_pos posY = 0; posY < spriteHeight; posY++) {
+            tsgl_pos setPosY = posY + y;
+            tsgl_framebuffer_setWithoutCheckFast(framebuffer, setPosX, setPosY, tsgl_framebuffer_getWithoutCheckFast(sprite->sprite, posX, posY));
+        }
+    }
+}
+
+void tsgl_framebuffer_pushFastWithTransparentSupport(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
+    framebuffer->changed = true;
+    
+    tsgl_pos spriteWidth = sprite->sprite->defaultWidth;
+    tsgl_pos spriteHeight = sprite->sprite->defaultHeight;
+
+    for (tsgl_pos posX = 0; posX < spriteWidth; posX++) {
+        tsgl_pos setPosX = posX + x;
+        for (tsgl_pos posY = 0; posY < spriteHeight; posY++) {
+            tsgl_pos setPosY = posY + y;
+            tsgl_rawcolor color = tsgl_framebuffer_getWithoutCheckFast(sprite->sprite, posX, posY);
+            if (sprite->transparentColor.invalid || memcmp(color.arr, sprite->transparentColor.arr, framebuffer->colorsizeInt) != 0) {
+                tsgl_framebuffer_setWithoutCheckFast(framebuffer, setPosX, setPosY, color);
+            }
+        }
+    }
+}
+
 void tsgl_framebuffer_line(tsgl_framebuffer* framebuffer, tsgl_pos x1, tsgl_pos y1, tsgl_pos x2, tsgl_pos y2, tsgl_rawcolor color, tsgl_pos stroke) {
     tsgl_gfx_line(framebuffer, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fill, x1, y1, x2, y2, color, stroke, framebuffer->viewport_minX, framebuffer->viewport_minY, framebuffer->viewport_maxX, framebuffer->viewport_maxY);
 }
@@ -387,6 +421,12 @@ void tsgl_framebuffer_setWithoutCheck(tsgl_framebuffer* framebuffer, tsgl_pos x,
             break;
         }
     }
+}
+
+void tsgl_framebuffer_setWithoutCheckFast(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_rawcolor color) {
+    size_t index = (x + (y * framebuffer->width)) * framebuffer->colorsizeInt;
+    _doubleSet(framebuffer, index, color);
+    if (framebuffer->colorsizeInt == 3) framebuffer->buffer[index + 2] = color.arr[2];
 }
 
 void tsgl_framebuffer_fill(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_rawcolor color) {
@@ -556,6 +596,14 @@ tsgl_rawcolor tsgl_framebuffer_getWithoutCheck(tsgl_framebuffer* framebuffer, ts
             return rawcolor;
         }
     }
+}
+
+tsgl_rawcolor tsgl_framebuffer_getWithoutCheckFast(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {
+    size_t index = (x + (y * framebuffer->width)) * framebuffer->colorsizeInt;
+    return (tsgl_rawcolor) {
+        .invalid = false,
+        .arr = {framebuffer->buffer[index + 0], framebuffer->buffer[index + 1], framebuffer->buffer[index + 2]}
+    };
 }
 
 tsgl_rawcolor tsgl_framebuffer_get(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y) {

@@ -22,6 +22,7 @@ typedef struct {
     tsgl_ledc* ledc;
     int value;
     int count;
+    bool processed;
 } tsgl_sound_output;
 
 typedef enum {
@@ -80,6 +81,9 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
     bool freeOnEnd;
 
     portMUX_TYPE lock;
+
+    void* userData;
+    int userData_int;
 };
 
 // If you want to produce multiple sounds at the same time, you must activate the global timer.
@@ -122,6 +126,7 @@ void tsgl_sound_attachCallback_end(tsgl_sound* sound, void(*callback)(tsgl_sound
     tsgl_sound_output* tsgl_sound_newDacOutput(dac_channel_t channel);
 #endif
 tsgl_sound_output* tsgl_sound_newLedcOutput(gpio_num_t pin);
+void tsgl_sound_rawSetOutput(tsgl_sound_output* output, uint8_t value);
 void tsgl_sound_addOutputValue(tsgl_sound_output* output, int value);
 void tsgl_sound_flushOutput(tsgl_sound_output* output); //mixes all added samples and sets the output voltages
 void tsgl_sound_freeOutput(tsgl_sound_output* output);

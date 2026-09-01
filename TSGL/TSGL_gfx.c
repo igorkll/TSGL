@@ -159,6 +159,40 @@ static size_t _len(const char* str) {
     return size;
 }
 
+static tsgl_pos _getY(tsgl_print_settings sets, tsgl_pos y, tsgl_pos iy, tsgl_pos scaleCharHeight, tsgl_pos maxScaleCharHeight) {
+    switch (sets.locationMode) {
+        case tsgl_print_start_bottom:
+            iy = (maxScaleCharHeight - 1) - iy;
+            break;
+
+        case tsgl_print_start_top:
+            break;
+    }
+
+    tsgl_pos riy = 0;
+    switch (sets.locationMode) {
+        case tsgl_print_start_bottom:
+            riy = y - iy;
+            break;
+
+        case tsgl_print_start_top:
+            riy = y + iy;
+            break;
+    }
+
+    bool shiftIy =
+        sets.localLocationMode == tsgl_print_localLocationMode_bottom ||
+        (sets.localLocationMode == tsgl_print_localLocationMode_from_localtionMode && sets.locationMode == tsgl_print_start_bottom);
+
+    if (shiftIy) {
+        riy += maxScaleCharHeight - scaleCharHeight;
+    } else if (sets.localLocationMode == tsgl_print_localLocationMode_center) {
+        riy += (maxScaleCharHeight - scaleCharHeight) / 2;
+    }
+
+    return riy;
+}
+
 tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     size_t realsize = strlen(text);
     tsgl_print_textArea textArea = {
@@ -204,10 +238,13 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     if (sets.multiline) {
         tsgl_pos oldX = x;
 
-        if (sets.globalCentering) {
+        if (sets.globalCentering || sets.globalAlignmentX != tsgl_print_alignment_left || sets.globalAlignmentY != tsgl_print_alignment_left) {
             tsgl_print_settings lSets;
             memcpy(&lSets, &sets, sizeof(tsgl_print_settings));
             lSets.globalCentering = false;
+            lSets.globalAlignmentX = tsgl_print_alignment_left;
+            lSets.globalAlignmentY = tsgl_print_alignment_left;
+            lSets.alignment = tsgl_print_alignment_left;
             lSets._minWidth = oldX;
             lSets._maxWidth = (oldX + sets.width) - 1;
             lSets._clamp = true;
@@ -225,8 +262,21 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             }
 
             tsgl_print_textArea textArea = tsgl_font_getTextArea(x, y, lSets, text);
-            if (sets.width > 0) x = (x + (sets.width / 2)) - (textArea.width / 2);
-            if (sets.height > 0) y = (y + (sets.height / 2)) - (textArea.height / 2);
+            if (sets.width > 0) {
+                if (sets.globalCentering || sets.globalAlignmentX == tsgl_print_alignment_center) {
+                    x += (sets.width / 2) - (textArea.width / 2);
+                } else if (sets.globalAlignmentX == tsgl_print_alignment_right) {
+                    x += sets.width - textArea.width;
+                }
+            }
+
+            if (sets.height > 0) {
+                if (sets.globalCentering || sets.globalAlignmentY == tsgl_print_alignment_center) {
+                    y += (sets.height / 2) - (textArea.height / 2);
+                } else if (sets.globalAlignmentY == tsgl_print_alignment_right) {
+                    y += sets.height - textArea.height;
+                }
+            }
         }
 
         tsgl_print_settings newSets = {
@@ -243,7 +293,8 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             ._scaleY = sets._scaleY,
             .spacing = sets.spacing,
             .spaceSize = sets.spaceSize,
-            .locationMode = sets.locationMode
+            .locationMode = sets.locationMode,
+            .localLocationMode = sets.localLocationMode
         };
 
         switch (sets.locationMode) {
@@ -263,14 +314,36 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
         textArea.left = TSGL_POS_MAX;
         textArea.right = TSGL_POS_MIN;
 
+        tsgl_pos high_size = 0;
+        if (sets.alignment != tsgl_print_alignment_left) {
+            for (size_t i = 0; i < realsize;) {
+                tsgl_print_textArea lTextArea = tsgl_font_getTextArea(x, y, newSets, text + i);
+                if (lTextArea.width > high_size) high_size = lTextArea.width;
+                i += lTextArea.strlen + 1;
+                if (*((const char*)(text + i)) == '\0') break;
+            }
+        }
+
+        //if (set != NULL) printf("-- %i %i - %i %i\n", x, y, sets.width, sets.height);
         tsgl_pos currentY = y;
         for (size_t i = 0; i < realsize;) {
-            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x, currentY, newSets, text + i, minX, minY, maxX, maxY);
+            //if (set != NULL) printf("--- %i %i\n", x, currentY);
+            tsgl_pos offsetX = 0;
+
+            if (sets.alignment != tsgl_print_alignment_left) {
+                tsgl_print_textArea llTextArea = tsgl_font_getTextArea(x, y, newSets, text + i);
+                if (sets.alignment == tsgl_print_alignment_center) offsetX += (high_size / 2) - (llTextArea.width / 2);
+                else if (sets.alignment == tsgl_print_alignment_right) offsetX += high_size - llTextArea.width;
+            }
+
+            tsgl_print_textArea lTextArea = tsgl_gfx_text(arg, set, fill, x + offsetX, currentY, newSets, text + i, minX, minY, maxX, maxY);
             if (lTextArea.top < textArea.top) textArea.top = lTextArea.top;
             if (lTextArea.bottom > textArea.bottom) textArea.bottom = lTextArea.bottom;
             if (lTextArea.left < textArea.left) textArea.left = lTextArea.left;
             if (lTextArea.right > textArea.right) textArea.right = lTextArea.right;
+            //if (set != NULL) printf("---- %i %i %i %i %s %i\n", lTextArea.top, lTextArea.bottom, lTextArea.left, lTextArea.right, text + i, lTextArea.strlen);
             i += lTextArea.strlen + 1;
+            if (*((const char*)(text + i)) == '\0') break;
             switch (sets.locationMode) {
                 case tsgl_print_start_bottom:
                     currentY -= lTextArea.height + spacing;
@@ -287,19 +360,34 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     }
 
     textArea.left = x;
+    textArea.right = x;
     switch (sets.locationMode) {
         case tsgl_print_start_bottom:
-            textArea.top = TSGL_POS_MAX;
+            textArea.top = y;
             textArea.bottom = y;
             break;
         case tsgl_print_start_top:
             textArea.top = y;
-            textArea.bottom = TSGL_POS_MIN;
+            textArea.bottom = y;
             break;
     }
     size_t strsize = _len(text);
     textArea.strlen = strsize;
     tsgl_pos offset = 0;
+
+    uint16_t maxScaleCharHeight = 0;
+    for (size_t i = 0; i < strsize; i++) {
+        char chr = text[i];
+        if (chr != ' ') {
+            size_t charPosition = tsgl_font_find(sets.font, chr);
+            if (charPosition > 0) {
+                uint16_t charHeight = tsgl_font_height(sets.font, chr);
+                uint16_t scaleCharHeight = ((float)charHeight * sets._scaleY * sets.scaleY) + 0.5;
+                if (scaleCharHeight > maxScaleCharHeight) maxScaleCharHeight = scaleCharHeight;
+            }
+        }
+    }
+
     for (size_t i = 0; i < strsize; i++) {
         char chr = text[i];
         if (chr != ' ') {
@@ -310,25 +398,19 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                 uint16_t scaleCharWidth = ((float)charWidth * sets._scaleX * sets.scaleX) + 0.5;
                 uint16_t scaleCharHeight = ((float)charHeight * sets._scaleY * sets.scaleY) + 0.5;
                 uint16_t blockCheckX = charWidth / scaleCharWidth;
-                if (blockCheckX < 1 || set == NULL) blockCheckX = 1;
+                if (blockCheckX < 1 || set == NULL) blockCheckX = 0;
                 uint16_t blockCheckY = charHeight / scaleCharHeight;
-                if (blockCheckY < 1 || set == NULL) blockCheckY = 1;
+                if (blockCheckY < 1 || set == NULL) blockCheckY = 0;
                 for (tsgl_pos iy = 0; iy < scaleCharHeight; iy++) {
-                    tsgl_pos checkPy = 0;
-                    switch (sets.locationMode) {
-                        case tsgl_print_start_bottom:
-                            checkPy = y - iy;
-                            break;
-                        case tsgl_print_start_top:
-                            checkPy = y + iy;
-                            break;
-                    }
-                    if (checkPy < minY) continue;
-                    if (checkPy >= maxY) break;
+                    tsgl_pos py = _getY(sets, y, iy, scaleCharHeight, maxScaleCharHeight);
+                    if (py < minY) continue;
+                    if (py >= maxY) break;
                     if (sets._clamp) {
-                        if (checkPy < sets._minHeight) continue;
-                        if (checkPy > sets._maxHeight) break;
+                        if (py < sets._minHeight) continue;
+                        if (py > sets._maxHeight) break;
                     }
+                    if (py < textArea.top) textArea.top = py;
+                    if (py > textArea.bottom) textArea.bottom = py;
 
                     for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
                         tsgl_pos px = x + ix + offset;
@@ -340,18 +422,6 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                         }
                         if (px > textArea.right) textArea.right = px;
 
-                        tsgl_pos py = 0;
-                        switch (sets.locationMode) {
-                            case tsgl_print_start_bottom:
-                                py = y - iy;
-                                if (py < textArea.top) textArea.top = py;
-                                break;
-                            case tsgl_print_start_top:
-                                py = y + iy;
-                                if (py > textArea.bottom) textArea.bottom = py;
-                                break;
-                        }
-
                         float findedCount = 0;
                         float allCount = 0;
                         for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
@@ -361,17 +431,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
                                 tsgl_pos oiy = (((float)iy) / sets._scaleY / sets.scaleY) + liy;
                                 if (oiy >= charHeight) break;
 
-                                size_t index = 0;
-                                switch (sets.locationMode) {
-                                    case tsgl_print_start_bottom:
-                                        index = oix + (((charHeight - 1) - oiy) * charWidth);
-                                        break;
-                                    case tsgl_print_start_top:
-                                        index = oix + (oiy * charWidth);
-                                        break;
-                                }
-                                
-                                if (tsgl_font_parse(sets.font, charPosition, index))
+                                if (tsgl_font_parse(sets.font, charPosition, oix + (oiy * charWidth)))
                                     findedCount++;
                                 allCount++;
                             }

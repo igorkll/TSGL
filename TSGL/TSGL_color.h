@@ -46,4 +46,4 @@ tsgl_color tsgl_color_fromHex(uint32_t color);
 tsgl_rawcolor tsgl_color_raw(tsgl_color color, tsgl_colormode colormode);
 tsgl_color tsgl_color_uraw(tsgl_rawcolor color, tsgl_colormode colormode);
 
-bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize);
+bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, tsgl_colormode_raw colorsize);

@@ -6,6 +6,5 @@ sdkconfig.ci
 managed_components
 dependencies.lock
 target
-Cargo.lock
 *.ttf
 .private

@@ -302,7 +302,7 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     return TSGL_BLACK;
 }
 
-bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, float colorsize) {
+bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, tsgl_colormode_raw colorsize) {
     if (colorsize == (int)colorsize) {
         return memcmp(color1.arr, color2.arr, colorsize) == 0;
     } else {

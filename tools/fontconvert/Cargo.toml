@@ -1,0 +1,8 @@
+[package]
+name = "fontconvert"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fontdue = "=0.8.0"
+nfd = "0.0.4"
