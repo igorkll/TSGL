@@ -3,6 +3,8 @@
 #include "TSGL_color.h"
 #include "TSGL_fonts/default.h"
 
+#define DEFAULT_CONTRAST 0.6
+
 typedef enum {
     tsgl_print_start_bottom = 0, //the text is drawn starting from the bottom left point
     tsgl_print_start_top //starting from the top left point
@@ -26,6 +28,12 @@ typedef struct {
     tsgl_rawcolor fill;
     tsgl_rawcolor bg; //you can make the background or text transparent using TSGL_INVALID_RAWCOLOR
     tsgl_rawcolor fg;
+
+    float contrast; // default: 0.6
+
+    tsgl_pos stroke_thickness;
+    tsgl_rawcolor stroke;
+    bool stroke_no_clamp;
 
     float scaleX; //if 0, scaling is disabled
     float scaleY;

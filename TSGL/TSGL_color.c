@@ -302,24 +302,17 @@ tsgl_color tsgl_color_uraw(tsgl_rawcolor rawcolor, tsgl_colormode colormode) {
     return TSGL_BLACK;
 }
 
-bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, tsgl_colormode_raw colorsize) {
-    if (colorsize == (int)colorsize) {
-        return memcmp(color1.arr, color2.arr, colorsize) == 0;
-    } else {
-        uint8_t byteIndex = 0;
-        uint8_t bitsCount = colorsize * 8;
-        while (bitsCount >= 8) {
-            if (color1.arr[byteIndex] != color2.arr[byteIndex]) {
-                return false;
-            }
-            bitsCount -= 8;
-            byteIndex++;
+bool tsgl_color_rawColorCompare(tsgl_rawcolor color1, tsgl_rawcolor color2, tsgl_colormode_raw colorsize, bool floatColorsize) {
+    if (floatColorsize) {
+        if (colorsize == 12) {
+            // Сравниваем первый байт целиком и старшие 4 бита второго байта
+            return (color1.arr[0] == color2.arr[0]) && ((color1.arr[1] & 0xF0) == (color2.arr[1] & 0xF0));
+        } else if (colorsize == 1) {
+            // Сравниваем только младший бит первого байта
+            return (color1.arr[0] & 0x01) == (color2.arr[0] & 0x01);
         }
-        for (size_t i = 0; i < bitsCount; i++) {
-            if (((color1.arr[byteIndex] >> i) & 1) != ((color2.arr[byteIndex] >> i) & 1)) {
-                return false;
-            }
-        }
-        return true;
     }
+
+    // Для остальных случаев (целое число байт) используем побайтовое сравнение
+    return memcmp(color1.arr, color2.arr, colorsize) == 0;
 }

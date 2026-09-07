@@ -51,28 +51,38 @@ static int IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
 
 static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
-    
-    void* buffer;
-    if (sound->doubleSwapBuffer) {
-        buffer = sound->buffer2;
-    } else {
-        buffer = sound->buffer;
-    }
 
     vTaskSuspend(NULL);
 
     while (true) {
+        void* buffer;
         if (sound->doubleSwapBuffer) {
             buffer = sound->buffer2;
         } else {
             buffer = sound->buffer;
         }
         
-        if (sound->reload) {
-            sound->reload = false;
-            fseek(sound->file, sound->position + sound->offset, SEEK_SET);
+        size_t bytesRead = fread(buffer, 1, sound->bufferSize, sound->file);
+        
+        // Проверка на конец файла
+        if (bytesRead < sound->bufferSize) {
+            if (sound->loop) {
+                // Перематываем файл в начало
+                fseek(sound->file, 0, SEEK_SET);
+                // Добираем оставшиеся байты из начала, чтобы буфер был полным
+                if (bytesRead > 0) {
+                    // Читаем недостающие байты в конец буфера (смещение на bytesRead)
+                    fread((char*)buffer + bytesRead, 1, sound->bufferSize - bytesRead, sound->file);
+                } else {
+                    // Если ничего не прочитано, читаем весь буфер заново
+                    fread(buffer, 1, sound->bufferSize, sound->file);
+                }
+            } else {
+                // Забиваю нулями остаток бфера
+                memset((char*)buffer + bytesRead, 0, sound->bufferSize - bytesRead);
+            }
         }
-        fread(buffer, sound->bit_rate, sound->bufferSize, sound->file);
+
         if (!sound->doubleSwapBuffer) {
             if (sound->use_local_timer) {
                 gptimer_start(sound->timer);
@@ -117,10 +127,7 @@ static void IRAM_ATTR _read_next_block(tsgl_sound* sound, int bufOffset) {
     if (sound->position >= sound->len) {
         sound->position = 0;
 
-        if (sound->loop) {
-            sound->reload = true;
-            readFile = true;
-        }
+        readFile = sound->loop;
 
         sound->callback_end_run = true;
         xTaskResumeFromISR(sound->task_service);
@@ -139,6 +146,83 @@ static void IRAM_ATTR _read_next_block(tsgl_sound* sound, int bufOffset) {
             xTaskResumeFromISR(sound->task);
         }
     }
+}
+
+static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
+    portENTER_CRITICAL_ISR(&global_sounds_lock);
+    for (size_t i = 0; i < global_sounds_index; i++) {
+        tsgl_sound* sound = global_sounds[i];
+
+        portENTER_CRITICAL_ISR(&sound->lock);
+
+        if (sound->playing && !sound->callback_end_run) {
+            if (!sound->mute) {
+                void* ptr = sound->buffer + sound->bufferPosition;
+
+                int div;
+                if (sound->bit_rate == 4) {
+                    div = 256 * 256 * 256;
+                } else if (sound->bit_rate == 2) {
+                    div = 256;
+                } else {
+                    div = 1;
+                }
+
+                for (size_t i = 0; i < sound->outputsCount; i++) {
+                    tsgl_sound_output* output = sound->outputs[i];
+
+                    tsgl_sound_addOutputValue(output,
+                        (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
+                    );
+                }
+            }
+
+            if (sound->global_timer_state >= sound->global_timer_div) {
+                _read_next_block(sound, sound->bit_rate * sound->channels);
+                sound->global_timer_state = 0;
+            } else {
+                sound->global_timer_state++;
+            }
+        }
+
+        portEXIT_CRITICAL_ISR(&sound->lock);
+    }
+
+    for (size_t i = 0; i < global_sounds_index; i++) {
+        tsgl_sound* sound = global_sounds[i];
+
+        portENTER_CRITICAL_ISR(&sound->lock);
+
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+            output->processed = true;
+        }
+
+        portEXIT_CRITICAL_ISR(&sound->lock);
+    }
+
+    for (size_t i = 0; i < global_sounds_index; i++) {
+        tsgl_sound* sound = global_sounds[i];
+
+        portENTER_CRITICAL_ISR(&sound->lock);
+
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+            if (output->processed) {
+                if (output->count > 0) {
+                    tsgl_sound_flushOutput(output);
+                } else {
+                    tsgl_sound_rawSetOutput(output, 0);
+                }
+                output->processed = false;
+            }
+        }
+
+        portEXIT_CRITICAL_ISR(&sound->lock);
+    }
+
+    portEXIT_CRITICAL_ISR(&global_sounds_lock);
+    return false;
 }
 
 static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
@@ -244,83 +328,6 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
     }
 }
 
-static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
-    portENTER_CRITICAL_ISR(&global_sounds_lock);
-    for (size_t i = 0; i < global_sounds_index; i++) {
-        tsgl_sound* sound = global_sounds[i];
-
-        portENTER_CRITICAL_ISR(&sound->lock);
-
-        if (sound->playing && !sound->callback_end_run) {
-            if (!sound->mute) {
-                void* ptr = sound->buffer + sound->bufferPosition;
-
-                int div;
-                if (sound->bit_rate == 4) {
-                    div = 256 * 256 * 256;
-                } else if (sound->bit_rate == 2) {
-                    div = 256;
-                } else {
-                    div = 1;
-                }
-
-                for (size_t i = 0; i < sound->outputsCount; i++) {
-                    tsgl_sound_output* output = sound->outputs[i];
-
-                    tsgl_sound_addOutputValue(output,
-                        (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
-                    );
-                }
-            }
-
-            if (sound->global_timer_state >= sound->global_timer_div) {
-                _read_next_block(sound, sound->bit_rate * sound->channels);
-                sound->global_timer_state = 0;
-            } else {
-                sound->global_timer_state++;
-            }
-        }
-
-        portEXIT_CRITICAL_ISR(&sound->lock);
-    }
-
-    for (size_t i = 0; i < global_sounds_index; i++) {
-        tsgl_sound* sound = global_sounds[i];
-
-        portENTER_CRITICAL_ISR(&sound->lock);
-
-        for (size_t i = 0; i < sound->outputsCount; i++) {
-            tsgl_sound_output* output = sound->outputs[i];
-            output->processed = true;
-        }
-
-        portEXIT_CRITICAL_ISR(&sound->lock);
-    }
-
-    for (size_t i = 0; i < global_sounds_index; i++) {
-        tsgl_sound* sound = global_sounds[i];
-
-        portENTER_CRITICAL_ISR(&sound->lock);
-
-        for (size_t i = 0; i < sound->outputsCount; i++) {
-            tsgl_sound_output* output = sound->outputs[i];
-            if (output->processed) {
-                if (output->count > 0) {
-                    tsgl_sound_flushOutput(output);
-                } else {
-                    tsgl_sound_rawSetOutput(output, 0);
-                }
-                output->processed = false;
-            }
-        }
-
-        portEXIT_CRITICAL_ISR(&sound->lock);
-    }
-
-    portEXIT_CRITICAL_ISR(&global_sounds_lock);
-    return false;
-}
-
 void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds) {
     if (use_global_timer) return;
 
@@ -379,7 +386,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
     memset(sound, 0, sizeof(tsgl_sound));
     sound->lock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
 
-    sound->file = fopen(path, "rb");
+    sound->file = tsgl_filesystem_open(path, "rb");
     if (sound->file == NULL) return ESP_FAIL;
     fseek(sound->file, offset, SEEK_SET);
 

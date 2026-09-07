@@ -163,6 +163,7 @@ static void _selectAll(tsgl_display* display) {
 esp_err_t tsgl_display_spi(tsgl_display* display, const tsgl_display_settings settings, spi_host_device_t spihost, size_t freq, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst) {
     memset(display, 0, sizeof(tsgl_display));
     memcpy(&display->storage, &settings.driver->storage, sizeof(tsgl_driver_storage));
+
     display->storage.swapRGB = settings.swapRGB;
     display->storage.flipX = settings.flipX;
     display->storage.flipY = settings.flipY;

@@ -9,7 +9,8 @@
 #include <esp_random.h>
 
 static const char* TAG = "TSGL";
-const float tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 1.5, 1.5, 0.125};
+const tsgl_colormode_raw tsgl_colormodeSizes[] = {2, 2, 2, 2, 3, 3, 12, 12, 1};
+const bool tsgl_floatColormodeSizes[] = {false, false, false, false, false, false, true, true, true};
 
 size_t tsgl_getPartSize() {
     multi_heap_info_t info;

@@ -146,9 +146,65 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
                 sprite->resizeHeight == 0 ? getPosY : tsgl_math_imap(getPosY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
             );
 
-            if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize)) {
+            if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize, sprite->sprite->floatColorsize)) {
                 set(arg, setPosX, setPosY, color);
             }
+        }
+    }
+}
+
+void tsgl_gfx_push_wtrans(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+    sprite->rotation = ((uint8_t)(-sprite->rotation)) % (uint8_t)4;
+
+    if (sprite->sprite->hardwareRotate) {
+        ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
+        return;
+    }
+
+    tsgl_pos realSpriteWidth;
+    tsgl_pos realSpriteHeight;
+    switch (sprite->rotation) {
+        case 1:
+        case 3:
+            realSpriteWidth = sprite->sprite->defaultHeight;
+            realSpriteHeight = sprite->sprite->defaultWidth;
+            break;
+
+        default:
+            realSpriteWidth = sprite->sprite->defaultWidth;
+            realSpriteHeight = sprite->sprite->defaultHeight;
+            break;
+    }
+
+    tsgl_pos spriteWidth = realSpriteWidth;
+    if (sprite->resizeWidth != 0) spriteWidth = sprite->resizeWidth;
+    tsgl_pos spriteHeight = realSpriteHeight;
+    if (sprite->resizeHeight != 0) spriteHeight = sprite->resizeHeight;
+
+    tsgl_pos startX = 0;
+    tsgl_pos startY = 0;
+    if (x < minX) startX = minX - x;
+    if (y < minY) startY = minY - y;
+    tsgl_pos maxSpriteWidth = maxX - x;
+    tsgl_pos maxSpriteHeight = maxY - y;
+    tsgl_pos spriteMaxPointX = spriteWidth - 1;
+    tsgl_pos spriteMaxPointY = spriteHeight - 1;
+    tsgl_pos spriteRealMaxPointX = realSpriteWidth - 1;
+    tsgl_pos spriteRealMaxPointY = realSpriteHeight - 1;
+    if (spriteWidth > maxSpriteWidth) spriteWidth = maxSpriteWidth;
+    if (spriteHeight > maxSpriteHeight) spriteHeight = maxSpriteHeight;
+    for (tsgl_pos posX = startX; posX < spriteWidth; posX++) {
+        tsgl_pos setPosX = posX + x;
+        for (tsgl_pos posY = startY; posY < spriteHeight; posY++) {
+            tsgl_pos setPosY = posY + y;
+            tsgl_pos getPosX = sprite->flixX ? (spriteMaxPointX - posX) : posX;
+            tsgl_pos getPosY = sprite->flixY ? (spriteMaxPointY - posY) : posY;
+            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation,
+                sprite->resizeWidth == 0 ? getPosX : tsgl_math_imap(getPosX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
+                sprite->resizeHeight == 0 ? getPosY : tsgl_math_imap(getPosY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
+            );
+
+            set(arg, setPosX, setPosY, color);
         }
     }
 }
@@ -191,6 +247,107 @@ static tsgl_pos _getY(tsgl_print_settings sets, tsgl_pos y, tsgl_pos iy, tsgl_po
     }
 
     return riy;
+}
+
+static void _text_stroke_set(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos px, tsgl_pos py, tsgl_rawcolor color,
+    tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY,
+    tsgl_print_settings sets) {
+    
+    if (px < minX || px >= maxX || py < minY || py >= maxY) return;
+    if (sets._clamp && !sets.stroke_no_clamp && (px < sets._minWidth || px > sets._maxWidth || py < sets._minHeight || py > sets._maxHeight)) return;
+    set(arg, px, py, color);
+}
+
+static void _text_rastezise_main(bool drawStroke, void* arg, TSGL_SET_REFERENCE(set), const char* text,
+    size_t strsize, tsgl_pos maxScaleCharHeight, tsgl_pos spacing,
+    tsgl_pos standartWidth, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, tsgl_print_textArea* textArea,
+    tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+    
+    tsgl_pos offset = 0;
+    for (size_t i = 0; i < strsize; i++) {
+        char chr = text[i];
+        if (chr != ' ') {
+            size_t charPosition = tsgl_font_find(sets.font, chr);
+            if (charPosition > 0) {
+                uint16_t charWidth = tsgl_font_width(sets.font, chr);
+                uint16_t charHeight = tsgl_font_height(sets.font, chr);
+                uint16_t scaleCharWidth = ((float)charWidth * sets._scaleX * sets.scaleX) + 0.5;
+                uint16_t scaleCharHeight = ((float)charHeight * sets._scaleY * sets.scaleY) + 0.5;
+
+                uint16_t blockCheckX = charWidth / scaleCharWidth;
+                if (blockCheckX < 1) blockCheckX = 1;
+                uint16_t blockCheckY = charHeight / scaleCharHeight;
+                if (blockCheckY < 1) blockCheckY = 1;
+
+                for (tsgl_pos iy = 0; iy < scaleCharHeight; iy++) {
+                    tsgl_pos py = _getY(sets, y, iy, scaleCharHeight, maxScaleCharHeight);
+                    if (py < minY) continue;
+                    if (py >= maxY) break;
+                    if (sets._clamp) {
+                        if (py < sets._minHeight) continue;
+                        if (py > sets._maxHeight) break;
+                    }
+                    if (py < textArea->top) textArea->top = py;
+                    if (py > textArea->bottom) textArea->bottom = py;
+
+                    for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
+                        tsgl_pos px = x + ix + offset;
+                        if (px < minX) continue;
+                        if (px >= maxX) break;
+                        if (sets._clamp) {
+                            if (px < sets._minWidth) continue;
+                            if (px > sets._maxWidth) break;
+                        }
+                        if (px > textArea->right) textArea->right = px;
+
+                        if (set != NULL) {
+                            float findedCount = 0;
+                            float allCount = 0;
+                            for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
+                                tsgl_pos oix = (((float)ix) / sets._scaleX / sets.scaleX) + lix;
+                                if (oix >= charWidth) break;
+                                for (tsgl_pos liy = 0; liy < blockCheckY; liy++) {
+                                    tsgl_pos oiy = (((float)iy) / sets._scaleY / sets.scaleY) + liy;
+                                    if (oiy >= charHeight) break;
+    
+                                    if (tsgl_font_parse(sets.font, charPosition, oix + (oiy * charWidth)))
+                                        findedCount++;
+                                    allCount++;
+                                }
+                            }
+
+                            tsgl_rawcolor color = TSGL_INVALID_RAWCOLOR;
+                            float contrast = sets.contrast > 0 ? sets.contrast : DEFAULT_CONTRAST;
+                            if (findedCount / allCount > (1 - contrast)) {
+                                if (drawStroke) {
+                                    for (tsgl_pos ox = -sets.stroke_thickness; ox <= sets.stroke_thickness; ox++) {
+                                        for (tsgl_pos oy = -sets.stroke_thickness; oy <= sets.stroke_thickness; oy++) {
+                                            if (ox != 0 || oy != 0) _text_stroke_set(arg, set, px + ox, py + oy, sets.stroke, minX, minY, maxX, maxY, sets);
+                                        }
+                                    }
+                                }
+                                color = sets.fg;
+                            } else {
+                                color = sets.bg;
+                            }
+                            if (!drawStroke && !color.invalid) set(arg, px, py, color);
+                        }
+                    }
+                }
+                offset += scaleCharWidth + spacing;
+            }
+        } else {
+            tsgl_pos spaceSize;
+            if (sets.spaceSize == 0) {
+                spaceSize = standartWidth * 0.7;
+            } else {
+                spaceSize = sets.spaceSize;
+            }
+            tsgl_pos staceEndPos = x + spaceSize + offset;
+            if (staceEndPos > textArea->right) textArea->right = staceEndPos;
+            offset += spaceSize + spacing;
+        }
+    }
 }
 
 tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill), tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, const char* text, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
@@ -237,6 +394,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
 
     if (sets.multiline) {
         tsgl_pos oldX = x;
+        tsgl_pos oldY = y;
 
         if (sets.globalCentering || sets.globalAlignmentX != tsgl_print_alignment_left || sets.globalAlignmentY != tsgl_print_alignment_left) {
             tsgl_print_settings lSets;
@@ -248,6 +406,8 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             lSets._minWidth = oldX;
             lSets._maxWidth = (oldX + sets.width) - 1;
             lSets._clamp = true;
+            lSets.stroke_thickness = 0;
+            lSets.stroke = TSGL_INVALID_RAWCOLOR;
 
             switch (sets.locationMode) {
                 case tsgl_print_start_bottom:
@@ -294,20 +454,28 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             .spacing = sets.spacing,
             .spaceSize = sets.spaceSize,
             .locationMode = sets.locationMode,
-            .localLocationMode = sets.localLocationMode
+            .localLocationMode = sets.localLocationMode,
+            .stroke = sets.stroke,
+            .stroke_thickness = sets.stroke_thickness,
+            .stroke_no_clamp = sets.stroke_no_clamp
         };
 
         switch (sets.locationMode) {
             case tsgl_print_start_bottom:
-                newSets._minHeight = (y - sets.height) + 1;
-                newSets._maxHeight = y;
+                newSets._minHeight = (oldY - sets.height) + 1;
+                newSets._maxHeight = oldY;
                 break;
 
             case tsgl_print_start_top:
-                newSets._minHeight = y;
-                newSets._maxHeight = (y + sets.height) - 1;
+                newSets._minHeight = oldY;
+                newSets._maxHeight = (oldY + sets.height) - 1;
                 break;
         }
+
+        tsgl_print_settings newSetsCheck;
+        memcpy(&newSetsCheck, &newSets, sizeof(tsgl_print_settings));
+        newSetsCheck.stroke = TSGL_INVALID_RAWCOLOR;
+        newSetsCheck.stroke_thickness = 0;
 
         textArea.top = TSGL_POS_MAX;
         textArea.bottom = TSGL_POS_MIN;
@@ -317,7 +485,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
         tsgl_pos high_size = 0;
         if (sets.alignment != tsgl_print_alignment_left) {
             for (size_t i = 0; i < realsize;) {
-                tsgl_print_textArea lTextArea = tsgl_font_getTextArea(x, y, newSets, text + i);
+                tsgl_print_textArea lTextArea = tsgl_font_getTextArea(x, y, newSetsCheck, text + i);
                 if (lTextArea.width > high_size) high_size = lTextArea.width;
                 i += lTextArea.strlen + 1;
                 if (*((const char*)(text + i)) == '\0') break;
@@ -331,7 +499,7 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
             tsgl_pos offsetX = 0;
 
             if (sets.alignment != tsgl_print_alignment_left) {
-                tsgl_print_textArea llTextArea = tsgl_font_getTextArea(x, y, newSets, text + i);
+                tsgl_print_textArea llTextArea = tsgl_font_getTextArea(x, y, newSetsCheck, text + i);
                 if (sets.alignment == tsgl_print_alignment_center) offsetX += (high_size / 2) - (llTextArea.width / 2);
                 else if (sets.alignment == tsgl_print_alignment_right) offsetX += high_size - llTextArea.width;
             }
@@ -373,7 +541,6 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
     }
     size_t strsize = _len(text);
     textArea.strlen = strsize;
-    tsgl_pos offset = 0;
 
     uint16_t maxScaleCharHeight = 0;
     for (size_t i = 0; i < strsize; i++) {
@@ -388,77 +555,12 @@ tsgl_print_textArea tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_
         }
     }
 
-    for (size_t i = 0; i < strsize; i++) {
-        char chr = text[i];
-        if (chr != ' ') {
-            size_t charPosition = tsgl_font_find(sets.font, chr);
-            if (charPosition > 0) {
-                uint16_t charWidth = tsgl_font_width(sets.font, chr);
-                uint16_t charHeight = tsgl_font_height(sets.font, chr);
-                uint16_t scaleCharWidth = ((float)charWidth * sets._scaleX * sets.scaleX) + 0.5;
-                uint16_t scaleCharHeight = ((float)charHeight * sets._scaleY * sets.scaleY) + 0.5;
-                uint16_t blockCheckX = charWidth / scaleCharWidth;
-                if (blockCheckX < 1 || set == NULL) blockCheckX = 0;
-                uint16_t blockCheckY = charHeight / scaleCharHeight;
-                if (blockCheckY < 1 || set == NULL) blockCheckY = 0;
-                for (tsgl_pos iy = 0; iy < scaleCharHeight; iy++) {
-                    tsgl_pos py = _getY(sets, y, iy, scaleCharHeight, maxScaleCharHeight);
-                    if (py < minY) continue;
-                    if (py >= maxY) break;
-                    if (sets._clamp) {
-                        if (py < sets._minHeight) continue;
-                        if (py > sets._maxHeight) break;
-                    }
-                    if (py < textArea.top) textArea.top = py;
-                    if (py > textArea.bottom) textArea.bottom = py;
-
-                    for (tsgl_pos ix = 0; ix < scaleCharWidth; ix++) {
-                        tsgl_pos px = x + ix + offset;
-                        if (px < minX) continue;
-                        if (px >= maxX) break;
-                        if (sets._clamp) {
-                            if (px < sets._minWidth) continue;
-                            if (px > sets._maxWidth) break;
-                        }
-                        if (px > textArea.right) textArea.right = px;
-
-                        float findedCount = 0;
-                        float allCount = 0;
-                        for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
-                            tsgl_pos oix = (((float)ix) / sets._scaleX / sets.scaleX) + lix;
-                            if (oix >= charWidth) break;
-                            for (tsgl_pos liy = 0; liy < blockCheckY; liy++) {
-                                tsgl_pos oiy = (((float)iy) / sets._scaleY / sets.scaleY) + liy;
-                                if (oiy >= charHeight) break;
-
-                                if (tsgl_font_parse(sets.font, charPosition, oix + (oiy * charWidth)))
-                                    findedCount++;
-                                allCount++;
-                            }
-                        }
-                        if (findedCount / allCount > 0.5) {
-                            if (set != NULL && !sets.fg.invalid) set(arg, px, py, sets.fg);
-                        } else {
-                            if (set != NULL && !sets.bg.invalid) set(arg, px, py, sets.bg);
-                        }
-                    }
-                }
-                offset += scaleCharWidth + spacing;
-            }
-        } else {
-            tsgl_pos spaceSize;
-            if (sets.spaceSize == 0) {
-                spaceSize = standartWidth * 0.7;
-            } else {
-                spaceSize = sets.spaceSize;
-            }
-            tsgl_pos staceEndPos = x + spaceSize + offset;
-            if (staceEndPos > textArea.right) textArea.right = staceEndPos;
-            offset += spaceSize + spacing;
-        }
-    }
+    if (!sets.stroke.invalid && sets.stroke_thickness > 0) _text_rastezise_main(true, arg, set, text, strsize, maxScaleCharHeight, spacing, standartWidth, x, y, sets, &textArea, minX, minY, maxX, maxY);
+    _text_rastezise_main(false, arg, set, text, strsize, maxScaleCharHeight, spacing, standartWidth, x, y, sets, &textArea, minX, minY, maxX, maxY);
+    
     textArea.width = (textArea.right - textArea.left) + 1;
     textArea.height = (textArea.bottom - textArea.top) + 1;
+    //printf("%i %i %i %i - %i %i\n", textArea.top, textArea.left, textArea.left, textArea.right, textArea.width, textArea.height);
     return textArea;
 }
 
@@ -467,3 +569,21 @@ tsgl_print_textArea TSGL_FAST_FUNC tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(s
     return (tsgl_print_textArea) {};
 }
 */
+
+tsgl_sprite* tsgl_gfx_renderTextToSprite(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_print_settings sets, const char* text, tsgl_colormode colormode, int64_t caps, tsgl_rawcolor transparentColor, tsgl_rawcolor clearcolor) {
+    tsgl_sprite* sprite = calloc(1, sizeof(tsgl_sprite));
+    tsgl_framebuffer* sprite_fb = malloc(sizeof(tsgl_framebuffer));
+    sprite->sprite = sprite_fb;
+    sprite->transparentColor = transparentColor;
+
+    if (tsgl_framebuffer_init(sprite_fb, colormode, width, height, caps) != ESP_OK) {
+        free(sprite);
+        free(sprite_fb);
+        return NULL;
+    }
+
+    if (!clearcolor.invalid) tsgl_framebuffer_clear(sprite_fb, clearcolor);
+    tsgl_gfx_text(sprite_fb, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fillWithoutCheck, x, y, sets, text, sprite_fb->viewport_minX, sprite_fb->viewport_minY, sprite_fb->viewport_maxX, sprite_fb->viewport_maxY);
+
+    return sprite;
+}

@@ -1,6 +1,9 @@
 #include "TSGL.h"
 
 esp_err_t tsgl_filesystem_mount_fatfs(const char* path, const char* name);
+esp_err_t tsgl_filesystem_mount_fatfs_ro(const char* path, const char* name);
+esp_err_t tsgl_filesystem_mount_fatfs_af(const char* path, const char* name);
+esp_err_t tsgl_filesystem_mount_spifs_af(const char* path, const char* name);
 
 FILE* tsgl_filesystem_open(const char* path, const char* mode);
 size_t tsgl_filesystem_writeFile(const char* path, void* buffer, size_t bufferLen);
