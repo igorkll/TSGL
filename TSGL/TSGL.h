@@ -13,7 +13,7 @@ typedef struct tsgl_display tsgl_display;
 //typedef float tsgl_colormode_raw;
 typedef uint8_t tsgl_colormode_raw;
 
-#define TSGL_VERSION "0.6.0"
+#define TSGL_VERSION "0.7.0"
 
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767

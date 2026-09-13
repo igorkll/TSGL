@@ -129,9 +129,9 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
     uint32_t bcSize;
     fread(&bcSize, sizeof(uint32_t), 1, file);
     
-    uint32_t palette_size = 0;
+    //uint32_t palette_size = 0;
     uint32_t palette_entries = 0;
-    uint32_t compression = 0;
+    //uint32_t compression = 0;
     switch (bcSize) {
         case 12 : {
             BITMAPCOREHEADER_struct BITMAPINFO;
@@ -140,7 +140,7 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             info.height = BITMAPINFO.bcHeight;
             info.bits = BITMAPINFO.bcBitCount;
             
-            palette_size = 0;  // для 12-байтового заголовка палитра состоит из 3-байтовых записей
+            //palette_size = 0;  // для 12-байтового заголовка палитра состоит из 3-байтовых записей
             break;
         }
 
@@ -151,12 +151,12 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             info.height = BITMAPINFO.biHeight;
             info.bits = BITMAPINFO.biBitCount;
 
-            compression = BITMAPINFO.biCompression;
+            //compression = BITMAPINFO.biCompression;
             palette_entries = BITMAPINFO.biClrUsed;
             if (palette_entries == 0 && info.bits <= 8) {
                 palette_entries = 1 << info.bits; // если 0, то полная палитра
             }
-            palette_size = 4;
+            //palette_size = 4;
             break;
         }
 
@@ -167,10 +167,10 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             info.height = BITMAPINFO.biHeight;
             info.bits = BITMAPINFO.biBitCount;
 
-            compression = BITMAPINFO.biCompression;
+            //compression = BITMAPINFO.biCompression;
             palette_entries = BITMAPINFO.biClrUsed;
             if (palette_entries == 0 && info.bits <= 8) palette_entries = 1 << info.bits;
-            palette_size = 4;
+            //palette_size = 4;
             break;
         }
 
@@ -181,10 +181,10 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
             info.height = BITMAPINFO.biHeight;
             info.bits = BITMAPINFO.biBitCount;
 
-            compression = BITMAPINFO.biCompression;
+            //compression = BITMAPINFO.biCompression;
             palette_entries = BITMAPINFO.biClrUsed;
             if (palette_entries == 0 && info.bits <= 8) palette_entries = 1 << info.bits;
-            palette_size = 4;
+            //palette_size = 4;
             break;
         }
 
@@ -236,7 +236,7 @@ static tsgl_imageInfo _parse(const char* path, tsgl_framebuffer* sprite_fb, tsgl
 
         fseek(file, BITMAPFILEHEADER.bfOffBits, SEEK_SET);
 
-        uint32_t rowSize = ((info.bits * info.width + 31) / 32) * 4;
+        //uint32_t rowSize = ((info.bits * info.width + 31) / 32) * 4;
 
         uint8_t* bmpBuffer = malloc(BMP_BUFFER_SIZE);
         size_t bmpBufferPos = BMP_BUFFER_SIZE;

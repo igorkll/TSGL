@@ -14,6 +14,7 @@ static bool use_global_timer = false;
 
 static portMUX_TYPE global_sounds_lock = portMUX_INITIALIZER_UNLOCKED;
 static gptimer_handle_t global_timer;
+static bool global_timer_enabled;
 static int global_timer_freq = 0;
 
 static tsgl_sound** global_sounds;
@@ -56,37 +57,33 @@ static void _soundTask(void* _sound) {
 
     while (true) {
         void* buffer;
-        if (sound->doubleSwapBuffer) {
+        if (sound->doubleSwapBuffer && !sound->readFromStart) {
             buffer = sound->buffer2;
         } else {
             buffer = sound->buffer;
         }
+
+        if (sound->loop && sound->readFromStart) {
+            //printf("seek start\n");
+            fseek(sound->file, 0, SEEK_SET);
+        }
         
+        //printf("read\n");
         size_t bytesRead = fread(buffer, 1, sound->bufferSize, sound->file);
-        
-        // Проверка на конец файла
-        if (bytesRead < sound->bufferSize) {
-            if (sound->loop) {
-                // Перематываем файл в начало
-                fseek(sound->file, 0, SEEK_SET);
-                // Добираем оставшиеся байты из начала, чтобы буфер был полным
-                if (bytesRead > 0) {
-                    // Читаем недостающие байты в конец буфера (смещение на bytesRead)
-                    fread((char*)buffer + bytesRead, 1, sound->bufferSize - bytesRead, sound->file);
-                } else {
-                    // Если ничего не прочитано, читаем весь буфер заново
-                    fread(buffer, 1, sound->bufferSize, sound->file);
-                }
-            } else {
-                // Забиваю нулями остаток бфера
-                memset((char*)buffer + bytesRead, 0, sound->bufferSize - bytesRead);
-            }
+        size_t setZeroSize = sound->bufferSize - bytesRead;
+        if (setZeroSize > 0) memset((char*)buffer + bytesRead, 0, setZeroSize);
+
+        if (sound->doubleSwapBuffer && sound->readFromStart) {
+            fread(sound->buffer2, 1, sound->bufferSize, sound->file);
+            size_t setZeroSize = sound->bufferSize - bytesRead;
+            if (setZeroSize > 0) memset((char*)sound->buffer2 + bytesRead, 0, setZeroSize);
         }
 
-        if (!sound->doubleSwapBuffer) {
-            if (sound->use_local_timer) {
-                gptimer_start(sound->timer);
-            }
+        sound->readFromStart = false;
+        sound->tempStop = false;
+        if (sound->use_local_timer && sound->localTimerStopped) {
+            gptimer_start(sound->timer);
+            sound->localTimerStopped = false;
         }
 
         vTaskSuspend(NULL);
@@ -115,7 +112,7 @@ static void _soundServiceTask(void* _sound) {
     }
 }
 
-static void IRAM_ATTR _read_next_block(tsgl_sound* sound, int bufOffset) {
+static void IRAM_ATTR _read_next_block_raw(tsgl_sound* sound, int bufOffset) {
     bool readFile = false;
 
     sound->bufferPosition += bufOffset;
@@ -125,8 +122,19 @@ static void IRAM_ATTR _read_next_block(tsgl_sound* sound, int bufOffset) {
 
     sound->position += bufOffset;
     if (sound->position >= sound->len) {
-        sound->position = 0;
+        if (sound->loop) {
+            sound->position = 0;
+            sound->readFromStart = true;
 
+            if (sound->doubleSwapBuffer) {
+                if (sound->use_local_timer) {
+                    gptimer_stop(sound->timer);
+                    sound->localTimerStopped = true;
+                } else {
+                    sound->tempStop = true;
+                }
+            }
+        }
         readFile = sound->loop;
 
         sound->callback_end_run = true;
@@ -142,8 +150,64 @@ static void IRAM_ATTR _read_next_block(tsgl_sound* sound, int bufOffset) {
                 sound->buffer2 = buffer;
             } else if (sound->use_local_timer) {
                 gptimer_stop(sound->timer);
+                sound->localTimerStopped = true;
+            } else {
+                sound->tempStop = true;
             }
             xTaskResumeFromISR(sound->task);
+        }
+    }
+}
+
+static void IRAM_ATTR _math_current_block(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state) {
+        void* ptr = sound->buffer + sound->bufferPosition;
+
+        for (size_t i = 0; i < sound->channels; i++) {
+            tsgl_dfpwm_decode(&sound->dfpwm_decode_state[i], (uint8_t*)ptr, sound->bit_pos + i);
+        }
+    }
+}
+
+static void IRAM_ATTR _read_next_block(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state) {
+        sound->bit_pos += sound->channels;
+        if (sound->bit_pos >= 8) {
+            sound->bit_pos = 0;
+            _read_next_block_raw(sound, 1);
+        }
+    } else {
+        _read_next_block_raw(sound, sound->bit_rate * sound->channels);
+    }
+}
+
+static void IRAM_ATTR _addOutputsValues(tsgl_sound* sound) {
+    void* ptr = sound->buffer + sound->bufferPosition;
+
+    if (sound->dfpwm_decode_state) {
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+
+            tsgl_sound_addOutputValue(output,
+                (sound->dfpwm_decode_state[i % sound->channels].fq * sound->volume) / 255
+            );
+        }
+    } else {
+        int div;
+        if (sound->bit_rate == 4) {
+            div = 256 * 256 * 256;
+        } else if (sound->bit_rate == 2) {
+            div = 256;
+        } else {
+            div = 1;
+        }
+        
+        for (size_t i = 0; i < sound->outputsCount; i++) {
+            tsgl_sound_output* output = sound->outputs[i];
+    
+            tsgl_sound_addOutputValue(output,
+                (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
+            );
         }
     }
 }
@@ -155,30 +219,17 @@ static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_al
 
         portENTER_CRITICAL_ISR(&sound->lock);
 
-        if (sound->playing && !sound->callback_end_run) {
+        if (sound->playing) {
+            if (sound->global_timer_state == 0 && !sound->tempStop) {
+                _math_current_block(sound);
+            }
+
             if (!sound->mute) {
-                void* ptr = sound->buffer + sound->bufferPosition;
-
-                int div;
-                if (sound->bit_rate == 4) {
-                    div = 256 * 256 * 256;
-                } else if (sound->bit_rate == 2) {
-                    div = 256;
-                } else {
-                    div = 1;
-                }
-
-                for (size_t i = 0; i < sound->outputsCount; i++) {
-                    tsgl_sound_output* output = sound->outputs[i];
-
-                    tsgl_sound_addOutputValue(output,
-                        (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
-                    );
-                }
+                _addOutputsValues(sound);
             }
 
             if (sound->global_timer_state >= sound->global_timer_div) {
-                _read_next_block(sound, sound->bit_rate * sound->channels);
+                if (!sound->tempStop) _read_next_block(sound);
                 sound->global_timer_state = 0;
             } else {
                 sound->global_timer_state++;
@@ -235,24 +286,13 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         return false;
     }
 
+    _math_current_block(sound);
+
     if (!sound->mute) {
-        void* ptr = sound->buffer + sound->bufferPosition;
-        int div;
-        if (sound->bit_rate == 4) {
-            div = 256 * 256 * 256;
-        } else if (sound->bit_rate == 2) {
-            div = 256;
-        } else {
-            div = 1;
-        }
+        _addOutputsValues(sound);
 
         for (size_t i = 0; i < sound->outputsCount; i++) {
             tsgl_sound_output* output = sound->outputs[i];
-
-            tsgl_sound_addOutputValue(output,
-                (_convertPcm(sound, ptr + ((i % sound->channels) * sound->bit_rate)) * sound->volume) / 255 / div
-            );
-
             tsgl_sound_flushOutput(output);
         }
     } else {
@@ -262,7 +302,7 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         }
     }
 
-    _read_next_block(sound, sound->bit_rate * sound->channels);
+    _read_next_block(sound);
 
     portEXIT_CRITICAL_ISR(&sound->lock);
 
@@ -314,6 +354,15 @@ static void _freeOutputs(tsgl_sound* sound) {
     free(sound->outputs);
 }
 
+static void _resetDfpwmDecoder(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state == NULL) return;
+
+    sound->bit_pos = 0;
+    for (size_t i = 0; i < sound->channels; i++) {
+        tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i]);
+    }
+}
+
 static void _setPosition(tsgl_sound* sound, size_t position) {
     sound->position = position;
     //if (sound->position < 0) sound->position = 0;
@@ -326,6 +375,13 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
     } else {
         sound->bufferPosition = sound->position;
     }
+
+    _resetDfpwmDecoder(sound);
+}
+
+void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound) {
+    sound->dfpwm_decode_state = malloc(sound->channels * sizeof(tsgl_dfpwm_decode_state));
+    _resetDfpwmDecoder(sound);
 }
 
 void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds) {
@@ -559,8 +615,9 @@ void tsgl_sound_play(tsgl_sound* sound) {
     if (sound->use_local_timer) {
         _initTimer(sound);
         gptimer_start(sound->timer);
-    } else {
+    } else if (!global_timer_enabled) {
         gptimer_start(global_timer);
+        global_timer_enabled = true;
     }
     portEXIT_CRITICAL(&sound->lock);
 }
@@ -583,8 +640,9 @@ static void _stop(tsgl_sound* sound) {
                 break;
             }
         }
-        if (!found_playing) {
+        if (!found_playing && global_timer_enabled) {
             gptimer_stop(global_timer);
+            global_timer_enabled = false;
         }
         portEXIT_CRITICAL(&global_sounds_lock);
     }
@@ -608,6 +666,7 @@ void tsgl_sound_free(tsgl_sound* sound) {
     }
     if (sound->buffer != NULL) free(sound->buffer);
     if (sound->buffer2 != NULL) free(sound->buffer2);
+    if (sound->dfpwm_decode_state != NULL) free(sound->dfpwm_decode_state);
     _freeOutputs(sound);
     if (use_global_timer) {
         portENTER_CRITICAL(&global_sounds_lock);

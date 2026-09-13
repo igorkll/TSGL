@@ -262,6 +262,9 @@ static void _text_rastezise_main(bool drawStroke, void* arg, TSGL_SET_REFERENCE(
     size_t strsize, tsgl_pos maxScaleCharHeight, tsgl_pos spacing,
     tsgl_pos standartWidth, tsgl_pos x, tsgl_pos y, tsgl_print_settings sets, tsgl_print_textArea* textArea,
     tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
+
+    float contrast = sets.contrast > 0 ? sets.contrast : DEFAULT_CONTRAST;
+    contrast = 1 - contrast;
     
     tsgl_pos offset = 0;
     for (size_t i = 0; i < strsize; i++) {
@@ -301,13 +304,17 @@ static void _text_rastezise_main(bool drawStroke, void* arg, TSGL_SET_REFERENCE(
                         if (px > textArea->right) textArea->right = px;
 
                         if (set != NULL) {
-                            float findedCount = 0;
-                            float allCount = 0;
+                            uint16_t findedCount = 0;
+                            uint16_t allCount = 0;
+
+                            tsgl_pos boix = ((float)ix) / sets._scaleX / sets.scaleX;
+                            tsgl_pos boiy = ((float)iy) / sets._scaleY / sets.scaleY;
+
                             for (tsgl_pos lix = 0; lix < blockCheckX; lix++) {
-                                tsgl_pos oix = (((float)ix) / sets._scaleX / sets.scaleX) + lix;
+                                tsgl_pos oix = boix + lix;
                                 if (oix >= charWidth) break;
                                 for (tsgl_pos liy = 0; liy < blockCheckY; liy++) {
-                                    tsgl_pos oiy = (((float)iy) / sets._scaleY / sets.scaleY) + liy;
+                                    tsgl_pos oiy = boiy + liy;
                                     if (oiy >= charHeight) break;
     
                                     if (tsgl_font_parse(sets.font, charPosition, oix + (oiy * charWidth)))
@@ -317,8 +324,8 @@ static void _text_rastezise_main(bool drawStroke, void* arg, TSGL_SET_REFERENCE(
                             }
 
                             tsgl_rawcolor color = TSGL_INVALID_RAWCOLOR;
-                            float contrast = sets.contrast > 0 ? sets.contrast : DEFAULT_CONTRAST;
-                            if (findedCount / allCount > (1 - contrast)) {
+                            
+                            if ((float)findedCount / (float)allCount > contrast) {
                                 if (drawStroke) {
                                     for (tsgl_pos ox = -sets.stroke_thickness; ox <= sets.stroke_thickness; ox++) {
                                         for (tsgl_pos oy = -sets.stroke_thickness; oy <= sets.stroke_thickness; oy++) {
