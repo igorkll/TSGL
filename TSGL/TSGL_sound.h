@@ -62,6 +62,7 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
     size_t offset;
     size_t len;
     size_t sample_rate;
+    size_t scaled_sample_rate;
     size_t bit_rate;
     size_t channels;
     tsgl_sound_pcm_format pcm_format;
@@ -89,6 +90,7 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
     // количество декодеров равно количеству каналов
     tsgl_dfpwm_decode_state* dfpwm_decode_state;
     uint8_t bit_pos;
+    float cutoff_mul;
 
     void* userData;
     int userData_int;
@@ -110,7 +112,7 @@ esp_err_t tsgl_sound_load_pcmPart(tsgl_sound* sound, size_t offset, size_t loads
 // allows you to specify double buffering to avoid clicks
 esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format, bool doubleSwapBuffer);
 // activates the dfpwm decoder
-void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound);
+void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound, float cutoff_mul);
 //it makes a second instance of sound from already loaded data, works only with tracks fully loaded into RAM, it is necessary so that several sound effects can be run simultaneously
 esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent);
 //sets the outputs for sample playback. if the track is single-channel,

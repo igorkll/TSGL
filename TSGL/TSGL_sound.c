@@ -357,9 +357,11 @@ static void _freeOutputs(tsgl_sound* sound) {
 static void _resetDfpwmDecoder(tsgl_sound* sound) {
     if (sound->dfpwm_decode_state == NULL) return;
 
+    float cutoff_mul = sound.cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
+
     sound->bit_pos = 0;
     for (size_t i = 0; i < sound->channels; i++) {
-        tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i]);
+        tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i], sound->scaled_sample_rate, ((float)sound->scaled_sample_rate) * cutoff_mul);
     }
 }
 
@@ -379,8 +381,9 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
     _resetDfpwmDecoder(sound);
 }
 
-void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound) {
+void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound, float cutoff_mul) {
     sound->dfpwm_decode_state = malloc(sound->channels * sizeof(tsgl_dfpwm_decode_state));
+    sound->cutoff_mul = cutoff_mul;
     _resetDfpwmDecoder(sound);
 }
 
@@ -436,6 +439,8 @@ static void afterUpdateSpeed(tsgl_sound* sound) {
     if (!sound->use_local_timer) {
         sound->global_timer_div = (global_timer_freq / (sound->sample_rate * sound->speed)) - 1;
     }
+
+    sound->scaled_sample_rate = sound->sample_rate * sound->speed;
 }
 
 esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format, bool doubleSwapBuffer) {
@@ -552,6 +557,10 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
     sound->speed = speed;
 
     afterUpdateSpeed(sound);
+
+    if (sound->dfpwm_decode_state) {
+        _resetDfpwmDecoder(sound);
+    }
 
     if (sound->playing && sound->use_local_timer) {
         gptimer_stop(sound->timer);
