@@ -357,7 +357,7 @@ static void _freeOutputs(tsgl_sound* sound) {
 static void _resetDfpwmDecoder(tsgl_sound* sound) {
     if (sound->dfpwm_decode_state == NULL) return;
 
-    float cutoff_mul = sound.cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
+    float cutoff_mul = sound->cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
 
     sound->bit_pos = 0;
     for (size_t i = 0; i < sound->channels; i++) {
