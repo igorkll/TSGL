@@ -160,6 +160,14 @@ bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID) {
     return false;
 }
 
+bool tsgl_keyboard_getRawState(tsgl_keyboard* keyboard, int buttonID) {
+    tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
+    if (bindState != NULL) {
+        return bindState->rawState;
+    }
+    return false;
+}
+
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID) {
     tsgl_keyboard_bind* bindState = tsgl_keyboard_findButton(keyboard, buttonID);
     if (bindState != NULL) {

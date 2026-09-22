@@ -94,6 +94,7 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
 
     void* userData;
     int userData_int;
+    float userData_float;
 };
 
 // If you want to produce multiple sounds at the same time, you must activate the global timer.

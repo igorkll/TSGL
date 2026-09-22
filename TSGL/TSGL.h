@@ -13,7 +13,7 @@ typedef struct tsgl_display tsgl_display;
 //typedef float tsgl_colormode_raw;
 typedef uint8_t tsgl_colormode_raw;
 
-#define TSGL_VERSION "0.7.2"
+#define TSGL_VERSION "0.7.4"
 
 #define TSGL_POS_MIN -32768
 #define TSGL_POS_MAX 32767
@@ -21,7 +21,8 @@ typedef uint8_t tsgl_colormode_raw;
 #define TSGL_SPIRAM   (MALLOC_CAP_SPIRAM | MALLOC_CAP_32BIT)
 #define TSGL_RAM      0
 
-#define TSGL_CALC_ARRSIZE(arr) (sizeof(arr) / sizeof(&arr))
+#define TSGL_CALC_ARRSIZE(arr) (sizeof(arr) / sizeof(*(arr)))
+#define tsgl_rgb(_r, _g, _b) ((tsgl_color){.r = _r, .g = _g, .b = _b, .invalid = false})
 
 extern const tsgl_colormode_raw tsgl_colormodeSizes[];
 extern const bool tsgl_floatColormodeSizes[];
@@ -50,7 +51,7 @@ size_t tsgl_getPartSize();
 void tsgl_sendFlood(size_t maxPart, void* arg, bool(*send)(void* arg, void* part, size_t size), const uint8_t* data, size_t size, size_t flood);
 void* tsgl_malloc(size_t size, int64_t caps);
 void tsgl_delay(size_t time);
-int tsgl_random(int min, int max);
+int tsgl_random(int min, int max); //inclusive
 float tsgl_randomFloat(); //from 0 to 1
 time_t tsgl_time(); //returns the start time in milliseconds
 

@@ -34,3 +34,17 @@ int TSGL_funcs_slnprintf(char *str, size_t size, const char *format, ...) {
 
     return result;
 }
+
+bool tsgl_funcs_checkIntersection(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_pos x2, tsgl_pos y2, tsgl_pos width2, tsgl_pos height2) {
+    return (x < x2 + width2 && 
+            x + width > x2 && 
+            y < y2 + height2 && 
+            y + height > y2);
+}
+
+bool tsgl_funcs_checkTouch(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_pos x2, tsgl_pos y2, tsgl_pos width2, tsgl_pos height2) {
+    return (x <= x2 + width2 && 
+            x + width >= x2 && 
+            y <= y2 + height2 && 
+            y + height >= y2);
+}

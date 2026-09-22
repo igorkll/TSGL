@@ -43,5 +43,6 @@ void tsgl_keyboard_setDebounce(tsgl_keyboard* keyboard, int buttonID, time_t pre
 
 bool tsgl_keyboard_readState(tsgl_keyboard* keyboard, int buttonID); //be sure to call before using whenPressed, getState, whenReleasing to update the status
 bool tsgl_keyboard_getState(tsgl_keyboard* keyboard, int buttonID);
+bool tsgl_keyboard_getRawState(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenPressed(tsgl_keyboard* keyboard, int buttonID);
 bool tsgl_keyboard_whenReleasing(tsgl_keyboard* keyboard, int buttonID);
