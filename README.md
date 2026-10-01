@@ -1,8 +1,8 @@
-# TSGL 0.7.4
+# TSGL 0.8.0
 * extended graphics library for the ESP 32 family controller
 * this library is written entirely in "C"
 * designed exclusively for use with ESP-IDF
-* the esp-idf version i use is v5.4.1
+* the esp-idf version i use is v5.4.4
 * also, this library has an APIs for working with other peripherals
 
 ## supported platforms
@@ -20,6 +20,11 @@
 * st7789 - st77XX_rgb444 / st77XX_rgb565 / st77XX_rgb666
 * st7796 - st77XX_rgb565 / st77XX_rgb888
 
+## supported audio formats
+* pcm
+* dfpwm
+* nbs
+
 ## features
 * the ability to install custom drivers without having to change the library code
 * the ability to install drivers directly inside the project
@@ -27,6 +32,9 @@
 * the ability to change driver settings for specific display features, which allows you to use 1 driver for most displays (can configure: resolution, offsets, inversion, flipX, flipY, swapXY)
 * are red and blue mixed up? this is not a problem, just send the color encoded on the display not using the driver's color space, but its BGR/RGB counterpart. or set the swapRGB flag in the driver settings
 * support for the 444 color space, where 3 pixels are encoded in 2 bits (accessing such a framebuffer is slower, and working without framebuffer can cause graphical artifacts)
+
+## warnings
+* be sure to increase the stack size to at least 8192. for the main task, this is done with the "CONFIG_ESP_MAIN_TASK_STACK_SIZE" parameter in the sdkconfig
 
 ## langueches supported
 * english (ascii)

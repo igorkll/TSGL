@@ -12,3 +12,4 @@ size_t tsgl_filesystem_readFile(const char *path, void* buffer, size_t bufferLen
 bool tsgl_filesystem_exists(const char *path);
 bool tsgl_filesystem_isDirectory(const char *path);
 size_t tsgl_filesystem_size(const char* path);
+void tsgl_filesystem_remove(const char* path);

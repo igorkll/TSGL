@@ -12,9 +12,12 @@
 #include <driver/gptimer.h>
 #include <driver/gpio.h>
 #include <freertos/portmacro.h>
+#include <stdatomic.h>
 
 //use this instead of the bufferSize to load the track immediately into RAM without loading on playing
 #define TSGL_SOUND_FULLBUFFER (2 ^ sizeof(size_t))
+
+#define TSGL_SOUND_STACK_SIZE (1024 * 8)
 
 typedef struct {
     #ifdef HARDWARE_DAC
@@ -31,8 +34,10 @@ typedef enum {
     tsgl_sound_pcm_signed
 } tsgl_sound_pcm_format;
 
+extern bool tsgl_sound_force_enable_output;
+
 typedef struct tsgl_sound tsgl_sound;
-struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use methods. you can only write values to the first two configuration fields
+struct tsgl_sound {
     bool heap; //it will automatically call free when calling tsgl_sound_free
 
     bool playing;
@@ -71,11 +76,20 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
     size_t outputsCount;
     bool freeOutputs;
 
-    uint8_t global_timer_div;
-    uint8_t global_timer_state;
+    //uint8_t global_timer_div;
+    //uint8_t global_timer_state;
 
     gptimer_handle_t timer;
     bool use_local_timer;
+
+    bool math_block_flag;
+    
+    uint64_t phase;
+    uint64_t phase_step;
+
+    bool first_start;
+    bool inited;
+    bool isInstance;
 
     bool mute;
     bool reload;
@@ -85,7 +99,7 @@ struct tsgl_sound { //do not write ANYTHING in the fields of the structure. use 
 
     bool freeOnEnd;
 
-    portMUX_TYPE lock;
+    atomic_flag lock;
 
     // количество декодеров равно количеству каналов
     tsgl_dfpwm_decode_state* dfpwm_decode_state;
@@ -123,6 +137,7 @@ esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent);
 //supports the NULL value so that, for example, you can output only the first channel to two outputs at once, passing: output, NULL, output. then the first channel will be output to two outputs at once
 //if you want your channels to be free after the track is free, pass true to freeOutputs
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs);
+void tsgl_sound_setOutputsRaw(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount);
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed);
 void tsgl_sound_setLoop(tsgl_sound* sound, bool loop);
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume);
@@ -130,6 +145,7 @@ void tsgl_sound_setPosition(tsgl_sound* sound, size_t position);
 void tsgl_sound_seek(tsgl_sound* sound, int offset);
 void tsgl_sound_play(tsgl_sound* sound);
 void tsgl_sound_stop(tsgl_sound* sound);
+void tsgl_sound_free_instance(tsgl_sound* sound);
 void tsgl_sound_free(tsgl_sound* sound);
 void tsgl_sound_enableFreeOnEnd(tsgl_sound* sound, bool freeOnEnd);
 

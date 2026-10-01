@@ -1,0 +1,4 @@
+bitrate: 1 (8 bit)
+sample rate: 8000
+channels: 1 (mono)
+pcm type: signed (int8_t)

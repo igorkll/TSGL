@@ -67,8 +67,35 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
         #else
             size_t part = 1024 * 16;
         #endif
-        uint8_t* buffer1 = malloc(part);
-        uint8_t* buffer2 = malloc(part);
+
+        uint8_t* buffer1 = NULL;
+        uint8_t* buffer2 = NULL;
+        bool allocationEnabled = false;
+
+        if (!buffer1 || !buffer2) {
+            allocationEnabled = true;
+
+            for (size_t i = 0; i < 4; i++) {
+                buffer1 = malloc(part);
+                buffer2 = malloc(part);
+                if (!buffer1 || !buffer2) {
+                    if (buffer1) free(buffer1);
+                    if (buffer2) free(buffer2);
+                    part /= 2;
+                    ESP_LOGW(TAG, "failed to allocate send buffers. trying less size: %i", part);
+                } else {
+                    break;
+                }
+            }
+
+            if (!buffer1 || !buffer2) {
+                if (buffer1) free(buffer1);
+                if (buffer2) free(buffer2);
+                ESP_LOGE(TAG, "failed to allocated send buffers. no memory");
+                return;
+            }
+        }
+
         size_t offset = 0;
         bool currentBuffer = false;
         spi_transaction_t partTransaction;
@@ -103,8 +130,11 @@ static void _spi_sendData(tsgl_display* display, const uint8_t* data, size_t siz
             spi_transaction_t* partTransactionPtr = &partTransaction;
             ESP_ERROR_CHECK(spi_device_get_trans_result(*interfaceData->spi, &partTransactionPtr, portMAX_DELAY));
         }
-        free(buffer1);
-        free(buffer2);
+
+        if (allocationEnabled) {
+            free(buffer1);
+            free(buffer2);
+        }
     }
 }
 

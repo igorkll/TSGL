@@ -12,7 +12,7 @@ static const char* TAG = "TSGL_sound";
 
 static bool use_global_timer = false;
 
-static portMUX_TYPE global_sounds_lock = portMUX_INITIALIZER_UNLOCKED;
+static atomic_flag global_sounds_lock = ATOMIC_FLAG_INIT;
 static gptimer_handle_t global_timer;
 static bool global_timer_enabled;
 static int global_timer_freq = 0;
@@ -20,6 +20,8 @@ static int global_timer_freq = 0;
 static tsgl_sound** global_sounds;
 static size_t global_sounds_index = 0;
 static size_t global_sounds_max_count = 0;
+
+bool tsgl_sound_force_enable_output = false;
 
 static int IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
     if (sound->bit_rate == 4) {
@@ -65,7 +67,7 @@ static void _soundTask(void* _sound) {
 
         if (sound->loop && sound->readFromStart) {
             //printf("seek start\n");
-            fseek(sound->file, 0, SEEK_SET);
+            fseek(sound->file, sound->offset, SEEK_SET);
         }
         
         //printf("read\n");
@@ -74,7 +76,7 @@ static void _soundTask(void* _sound) {
         if (setZeroSize > 0) memset((char*)buffer + bytesRead, 0, setZeroSize);
 
         if (sound->doubleSwapBuffer && sound->readFromStart) {
-            fread(sound->buffer2, 1, sound->bufferSize, sound->file);
+            bytesRead = fread(sound->buffer2, 1, sound->bufferSize, sound->file);
             size_t setZeroSize = sound->bufferSize - bytesRead;
             if (setZeroSize > 0) memset((char*)sound->buffer2 + bytesRead, 0, setZeroSize);
         }
@@ -93,7 +95,7 @@ static void _soundTask(void* _sound) {
 static void _soundServiceTask(void* _sound) {
     tsgl_sound* sound = _sound;
     
-    vTaskSuspend(NULL);
+    //vTaskSuspend(NULL);
 
     while (true) {
         if (sound->callback_end_run) {
@@ -102,7 +104,11 @@ static void _soundServiceTask(void* _sound) {
             if (sound->callback_end != NULL) sound->callback_end(sound);
             if (sound->freeOnEnd) {
                 sound->task_service_used = false;
-                tsgl_sound_free(sound);
+                if (sound->isInstance) {
+                    tsgl_sound_free_instance(sound);
+                } else {
+                    tsgl_sound_free(sound);
+                }
                 vTaskDelete(NULL);
                 return;
             }
@@ -112,7 +118,33 @@ static void _soundServiceTask(void* _sound) {
     }
 }
 
-static void IRAM_ATTR _read_next_block_raw(tsgl_sound* sound, int bufOffset) {
+static void IRAM_ATTR _resetDfpwmState(tsgl_sound* sound) {
+    float cutoff_mul = sound->cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
+
+    sound->bit_pos = 0;
+    for (size_t i = 0; i < sound->channels; i++) {
+        tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i], sound->scaled_sample_rate, ((float)sound->scaled_sample_rate) * cutoff_mul);
+    }
+}
+
+static void IRAM_ATTR _process_dfpwm(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state) {
+        void* ptr = sound->buffer + sound->bufferPosition;
+
+        for (size_t i = 0; i < sound->channels; i++) {
+            tsgl_dfpwm_decode(&sound->dfpwm_decode_state[i], (uint8_t*)ptr, sound->bit_pos + i);
+        }
+    }
+}
+
+static void _resetDfpwmDecoder(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state == NULL) return;
+
+    _resetDfpwmState(sound);
+    _process_dfpwm(sound);
+}
+
+static void IRAM_ATTR _read_next_sample_raw(tsgl_sound* sound, int bufOffset) {
     bool readFile = false;
 
     sound->bufferPosition += bufOffset;
@@ -123,6 +155,8 @@ static void IRAM_ATTR _read_next_block_raw(tsgl_sound* sound, int bufOffset) {
     sound->position += bufOffset;
     if (sound->position >= sound->len) {
         if (sound->loop) {
+            _resetDfpwmState(sound);
+
             sound->position = 0;
             sound->readFromStart = true;
 
@@ -159,25 +193,17 @@ static void IRAM_ATTR _read_next_block_raw(tsgl_sound* sound, int bufOffset) {
     }
 }
 
-static void IRAM_ATTR _math_current_block(tsgl_sound* sound) {
-    if (sound->dfpwm_decode_state) {
-        void* ptr = sound->buffer + sound->bufferPosition;
-
-        for (size_t i = 0; i < sound->channels; i++) {
-            tsgl_dfpwm_decode(&sound->dfpwm_decode_state[i], (uint8_t*)ptr, sound->bit_pos + i);
-        }
-    }
-}
-
-static void IRAM_ATTR _read_next_block(tsgl_sound* sound) {
+static void IRAM_ATTR _read_next_sample(tsgl_sound* sound) {
     if (sound->dfpwm_decode_state) {
         sound->bit_pos += sound->channels;
         if (sound->bit_pos >= 8) {
             sound->bit_pos = 0;
-            _read_next_block_raw(sound, 1);
+            _read_next_sample_raw(sound, 1);
         }
+
+        _process_dfpwm(sound);
     } else {
-        _read_next_block_raw(sound, sound->bit_rate * sound->channels);
+        _read_next_sample_raw(sound, sound->bit_rate * sound->channels);
     }
 }
 
@@ -217,54 +243,53 @@ static bool IRAM_ATTR isSoundPlaying(tsgl_sound* sound) {
 }
 
 static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
-    portENTER_CRITICAL_ISR(&global_sounds_lock);
+    if (atomic_flag_test_and_set(&global_sounds_lock)) return false;
+
     for (size_t i = 0; i < global_sounds_index; i++) {
         tsgl_sound* sound = global_sounds[i];
 
-        portENTER_CRITICAL_ISR(&sound->lock);
+        if (atomic_flag_test_and_set(&sound->lock)) continue;
 
         if (sound->playing) {
-            if (sound->global_timer_state == 0 && !sound->tempStop) {
-                _math_current_block(sound);
-            }
-
             if (isSoundPlaying(sound)) {
                 _addOutputsValues(sound);
             }
 
-            if (sound->global_timer_state >= sound->global_timer_div) {
-                if (!sound->tempStop) _read_next_block(sound);
-                sound->global_timer_state = 0;
-            } else {
-                sound->global_timer_state++;
+            uint64_t acc = (uint64_t)sound->phase + sound->phase_step;
+            while (acc >= (1ULL << 32)) {
+                _read_next_sample(sound);
+                sound->math_block_flag = true;
+                acc -= (1ULL << 32);
+                if (acc >= (1ULL << 32)) continue;
             }
+            sound->phase = acc;
         }
 
-        portEXIT_CRITICAL_ISR(&sound->lock);
+        atomic_flag_clear(&sound->lock);
     }
 
     for (size_t i = 0; i < global_sounds_index; i++) {
         tsgl_sound* sound = global_sounds[i];
 
-        portENTER_CRITICAL_ISR(&sound->lock);
+        if (atomic_flag_test_and_set(&sound->lock)) continue;
 
         for (size_t i = 0; i < sound->outputsCount; i++) {
             tsgl_sound_output* output = sound->outputs[i];
             output->processed = true;
         }
 
-        portEXIT_CRITICAL_ISR(&sound->lock);
+        atomic_flag_clear(&sound->lock);
     }
 
     for (size_t i = 0; i < global_sounds_index; i++) {
         tsgl_sound* sound = global_sounds[i];
 
-        portENTER_CRITICAL_ISR(&sound->lock);
+        if (atomic_flag_test_and_set(&sound->lock)) continue;
 
         for (size_t i = 0; i < sound->outputsCount; i++) {
             tsgl_sound_output* output = sound->outputs[i];
             if (output->processed) {
-                if (output->count > 0) {
+                if (tsgl_sound_force_enable_output || output->count > 0) {
                     tsgl_sound_flushOutput(output);
                 } else {
                     tsgl_sound_rawSetOutput(output, 0);
@@ -273,26 +298,24 @@ static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_al
             }
         }
 
-        portEXIT_CRITICAL_ISR(&sound->lock);
+        atomic_flag_clear(&sound->lock);
     }
 
-    portEXIT_CRITICAL_ISR(&global_sounds_lock);
+    atomic_flag_clear(&global_sounds_lock);
     return false;
 }
 
 static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx) {
     tsgl_sound* sound = user_ctx;
 
-    portENTER_CRITICAL_ISR(&sound->lock);
+    if (atomic_flag_test_and_set(&sound->lock)) return false;
     
     if (sound->callback_end_run) {
-        portEXIT_CRITICAL_ISR(&sound->lock);
+        atomic_flag_clear(&sound->lock);
         return false;
     }
 
-    _math_current_block(sound);
-
-    if (isSoundPlaying(sound)) {
+    if (tsgl_sound_force_enable_output || isSoundPlaying(sound)) {
         _addOutputsValues(sound);
 
         for (size_t i = 0; i < sound->outputsCount; i++) {
@@ -306,16 +329,14 @@ static bool IRAM_ATTR _timer_ISR(gptimer_handle_t timer, const gptimer_alarm_eve
         }
     }
 
-    _read_next_block(sound);
+    _read_next_sample(sound);
 
-    portEXIT_CRITICAL_ISR(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 
     return false;
 }
 
 static void _initTimer(tsgl_sound* sound) {
-    uint64_t freq = sound->sample_rate * sound->speed;
-
     gptimer_alarm_config_t alarm_config = {
         .alarm_count = 1,
         .flags = {
@@ -326,7 +347,7 @@ static void _initTimer(tsgl_sound* sound) {
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = freq // 1MHz, 1 tick = 1us
+        .resolution_hz = sound->scaled_sample_rate // 1MHz, 1 tick = 1us
     };
   
     gptimer_event_callbacks_t callback_config = {
@@ -343,7 +364,7 @@ static void _resetOutputs(tsgl_sound* sound) {
     for (size_t i = 0; i < sound->outputsCount; i++) {
         tsgl_sound_output* output = sound->outputs[i];
         output->value = 0;
-        tsgl_sound_rawSetOutput(output, 0);
+        if (!tsgl_sound_force_enable_output) tsgl_sound_rawSetOutput(output, 0);
     }
 }
 
@@ -356,17 +377,6 @@ static void _freeOutputs(tsgl_sound* sound) {
         _resetOutputs(sound);
     }
     free(sound->outputs);
-}
-
-static void _resetDfpwmDecoder(tsgl_sound* sound) {
-    if (sound->dfpwm_decode_state == NULL) return;
-
-    float cutoff_mul = sound->cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
-
-    sound->bit_pos = 0;
-    for (size_t i = 0; i < sound->channels; i++) {
-        tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i], sound->scaled_sample_rate, ((float)sound->scaled_sample_rate) * cutoff_mul);
-    }
 }
 
 static void _setPosition(tsgl_sound* sound, size_t position) {
@@ -394,7 +404,7 @@ void tsgl_sound_allocatePcmDecoder(tsgl_sound* sound, float cutoff_mul) {
 void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds) {
     if (use_global_timer) return;
 
-    portENTER_CRITICAL_ISR(&global_sounds_lock);
+    while (atomic_flag_test_and_set(&global_sounds_lock));
 
     global_sounds = calloc(max_sounds, sizeof(size_t));
     global_sounds_max_count = max_sounds;
@@ -424,7 +434,7 @@ void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds) {
     global_timer_freq = freq;
     use_global_timer = true;
 
-    portEXIT_CRITICAL_ISR(&global_sounds_lock);
+    atomic_flag_clear(&global_sounds_lock);
 }
 
 esp_err_t tsgl_sound_load_pcm(tsgl_sound* sound, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format) {
@@ -443,13 +453,19 @@ static void afterUpdateSpeed(tsgl_sound* sound) {
     sound->scaled_sample_rate = sound->sample_rate * sound->speed;
 
     if (!sound->use_local_timer) {
-        sound->global_timer_div = (global_timer_freq / sound->scaled_sample_rate) - 1;
+        //sound->global_timer_div = (global_timer_freq / sound->scaled_sample_rate) - 1;
+
+        uint64_t step = ((uint64_t)sound->scaled_sample_rate << 32) / (uint64_t)global_timer_freq;
+        sound->phase_step = step;
     }
 }
 
 esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loadsize, size_t bufferSize, int64_t caps, const char* path, size_t sample_rate, size_t bit_rate, size_t channels, tsgl_sound_pcm_format pcm_format, bool doubleSwapBuffer) {
     memset(sound, 0, sizeof(tsgl_sound));
-    sound->lock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+    sound->inited = true;
+    sound->math_block_flag = true;
+
+    atomic_flag_clear(&sound->lock);
 
     sound->file = tsgl_filesystem_open(path, "rb");
     if (sound->file == NULL) return ESP_FAIL;
@@ -480,6 +496,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
 
         sound->buffer = tsgl_malloc(bufferSize, caps);
         if (sound->buffer == NULL) {
+            fclose(sound->file);
             ESP_LOGE(TAG, "the buffer for the sound could not be allocated: %i bytes", bufferSize);
             memset(sound, 0, sizeof(tsgl_sound));
             return ESP_ERR_NO_MEM;
@@ -490,6 +507,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
         if (doubleSwapBuffer) {
             sound->buffer2 = tsgl_malloc(bufferSize, caps);
             if (sound->buffer2 == NULL) {
+                fclose(sound->file);
                 free(sound->buffer);
                 ESP_LOGE(TAG, "the buffer2 for the sound could not be allocated: %i bytes", sound->len);
                 memset(sound, 0, sizeof(tsgl_sound));
@@ -499,13 +517,14 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
             fread(sound->buffer2, sound->bit_rate, bufferSize, sound->file);
         }
 
-        xTaskCreate(_soundTask, NULL, 1024 * 8, sound, 1, &sound->task);
+        xTaskCreate(_soundTask, NULL, TSGL_SOUND_STACK_SIZE, sound, 1, &sound->task);
         sound->task_used = true;
     } else {
         sound->bufferSize = sound->len;
 
         sound->buffer = tsgl_malloc(sound->len, caps);
         if (sound->buffer == NULL) {
+            fclose(sound->file);
             ESP_LOGE(TAG, "the full buffer for the sound could not be allocated: %i bytes", sound->len);
             memset(sound, 0, sizeof(tsgl_sound));
             return ESP_ERR_NO_MEM;
@@ -516,31 +535,29 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
         sound->file = NULL;
     }
 
-    xTaskCreate(_soundServiceTask, NULL, 1024 * 8, sound, 1, &sound->task_service);
-    sound->task_service_used = true;
-
-    if (use_global_timer && global_sounds_index < global_sounds_max_count) {
-        portENTER_CRITICAL(&global_sounds_lock);
-        global_sounds[global_sounds_index++] = sound;
-        portEXIT_CRITICAL(&global_sounds_lock);
-    }
-
     return ESP_OK;
 }
 
 esp_err_t tsgl_sound_instance(tsgl_sound* sound, tsgl_sound* parent) {
-    if (parent->buffer != NULL) {
+    if (parent->task_used) {
         ESP_LOGE(TAG, "it is not possible to create an instance of a track with dynamic loading");
         return ESP_FAIL;
     }
 
     memcpy(sound, parent, sizeof(tsgl_sound));
+
+    // ------------------- recreate
+
+    sound->isInstance = true;
     sound->playing = false;
+    sound->task_service = NULL;
+
     return ESP_OK;
 }
 
 void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount, bool freeOutputs) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&global_sounds_lock));
+    while (atomic_flag_test_and_set(&sound->lock));
 
     _freeOutputs(sound);
 
@@ -552,19 +569,31 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
     }
     sound->freeOutputs = freeOutputs;
 
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
+    atomic_flag_clear(&global_sounds_lock);
+}
+
+void tsgl_sound_setOutputsRaw(tsgl_sound* sound, tsgl_sound_output** outputs, size_t outputsCount) {
+    while (atomic_flag_test_and_set(&global_sounds_lock));
+    while (atomic_flag_test_and_set(&sound->lock));
+
+    sound->outputsCount = outputsCount;
+    sound->outputs = malloc(outputsCount * sizeof(size_t));
+    for (size_t i = 0; i < sound->outputsCount; i++) {
+        tsgl_sound_output* output = outputs[i];
+        sound->outputs[i] = output;
+    }
+
+    atomic_flag_clear(&sound->lock);
+    atomic_flag_clear(&global_sounds_lock);
 }
 
 void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
 
     sound->speed = speed;
-
     afterUpdateSpeed(sound);
-
-    if (sound->dfpwm_decode_state) {
-        _resetDfpwmDecoder(sound);
-    }
+    _resetDfpwmDecoder(sound);
 
     if (sound->playing && sound->use_local_timer) {
         gptimer_stop(sound->timer);
@@ -574,17 +603,17 @@ void tsgl_sound_setSpeed(tsgl_sound* sound, float speed) {
         ESP_ERROR_CHECK_WITHOUT_ABORT(gptimer_start(sound->timer));
     }
 
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_setLoop(tsgl_sound* sound, bool loop) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     sound->loop = loop;
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     if (volume == 0) {
         sound->volume = 0;
         sound->mute = true;
@@ -592,27 +621,27 @@ void tsgl_sound_setVolume(tsgl_sound* sound, float volume) {
         sound->volume = volume * 255;
         sound->mute = false;
     }
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_setPosition(tsgl_sound* sound, size_t position) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     bool timerAction = sound->playing && sound->use_local_timer;
     if (timerAction) gptimer_stop(sound->timer);
     _setPosition(sound, position);
     if (timerAction) gptimer_start(sound->timer);
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_seek(tsgl_sound* sound, int offset) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     bool timerAction = sound->playing && sound->use_local_timer;
     if (timerAction) gptimer_stop(sound->timer);
     int64_t newpos = ((int64_t)sound->position) + offset;
     if (newpos < 0) newpos = 0;
     _setPosition(sound, newpos);
     if (timerAction) gptimer_start(sound->timer);
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_play(tsgl_sound* sound) {
@@ -623,7 +652,20 @@ void tsgl_sound_play(tsgl_sound* sound) {
         return;
     }
 
-    portENTER_CRITICAL(&sound->lock);
+    if (!sound->first_start) {
+        sound->first_start = true;
+
+        xTaskCreate(_soundServiceTask, NULL, TSGL_SOUND_STACK_SIZE, sound, 1, &sound->task_service);
+        sound->task_service_used = true;
+        
+        if (use_global_timer && global_sounds_index < global_sounds_max_count) {
+            while (atomic_flag_test_and_set(&global_sounds_lock));
+            global_sounds[global_sounds_index++] = sound;
+            atomic_flag_clear(&global_sounds_lock);
+        }
+    }
+
+    while (atomic_flag_test_and_set(&sound->lock));
     sound->playing = true;
     if (sound->use_local_timer) {
         _initTimer(sound);
@@ -632,7 +674,7 @@ void tsgl_sound_play(tsgl_sound* sound) {
         gptimer_start(global_timer);
         global_timer_enabled = true;
     }
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 static void _stop(tsgl_sound* sound) {
@@ -646,7 +688,7 @@ static void _stop(tsgl_sound* sound) {
         _resetOutputs(sound);
     } else {
         bool found_playing = false;
-        portENTER_CRITICAL(&global_sounds_lock);
+        while (atomic_flag_test_and_set(&global_sounds_lock));
         for (size_t i = 0; i < global_sounds_index; i++) {
             if (global_sounds[i]->playing) {
                 found_playing = true;
@@ -654,22 +696,23 @@ static void _stop(tsgl_sound* sound) {
             }
         }
         if (!found_playing && global_timer_enabled) {
+            _resetOutputs(sound);
             gptimer_stop(global_timer);
             global_timer_enabled = false;
         }
-        portEXIT_CRITICAL(&global_sounds_lock);
+        atomic_flag_clear(&global_sounds_lock);
     }
 }
 
 void tsgl_sound_stop(tsgl_sound* sound) {
     if (!sound->playing) return;
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     _stop(sound);
-    portEXIT_CRITICAL(&sound->lock);
+    atomic_flag_clear(&sound->lock);
 }
 
 void tsgl_sound_free(tsgl_sound* sound) {
-    portENTER_CRITICAL(&sound->lock);
+    while (atomic_flag_test_and_set(&sound->lock));
     if (sound->playing) _stop(sound);
     if (sound->task_used) {
         vTaskDelete(sound->task);
@@ -680,9 +723,8 @@ void tsgl_sound_free(tsgl_sound* sound) {
     if (sound->buffer != NULL) free(sound->buffer);
     if (sound->buffer2 != NULL) free(sound->buffer2);
     if (sound->dfpwm_decode_state != NULL) free(sound->dfpwm_decode_state);
-    _freeOutputs(sound);
     if (use_global_timer) {
-        portENTER_CRITICAL(&global_sounds_lock);
+        while (atomic_flag_test_and_set(&global_sounds_lock));
         for (size_t i = 0; i < global_sounds_index; i++) {
             tsgl_sound* globalSound = global_sounds[i];
             if (globalSound == sound) {
@@ -691,9 +733,43 @@ void tsgl_sound_free(tsgl_sound* sound) {
                 break;
             }
         }
-        portEXIT_CRITICAL(&global_sounds_lock);
+        atomic_flag_clear(&global_sounds_lock);
     }
-    portEXIT_CRITICAL(&sound->lock);
+    _freeOutputs(sound);
+    atomic_flag_clear(&sound->lock);
+
+    if (sound->file != NULL) {
+        fclose(sound->file);
+    }
+    
+    memset(sound, 0, sizeof(tsgl_sound));
+    if (sound->heap) free(sound);
+}
+
+void tsgl_sound_free_instance(tsgl_sound* sound) {
+    while (atomic_flag_test_and_set(&sound->lock));
+    if (sound->playing) _stop(sound);
+    if (sound->task_used) {
+        vTaskDelete(sound->task);
+    }
+    if (sound->task_service_used) {
+        vTaskDelete(sound->task_service);
+    }
+    if (sound->dfpwm_decode_state != NULL) free(sound->dfpwm_decode_state);
+    if (use_global_timer) {
+        while (atomic_flag_test_and_set(&global_sounds_lock));
+        for (size_t i = 0; i < global_sounds_index; i++) {
+            tsgl_sound* globalSound = global_sounds[i];
+            if (globalSound == sound) {
+                global_sounds[i] = global_sounds[global_sounds_index - 1];
+                global_sounds_index--;
+                break;
+            }
+        }
+        atomic_flag_clear(&global_sounds_lock);
+    }
+    _freeOutputs(sound);
+    atomic_flag_clear(&sound->lock);
 
     if (sound->file != NULL) {
         fclose(sound->file);
