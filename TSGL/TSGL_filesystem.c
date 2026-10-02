@@ -7,10 +7,16 @@
 #include <stddef.h>
 #include <stdio.h>
 
+static uint8_t max_opened_files = 4;
+
+void tsgl_filesystem_initparameter_setMaxOpenedFiles(uint8_t _max_opened_files) {
+    max_opened_files = _max_opened_files;
+}
+
 esp_err_t tsgl_filesystem_mount_fatfs(const char* path, const char* name) {
     static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
     esp_vfs_fat_mount_config_t storage_mount_config = {
-        .max_files = 4,
+        .max_files = max_opened_files,
         .format_if_mount_failed = false,
         .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
@@ -20,7 +26,7 @@ esp_err_t tsgl_filesystem_mount_fatfs(const char* path, const char* name) {
 
 esp_err_t tsgl_filesystem_mount_fatfs_ro(const char* path, const char* name) {
     esp_vfs_fat_mount_config_t storage_mount_config = {
-        .max_files = 4,
+        .max_files = max_opened_files,
         .format_if_mount_failed = false,
         .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
@@ -31,7 +37,7 @@ esp_err_t tsgl_filesystem_mount_fatfs_ro(const char* path, const char* name) {
 esp_err_t tsgl_filesystem_mount_fatfs_af(const char* path, const char* name) {
     static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
     esp_vfs_fat_mount_config_t storage_mount_config = {
-        .max_files = 4,
+        .max_files = max_opened_files,
         .format_if_mount_failed = false,
         .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
@@ -43,7 +49,7 @@ esp_err_t tsgl_filesystem_mount_spifs_af(const char* path, const char* name) {
     esp_vfs_spiffs_conf_t conf = {
         .base_path = path,
         .partition_label = name,
-        .max_files = 4,
+        .max_files = max_opened_files,
         .format_if_mount_failed = true
     };
 

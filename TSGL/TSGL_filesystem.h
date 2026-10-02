@@ -1,5 +1,7 @@
 #include "TSGL.h"
 
+void tsgl_filesystem_initparameter_setMaxOpenedFiles(uint8_t max_opened_files);
+
 esp_err_t tsgl_filesystem_mount_fatfs(const char* path, const char* name);
 esp_err_t tsgl_filesystem_mount_fatfs_ro(const char* path, const char* name);
 esp_err_t tsgl_filesystem_mount_fatfs_af(const char* path, const char* name);
