@@ -99,7 +99,7 @@ void tsgl_gfx_line(void* arg, TSGL_SET_REFERENCE(set), TSGL_FILL_REFERENCE(fill)
 void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     sprite->rotation = ((uint8_t)(-sprite->rotation)) % (uint8_t)4;
 
-    if (sprite->sprite->hardwareRotate) {
+    if (sprite->fb->hardwareRotate) {
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
         return;
     }
@@ -109,13 +109,13 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
     switch (sprite->rotation) {
         case 1:
         case 3:
-            realSpriteWidth = sprite->sprite->defaultHeight;
-            realSpriteHeight = sprite->sprite->defaultWidth;
+            realSpriteWidth = sprite->fb->defaultHeight;
+            realSpriteHeight = sprite->fb->defaultWidth;
             break;
 
         default:
-            realSpriteWidth = sprite->sprite->defaultWidth;
-            realSpriteHeight = sprite->sprite->defaultHeight;
+            realSpriteWidth = sprite->fb->defaultWidth;
+            realSpriteHeight = sprite->fb->defaultHeight;
             break;
     }
 
@@ -142,12 +142,12 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
             tsgl_pos setPosY = posY + y;
             tsgl_pos getPosX = sprite->flixX ? (spriteMaxPointX - posX) : posX;
             tsgl_pos getPosY = sprite->flixY ? (spriteMaxPointY - posY) : posY;
-            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation,
+            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->fb, sprite->rotation,
                 sprite->resizeWidth == 0 ? getPosX : tsgl_math_imap(getPosX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
                 sprite->resizeHeight == 0 ? getPosY : tsgl_math_imap(getPosY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
             );
 
-            if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->sprite->colorsize, sprite->sprite->floatColorsize)) {
+            if (sprite->transparentColor.invalid || !tsgl_color_rawColorCompare(color, sprite->transparentColor, sprite->fb->colorsize, sprite->fb->floatColorsize)) {
                 set(arg, setPosX, setPosY, color);
             }
         }
@@ -157,7 +157,7 @@ void tsgl_gfx_push(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, t
 void tsgl_gfx_push_wtrans(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite, tsgl_pos minX, tsgl_pos minY, tsgl_pos maxX, tsgl_pos maxY) {
     sprite->rotation = ((uint8_t)(-sprite->rotation)) % (uint8_t)4;
 
-    if (sprite->sprite->hardwareRotate) {
+    if (sprite->fb->hardwareRotate) {
         ESP_LOGE(TAG, "a sprite cannot have a hardware rotation");
         return;
     }
@@ -167,13 +167,13 @@ void tsgl_gfx_push_wtrans(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_p
     switch (sprite->rotation) {
         case 1:
         case 3:
-            realSpriteWidth = sprite->sprite->defaultHeight;
-            realSpriteHeight = sprite->sprite->defaultWidth;
+            realSpriteWidth = sprite->fb->defaultHeight;
+            realSpriteHeight = sprite->fb->defaultWidth;
             break;
 
         default:
-            realSpriteWidth = sprite->sprite->defaultWidth;
-            realSpriteHeight = sprite->sprite->defaultHeight;
+            realSpriteWidth = sprite->fb->defaultWidth;
+            realSpriteHeight = sprite->fb->defaultHeight;
             break;
     }
 
@@ -200,7 +200,7 @@ void tsgl_gfx_push_wtrans(void* arg, TSGL_SET_REFERENCE(set), tsgl_pos x, tsgl_p
             tsgl_pos setPosY = posY + y;
             tsgl_pos getPosX = sprite->flixX ? (spriteMaxPointX - posX) : posX;
             tsgl_pos getPosY = sprite->flixY ? (spriteMaxPointY - posY) : posY;
-            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->sprite, sprite->rotation,
+            tsgl_rawcolor color = tsgl_framebuffer_rotationGet(sprite->fb, sprite->rotation,
                 sprite->resizeWidth == 0 ? getPosX : tsgl_math_imap(getPosX, 0, spriteMaxPointX, 0, spriteRealMaxPointX),
                 sprite->resizeHeight == 0 ? getPosY : tsgl_math_imap(getPosY, 0, spriteMaxPointY, 0, spriteRealMaxPointY)
             );
@@ -942,18 +942,18 @@ tsgl_print_textArea TSGL_FAST_FUNC tsgl_gfx_text(void* arg, TSGL_SET_REFERENCE(s
 
 tsgl_sprite* tsgl_gfx_renderTextToSprite(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos height, tsgl_print_settings sets, const char* text, tsgl_colormode colormode, int64_t caps, tsgl_rawcolor transparentColor, tsgl_rawcolor clearcolor) {
     tsgl_sprite* sprite = calloc(1, sizeof(tsgl_sprite));
-    tsgl_framebuffer* sprite_fb = malloc(sizeof(tsgl_framebuffer));
-    sprite->sprite = sprite_fb;
+    tsgl_framebuffer* fb = malloc(sizeof(tsgl_framebuffer));
+    sprite->fb = fb;
     sprite->transparentColor = transparentColor;
 
-    if (tsgl_framebuffer_init(sprite_fb, colormode, width, height, caps) != ESP_OK) {
+    if (tsgl_framebuffer_init(fb, colormode, width, height, caps) != ESP_OK) {
         free(sprite);
-        free(sprite_fb);
+        free(fb);
         return NULL;
     }
 
-    if (!clearcolor.invalid) tsgl_framebuffer_clear(sprite_fb, clearcolor);
-    tsgl_gfx_text(sprite_fb, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fillWithoutCheck, x, y, sets, text, sprite_fb->viewport_minX, sprite_fb->viewport_minY, sprite_fb->viewport_maxX, sprite_fb->viewport_maxY);
+    if (!clearcolor.invalid) tsgl_framebuffer_clear(fb, clearcolor);
+    tsgl_gfx_text(fb, (TSGL_SET_REFERENCE())tsgl_framebuffer_setWithoutCheck, (TSGL_FILL_REFERENCE())tsgl_framebuffer_fillWithoutCheck, x, y, sets, text, fb->viewport_minX, fb->viewport_minY, fb->viewport_maxX, fb->viewport_maxY);
 
     return sprite;
 }

@@ -48,3 +48,8 @@ bool tsgl_funcs_checkTouch(tsgl_pos x, tsgl_pos y, tsgl_pos width, tsgl_pos heig
             y <= y2 + height2 && 
             y + height >= y2);
 }
+
+void tsgl_funcs_getFillBlockSizeFromTo(tsgl_pos* out_width, tsgl_pos* out_height, tsgl_pos x, tsgl_pos y, tsgl_pos x2, tsgl_pos y2) {
+    *out_width = (x2 - x) + 1;
+    *out_height = (y2 - y) + 1;
+}

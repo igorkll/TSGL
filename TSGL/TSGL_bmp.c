@@ -1,5 +1,6 @@
 #include "TSGL_bmp.h"
-#include <TSGL_filesystem.h>
+#include "TSGL_filesystem.h"
+#include "TSGL_framebuffer.h"
 #include <esp_log.h>
 #include <string.h>
 
@@ -296,7 +297,7 @@ tsgl_imageInfo tsgl_bmp_readImageInfo(const char* path) {
 tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t caps, tsgl_rawcolor transparentColor) {
     tsgl_sprite* sprite = calloc(1, sizeof(tsgl_sprite));
     tsgl_framebuffer* sprite_fb = malloc(sizeof(tsgl_framebuffer));
-    sprite->sprite = sprite_fb;
+    sprite->fb = sprite_fb;
     sprite->transparentColor = transparentColor;
 
     tsgl_imageInfo imageInfo = _parse(path, NULL, TSGL_INVALID_RAWCOLOR);
@@ -324,10 +325,4 @@ tsgl_sprite* tsgl_bmp_load(const char* path, tsgl_colormode colormode, int64_t c
 
     ESP_LOGI(TAG, "bmp loaded: %s", path);
     return sprite;
-}
-
-void tsgl_bmp_free(tsgl_sprite* sprite) {
-    tsgl_framebuffer_free(sprite->sprite);
-    free(sprite->sprite);
-    free(sprite);
 }

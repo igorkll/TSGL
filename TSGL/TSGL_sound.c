@@ -52,6 +52,25 @@ static int IRAM_ATTR _convertPcm(tsgl_sound* sound, void* source) {
     return 0;
 }
 
+static size_t freadz(void* __ptr, size_t __size, size_t __n, FILE* __stream) {
+    size_t bufferSize = __size * __n;
+    size_t elementsRead = fread(__ptr, __size, __n, __stream);
+    size_t bytesRead = elementsRead * __size;
+    size_t setZeroSize = bufferSize - bytesRead;
+    if (setZeroSize > 0) memset((void*)__ptr + bytesRead, 0, setZeroSize);
+    return elementsRead;
+}
+
+static void IRAM_ATTR _process_dfpwm(tsgl_sound* sound) {
+    if (sound->dfpwm_decode_state) {
+        void* ptr = sound->buffer + sound->bufferPosition;
+
+        for (size_t i = 0; i < sound->channels; i++) {
+            tsgl_dfpwm_decode(&sound->dfpwm_decode_state[i], (uint8_t*)ptr, sound->bit_pos + i);
+        }
+    }
+}
+
 static void _soundTask(void* _sound) {
     tsgl_sound* sound = _sound;
 
@@ -71,15 +90,13 @@ static void _soundTask(void* _sound) {
         }
         
         //printf("read\n");
-        size_t bytesRead = fread(buffer, 1, sound->bufferSize, sound->file);
-        size_t setZeroSize = sound->bufferSize - bytesRead;
-        if (setZeroSize > 0) memset((char*)buffer + bytesRead, 0, setZeroSize);
+        freadz(buffer, 1, sound->bufferSize, sound->file);
 
         if (sound->doubleSwapBuffer && sound->readFromStart) {
-            bytesRead = fread(sound->buffer2, 1, sound->bufferSize, sound->file);
-            size_t setZeroSize = sound->bufferSize - bytesRead;
-            if (setZeroSize > 0) memset((char*)sound->buffer2 + bytesRead, 0, setZeroSize);
+            freadz(sound->buffer2, 1, sound->bufferSize, sound->file);
         }
+
+        if (sound->readFromStart || !sound->doubleSwapBuffer) _process_dfpwm(sound);
 
         sound->readFromStart = false;
         sound->tempStop = false;
@@ -127,16 +144,6 @@ static void IRAM_ATTR _resetDfpwmState(tsgl_sound* sound) {
     }
 }
 
-static void IRAM_ATTR _process_dfpwm(tsgl_sound* sound) {
-    if (sound->dfpwm_decode_state) {
-        void* ptr = sound->buffer + sound->bufferPosition;
-
-        for (size_t i = 0; i < sound->channels; i++) {
-            tsgl_dfpwm_decode(&sound->dfpwm_decode_state[i], (uint8_t*)ptr, sound->bit_pos + i);
-        }
-    }
-}
-
 static void _resetDfpwmDecoder(tsgl_sound* sound) {
     if (sound->dfpwm_decode_state == NULL) return;
 
@@ -144,8 +151,9 @@ static void _resetDfpwmDecoder(tsgl_sound* sound) {
     _process_dfpwm(sound);
 }
 
-static void IRAM_ATTR _read_next_sample_raw(tsgl_sound* sound, int bufOffset) {
+static bool IRAM_ATTR _read_next_sample_raw(tsgl_sound* sound, int bufOffset) {
     bool readFile = false;
+    bool notDecode = false;
 
     sound->bufferPosition += bufOffset;
     if (sound->bufferPosition >= sound->bufferSize) {
@@ -156,6 +164,8 @@ static void IRAM_ATTR _read_next_sample_raw(tsgl_sound* sound, int bufOffset) {
     if (sound->position >= sound->len) {
         if (sound->loop) {
             _resetDfpwmState(sound);
+
+            notDecode = true;
 
             sound->position = 0;
             sound->readFromStart = true;
@@ -182,26 +192,35 @@ static void IRAM_ATTR _read_next_sample_raw(tsgl_sound* sound, int bufOffset) {
                 void* buffer = sound->buffer;
                 sound->buffer = sound->buffer2;
                 sound->buffer2 = buffer;
-            } else if (sound->use_local_timer) {
-                gptimer_stop(sound->timer);
-                sound->localTimerStopped = true;
             } else {
-                sound->tempStop = true;
+                if (sound->use_local_timer) {
+                    gptimer_stop(sound->timer);
+                    sound->localTimerStopped = true;
+                } else {
+                    sound->tempStop = true;
+                }
+                notDecode = true;
             }
             xTaskResumeFromISR(sound->task);
         }
     }
+
+    return notDecode;
 }
 
 static void IRAM_ATTR _read_next_sample(tsgl_sound* sound) {
     if (sound->dfpwm_decode_state) {
+        bool notDecode = false;
+
         sound->bit_pos += sound->channels;
         if (sound->bit_pos >= 8) {
             sound->bit_pos = 0;
-            _read_next_sample_raw(sound, 1);
+            notDecode = _read_next_sample_raw(sound, 1);
         }
 
-        _process_dfpwm(sound);
+        if (!notDecode) {
+            _process_dfpwm(sound);
+        }
     } else {
         _read_next_sample_raw(sound, sound->bit_rate * sound->channels);
     }
@@ -250,7 +269,7 @@ static bool IRAM_ATTR _global_timer_ISR(gptimer_handle_t timer, const gptimer_al
 
         if (atomic_flag_test_and_set(&sound->lock)) continue;
 
-        if (sound->playing) {
+        if (sound->playing && !sound->tempStop && !sound->callback_end_run) {
             if (isSoundPlaying(sound)) {
                 _addOutputsValues(sound);
             }
@@ -387,7 +406,7 @@ static void _setPosition(tsgl_sound* sound, size_t position) {
     if (sound->file != NULL) {
         sound->bufferPosition = 0;
         fseek(sound->file, sound->position + sound->offset, SEEK_SET);
-        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        freadz(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
     } else {
         sound->bufferPosition = sound->position;
     }
@@ -406,7 +425,7 @@ void tsgl_sound_enableGlobalTimer(int freq, size_t max_sounds) {
 
     while (atomic_flag_test_and_set(&global_sounds_lock));
 
-    global_sounds = calloc(max_sounds, sizeof(size_t));
+    global_sounds = calloc(max_sounds, sizeof(tsgl_sound*));
     global_sounds_max_count = max_sounds;
 
     gptimer_alarm_config_t alarm_config = {
@@ -502,7 +521,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
             return ESP_ERR_NO_MEM;
         }
 
-        fread(sound->buffer, sound->bit_rate, bufferSize, sound->file);
+        freadz(sound->buffer, sound->bit_rate, bufferSize, sound->file);
 
         if (doubleSwapBuffer) {
             sound->buffer2 = tsgl_malloc(bufferSize, caps);
@@ -514,7 +533,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
                 return ESP_ERR_NO_MEM;
             }
 
-            fread(sound->buffer2, sound->bit_rate, bufferSize, sound->file);
+            freadz(sound->buffer2, sound->bit_rate, bufferSize, sound->file);
         }
 
         xTaskCreate(_soundTask, NULL, TSGL_SOUND_STACK_SIZE, sound, 1, &sound->task);
@@ -530,7 +549,7 @@ esp_err_t tsgl_sound_load_pcmPartEx(tsgl_sound* sound, size_t offset, size_t loa
             return ESP_ERR_NO_MEM;
         }
 
-        fread(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
+        freadz(sound->buffer, sound->bit_rate, sound->bufferSize, sound->file);
         fclose(sound->file);
         sound->file = NULL;
     }
@@ -562,7 +581,7 @@ void tsgl_sound_setOutputs(tsgl_sound* sound, tsgl_sound_output** outputs, size_
     _freeOutputs(sound);
 
     sound->outputsCount = outputsCount;
-    sound->outputs = malloc(outputsCount * sizeof(size_t));
+    sound->outputs = malloc(outputsCount * sizeof(tsgl_sound_output*));
     for (size_t i = 0; i < sound->outputsCount; i++) {
         tsgl_sound_output* output = outputs[i];
         sound->outputs[i] = output;
@@ -578,7 +597,7 @@ void tsgl_sound_setOutputsRaw(tsgl_sound* sound, tsgl_sound_output** outputs, si
     while (atomic_flag_test_and_set(&sound->lock));
 
     sound->outputsCount = outputsCount;
-    sound->outputs = malloc(outputsCount * sizeof(size_t));
+    sound->outputs = malloc(outputsCount * sizeof(tsgl_sound_output*));
     for (size_t i = 0; i < sound->outputsCount; i++) {
         tsgl_sound_output* output = outputs[i];
         sound->outputs[i] = output;
@@ -742,8 +761,8 @@ void tsgl_sound_free(tsgl_sound* sound) {
         fclose(sound->file);
     }
     
-    memset(sound, 0, sizeof(tsgl_sound));
     if (sound->heap) free(sound);
+    memset(sound, 0, sizeof(tsgl_sound));
 }
 
 void tsgl_sound_free_instance(tsgl_sound* sound) {
@@ -775,8 +794,8 @@ void tsgl_sound_free_instance(tsgl_sound* sound) {
         fclose(sound->file);
     }
     
-    memset(sound, 0, sizeof(tsgl_sound));
     if (sound->heap) free(sound);
+    memset(sound, 0, sizeof(tsgl_sound));
 }
 
 void tsgl_sound_enableFreeOnEnd(tsgl_sound* sound, bool freeOnEnd) {

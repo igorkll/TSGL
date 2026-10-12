@@ -131,6 +131,25 @@ tsgl_color tsgl_color_hsv(uint8_t hue, uint8_t saturation, uint8_t value) {
     return rgb;
 }
 
+tsgl_color tsgl_color_grayscale(tsgl_color color) {
+    if (color.invalid) {
+        return TSGL_INVALID_COLOR;
+    }
+
+    // Rec.709 / sRGB luma:
+    // Y = 0.2126*R + 0.7152*G + 0.0722*B
+    uint32_t y = (2126u * color.r + 7152u * color.g + 722u * color.b + 5000u) / 10000u;
+    if (y > 255u) y = 255u;
+
+    tsgl_color result = {
+        .r = (uint8_t)y,
+        .g = (uint8_t)y,
+        .b = (uint8_t)y,
+        .invalid = false
+    };
+    return result;
+}
+
 uint16_t tsgl_color_to565(tsgl_color color) {
     uint16_t result;
     result = (color.r >> 3) << 11;

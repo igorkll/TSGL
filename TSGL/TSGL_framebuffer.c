@@ -385,14 +385,14 @@ void tsgl_framebuffer_push_wtrans(tsgl_framebuffer* framebuffer, tsgl_pos x, tsg
 void tsgl_framebuffer_pushFast(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
     framebuffer->changed = true;
     
-    tsgl_pos spriteWidth = sprite->sprite->defaultWidth;
-    tsgl_pos spriteHeight = sprite->sprite->defaultHeight;
+    tsgl_pos spriteWidth = sprite->fb->defaultWidth;
+    tsgl_pos spriteHeight = sprite->fb->defaultHeight;
 
     for (tsgl_pos posX = 0; posX < spriteWidth; posX++) {
         tsgl_pos setPosX = posX + x;
         for (tsgl_pos posY = 0; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
-            tsgl_rawcolor color = tsgl_framebuffer_getWithoutCheckFast(sprite->sprite, posX, posY);
+            tsgl_rawcolor color = tsgl_framebuffer_getWithoutCheckFast(sprite->fb, posX, posY);
             if (sprite->transparentColor.invalid || memcmp(color.arr, sprite->transparentColor.arr, framebuffer->colorsize) != 0) {
                 tsgl_framebuffer_setWithoutCheckFast(framebuffer, setPosX, setPosY, color);
             }
@@ -403,14 +403,14 @@ void tsgl_framebuffer_pushFast(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_p
 void tsgl_framebuffer_pushFast_wtrans(tsgl_framebuffer* framebuffer, tsgl_pos x, tsgl_pos y, tsgl_sprite* sprite) {
     framebuffer->changed = true;
     
-    tsgl_pos spriteWidth = sprite->sprite->defaultWidth;
-    tsgl_pos spriteHeight = sprite->sprite->defaultHeight;
+    tsgl_pos spriteWidth = sprite->fb->defaultWidth;
+    tsgl_pos spriteHeight = sprite->fb->defaultHeight;
 
     for (tsgl_pos posX = 0; posX < spriteWidth; posX++) {
         tsgl_pos setPosX = posX + x;
         for (tsgl_pos posY = 0; posY < spriteHeight; posY++) {
             tsgl_pos setPosY = posY + y;
-            tsgl_framebuffer_setWithoutCheckFast(framebuffer, setPosX, setPosY, tsgl_framebuffer_getWithoutCheckFast(sprite->sprite, posX, posY));
+            tsgl_framebuffer_setWithoutCheckFast(framebuffer, setPosX, setPosY, tsgl_framebuffer_getWithoutCheckFast(sprite->fb, posX, posY));
         }
     }
 }

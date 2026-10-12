@@ -5,7 +5,7 @@
 
 struct tsgl_sprite { //the type is declared in "TSGL.h"
     uint8_t rotation;
-    tsgl_framebuffer* sprite;
+    tsgl_framebuffer* fb;
     tsgl_rawcolor transparentColor;
     bool flixX;
     bool flixY;
