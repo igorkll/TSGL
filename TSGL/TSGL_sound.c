@@ -136,8 +136,9 @@ static void _soundServiceTask(void* _sound) {
 }
 
 static void IRAM_ATTR _resetDfpwmState(tsgl_sound* sound) {
-    float cutoff_mul = sound->cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
+    if (sound->dfpwm_decode_state == NULL) return;
 
+    float cutoff_mul = sound->cutoff_mul > 0 ? sound->cutoff_mul : 0.35;
     sound->bit_pos = 0;
     for (size_t i = 0; i < sound->channels; i++) {
         tsgl_dfpwm_reset(&sound->dfpwm_decode_state[i], sound->scaled_sample_rate, ((float)sound->scaled_sample_rate) * cutoff_mul);
